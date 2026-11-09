@@ -1,0 +1,247 @@
+// ASAA Templates — relational model (US-A01/A02, US-C01/C02/C04, US-D01/D02, US-I02/I03).
+// Schema changes are made only through Prisma migrations (apps/api/prisma/migrations).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// The single platform owner. `singleton` makes a second owner impossible at the DB level.
+model Owner {
+  id                String    @id @default(uuid()) @db.Uuid
+  singleton         Boolean   @unique @default(true)
+  email             String    @unique @db.VarChar(254)
+  displayName       String    @db.VarChar(120)
+  passwordHash      String    @db.VarChar(512)
+  passwordChangedAt DateTime  @default(now()) @db.Timestamptz(3)
+  createdAt         DateTime  @default(now()) @db.Timestamptz(3)
+  sessions          Session[]
+  projects          Project[]
+}
+
+/// Server-side session. Only a SHA-256 of the opaque cookie token is stored.
+model Session {
+  id         String    @id @default(uuid()) @db.Uuid
+  ownerId    String    @db.Uuid
+  owner      Owner     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  tokenHash  String    @unique @db.Char(64)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+  lastSeenAt DateTime  @default(now()) @db.Timestamptz(3)
+  expiresAt  DateTime  @db.Timestamptz(3)
+  revokedAt  DateTime? @db.Timestamptz(3)
+  userAgent  String?   @db.VarChar(200)
+
+  @@index([ownerId, revokedAt])
+}
+
+enum AuditActorType {
+  OWNER
+  SYSTEM
+  ANONYMOUS
+}
+
+enum AuditOutcome {
+  SUCCESS
+  FAILURE
+  DENIED
+}
+
+/// Append-only audit trail. A database trigger (see migration) rejects UPDATE and DELETE.
+model AuditEvent {
+  id         BigInt         @id @default(autoincrement())
+  at         DateTime       @default(now()) @db.Timestamptz(3)
+  actorType  AuditActorType
+  actorId    String?        @db.Uuid
+  action     String         @db.VarChar(80)
+  targetType String?        @db.VarChar(40)
+  targetId   String?        @db.VarChar(80)
+  outcome    AuditOutcome
+  requestId  String?        @db.VarChar(64)
+  metadata   Json           @default("{}")
+
+  @@index([at])
+  @@index([action])
+  @@index([targetType, targetId])
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+}
+
+model Project {
+  id             String        @id @default(uuid()) @db.Uuid
+  key            String        @unique @db.VarChar(20)
+  name           String        @db.VarChar(120)
+  purpose        String        @default("") @db.VarChar(2000)
+  status         ProjectStatus @default(PLANNING)
+  ownerId        String        @db.Uuid
+  owner          Owner         @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  archivedAt     DateTime?     @db.Timestamptz(3)
+  createdAt      DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime      @updatedAt @db.Timestamptz(3)
+  /// Optimistic-concurrency version, incremented on every update.
+  version        Int           @default(1)
+  /// Next per-project requirement number (REQ-1, REQ-2, ...).
+  requirementSeq Int           @default(0)
+  requirements   Requirement[]
+
+  @@index([ownerId, archivedAt])
+}
+
+enum RequirementKind {
+  REQUIREMENT
+  USER_STORY
+}
+
+enum Priority {
+  P0
+  P1
+  P2
+}
+
+enum RequirementStatus {
+  DRAFT
+  READY
+  IN_DEVELOPMENT
+  DEVELOPED
+  BUILT
+  TESTED
+  RELEASED
+}
+
+model Requirement {
+  id                 String                  @id @default(uuid()) @db.Uuid
+  projectId          String                  @db.Uuid
+  project            Project                 @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  code               String                  @db.VarChar(20)
+  kind               RequirementKind         @default(USER_STORY)
+  title              String                  @db.VarChar(200)
+  description        String                  @default("") @db.VarChar(5000)
+  priority           Priority                @default(P1)
+  status             RequirementStatus       @default(DRAFT)
+  acceptanceCriteria String[]                @default([])
+  flaggedForReview   Boolean                 @default(false)
+  flagReason         String?                 @db.VarChar(500)
+  version            Int                     @default(1)
+  createdAt          DateTime                @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime                @updatedAt @db.Timestamptz(3)
+  dependsOn          RequirementDependency[] @relation("dependent")
+  dependedOnBy       RequirementDependency[] @relation("dependency")
+  versions           RequirementVersion[]
+  links              TraceLink[]
+
+  @@unique([projectId, code])
+  @@index([projectId, status])
+}
+
+/// Dependencies are restricted to the same project by the service layer (US-I03).
+model RequirementDependency {
+  requirementId String      @db.Uuid
+  dependsOnId   String      @db.Uuid
+  requirement   Requirement @relation("dependent", fields: [requirementId], references: [id], onDelete: Cascade)
+  dependsOn     Requirement @relation("dependency", fields: [dependsOnId], references: [id], onDelete: Cascade)
+
+  @@id([requirementId, dependsOnId])
+}
+
+/// Immutable snapshot of every requirement version (US-C02 traceable changes).
+model RequirementVersion {
+  id            String      @id @default(uuid()) @db.Uuid
+  requirementId String      @db.Uuid
+  requirement   Requirement @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+  version       Int
+  snapshot      Json
+  changeNote    String?     @db.VarChar(300)
+  changedAt     DateTime    @default(now()) @db.Timestamptz(3)
+
+  @@unique([requirementId, version])
+}
+
+enum TraceKind {
+  TASK
+  CODE_CHANGE
+  TEST
+  DEFECT
+  DOCUMENTATION
+  RELEASE
+}
+
+enum EvidenceStatus {
+  PLANNED
+  PASSED
+  FAILED
+}
+
+/// Requirement → delivery traceability (US-C04).
+model TraceLink {
+  id             String         @id @default(uuid()) @db.Uuid
+  requirementId  String         @db.Uuid
+  requirement    Requirement    @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+  kind           TraceKind
+  reference      String         @db.VarChar(300)
+  title          String?        @db.VarChar(200)
+  evidenceStatus EvidenceStatus @default(PLANNED)
+  createdAt      DateTime       @default(now()) @db.Timestamptz(3)
+
+  @@index([requirementId, kind])
+}
+
+enum CatalogKind {
+  TEMPLATE
+  COMPONENT
+  DESIGN_ASSET
+  WORKFLOW
+  IMPORTED_PROJECT
+}
+
+enum Lifecycle {
+  DRAFT
+  ACTIVE
+  DEPRECATED
+  RETIRED
+}
+
+enum TrustStatus {
+  UNTRUSTED
+  UNDER_REVIEW
+  TRUSTED
+}
+
+enum SourceType {
+  AUTHORED
+  IMPORTED
+}
+
+/// Private catalog of reusable templates and assets (US-D01, US-D02).
+model CatalogItem {
+  id                    String      @id @default(uuid()) @db.Uuid
+  slug                  String      @unique @db.VarChar(80)
+  title                 String      @db.VarChar(160)
+  description           String      @default("") @db.VarChar(4000)
+  kind                  CatalogKind @default(TEMPLATE)
+  category              String      @db.VarChar(80)
+  technologies          String[]    @default([])
+  tags                  String[]    @default([])
+  version               String      @db.VarChar(40)
+  lifecycle             Lifecycle   @default(DRAFT)
+  trustStatus           TrustStatus @default(TRUSTED)
+  sourceType            SourceType  @default(AUTHORED)
+  sourceReference       String?     @db.VarChar(500)
+  license               String      @db.VarChar(80)
+  ownership             String      @db.VarChar(120)
+  dependencies          Json        @default("[]")
+  metadataSchemaVersion Int         @default(1)
+  createdAt             DateTime    @default(now()) @db.Timestamptz(3)
+  updatedAt             DateTime    @updatedAt @db.Timestamptz(3)
+  rowVersion            Int         @default(1)
+
+  @@index([category])
+  @@index([lifecycle])
+}

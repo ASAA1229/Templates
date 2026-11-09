@@ -16,3 +16,10 @@ coverage/
 .cache/
 .DS_Store
 Thumbs.db
+
+# Local runtime data (project-local PostgreSQL cluster, logs, test artefacts)
+.local/
+*.log
+playwright-report/
+test-results/
+*.tsbuildinfo
