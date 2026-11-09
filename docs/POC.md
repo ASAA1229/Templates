@@ -114,7 +114,7 @@ Domain-oriented modules with explicit responsibilities, data ownership, API/even
 Select the initial database and storage technologies after evaluating actual workflows, transactions, query patterns, security, local deployment, portability and cost. Specify schemas, relationships, constraints, indexes, migrations, tenant boundaries, retention, audit and recovery. Keep provider adapters and migration paths documented.
 
 ### 7.5 Technology decisions
-No final programming language, framework, database, UI library, queue, CI/CD provider or deployment product is approved by this POC. Evaluate options against security, maintainability, performance, maturity, compatibility, productivity and the ₹0 constraint. Record decisions and alternatives in Architecture Decision Records (ADRs).
+The initial frontend, language, backend, database and UI foundation are approved in Section 17 and ADR-001. Exact versions and all other supporting products (including testing, queue, CI/CD, storage, monitoring and deployment tools) remain subject to separate evaluation and ADRs. Evaluate options against security, maintainability, performance, maturity, compatibility, productivity and the ₹0 constraint.
 
 ## 8. AI and JARVIS integration
 
@@ -216,8 +216,8 @@ The first implemented MVP is acceptable only when its owner can create a project
 ## 15. Decisions still required before implementation
 
 - Exact MVP modules, features and acceptance thresholds.
-- Actual frontend/backend/database/storage stack and pinned versions.
-- UI library and design tooling.
+- Pinned runtime/package versions, storage details and deployment topology; the initial application stack is approved in Section 17 and ADR-001.
+- Design tooling and detailed UI architecture; Tailwind CSS + shadcn/ui is approved as the initial UI foundation.
 - Repository integration and Git automation approach.
 - CI/CD and runner selection.
 - Local execution, containers and deployment topology.
