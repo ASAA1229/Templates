@@ -1,4 +1,4 @@
-import type { ProjectView, RequirementView } from "@asaa/contracts";
+import type { GenerationView, ProjectView, RequirementView } from "@asaa/contracts";
 import { Archive, ArchiveRestore, Pencil, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
@@ -7,6 +7,7 @@ import { Alert, Badge, Button, Card, CardContent, CardHeader, CardTitle } from "
 import { ApiError, api } from "@/lib/api";
 import { useResource } from "@/lib/hooks";
 import { formatDateTime, humanize } from "@/lib/utils";
+import { GenerationCard } from "@/features/generation/GenerationPanel";
 import { ProjectForm } from "./ProjectForm";
 import { RequirementCard } from "./RequirementCard";
 import { RequirementForm } from "./RequirementForm";
@@ -21,6 +22,9 @@ export function ProjectDetailPage() {
   const { projectId = "" } = useParams();
   const detail = useResource<ProjectDetail>(`/projects/${projectId}`);
   const list = useResource<{ requirements: RequirementView[] }>(`/projects/${projectId}/requirements`);
+  const generations = useResource<{ generations: GenerationView[] }>(
+    /^[0-9a-f-]{36}$/i.test(projectId) ? `/generations?projectId=${projectId}` : null,
+  );
   const [requirements, setRequirements] = useState<RequirementView[]>([]);
   const [editing, setEditing] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -119,6 +123,14 @@ export function ProjectDetailPage() {
                 <p className="whitespace-pre-wrap text-sm">{project.purpose || "No purpose recorded yet."}</p>
               </CardContent>
             </Card>
+          )}
+
+          {generations.state === "ready" && generations.data.generations[0] && (
+            <GenerationCard
+              key={generations.data.generations[0].id}
+              generation={generations.data.generations[0]}
+              onChanged={generations.reload}
+            />
           )}
 
           <section aria-labelledby="requirements-heading" className="space-y-3">

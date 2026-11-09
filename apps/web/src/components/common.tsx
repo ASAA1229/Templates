@@ -147,6 +147,8 @@ const STATUS_TONES: Record<string, "neutral" | "info" | "success" | "warning" | 
   PASSED: "success",
   FAILED: "danger",
   PLANNED: "neutral",
+  SUCCEEDED: "success",
+  PENDING: "info",
 };
 
 export function StatusBadge({ value }: { value: string }) {

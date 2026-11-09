@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { rmSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { PrismaClient } from "@prisma/client";
@@ -11,12 +12,13 @@ export const E2E_OWNER = { email: "owner@asaa.test", password: "e2e owner passwo
  */
 export default async function globalSetup() {
   const databaseUrl = process.env.E2E_DATABASE_URL!;
+  rmSync(process.env.E2E_GENERATION_DIR!, { recursive: true, force: true });
   const prisma = new PrismaClient({ datasourceUrl: databaseUrl });
   try {
     await prisma.$transaction([
       prisma.$executeRawUnsafe("SET LOCAL session_replication_role = replica"),
       prisma.$executeRawUnsafe(
-        'TRUNCATE "AuditEvent", "TraceLink", "RequirementVersion", "RequirementDependency", "Requirement", "Project", "Session", "Owner", "CatalogItem" RESTART IDENTITY CASCADE',
+        'TRUNCATE "AuditEvent", "ProjectGeneration", "TraceLink", "RequirementVersion", "RequirementDependency", "Requirement", "Project", "Session", "Owner", "CatalogItem" RESTART IDENTITY CASCADE',
       ),
     ]);
   } finally {

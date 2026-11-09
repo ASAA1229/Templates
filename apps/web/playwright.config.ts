@@ -17,6 +17,9 @@ function testDatabaseUrl(): string {
 
 const API_PORT = 4100;
 const WEB_PORT = 5180;
+/** Generated E2E project outputs go to a disposable folder, cleared by global setup. */
+export const E2E_GENERATION_DIR = path.resolve(import.meta.dirname, "../../.local/e2e-generated");
+process.env.E2E_GENERATION_DIR = E2E_GENERATION_DIR;
 export const E2E_BASE_URL = `http://localhost:${WEB_PORT}`;
 const databaseUrl = testDatabaseUrl();
 process.env.E2E_DATABASE_URL = databaseUrl;
@@ -45,7 +48,7 @@ export default defineConfig({
     {
       name: "desktop-dark",
       use: { ...devices["Desktop Chrome"], channel, colorScheme: "dark" },
-      testMatch: /journey.spec.ts/,
+      testMatch: /(journey|generation)\.spec\.ts/,
     },
   ],
   webServer: [
@@ -61,6 +64,7 @@ export default defineConfig({
         DATABASE_URL: databaseUrl,
         WEB_ORIGIN: E2E_BASE_URL,
         LOG_LEVEL: "warn",
+        GENERATION_OUTPUT_DIR: E2E_GENERATION_DIR,
       },
     },
     {

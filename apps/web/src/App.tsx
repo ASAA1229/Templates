@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useRef, type ReactNode } from "react";
 import { createBrowserRouter, Link, Navigate, RouterProvider, useLocation, type RouteObject } from "react-router";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState, LoadingState } from "@/components/common";
@@ -12,8 +12,14 @@ import { ProjectsPage } from "@/features/projects/ProjectsPage";
 import { SecurityPage } from "@/features/security/SecurityPage";
 import { AuthProvider, useAuth } from "@/lib/auth";
 
+// Project initialization is loaded on demand to keep the initial bundle small.
+const NewProjectWizard = lazy(() =>
+  import("@/features/generation/NewProjectWizard").then((module) => ({ default: module.NewProjectWizard })),
+);
+
 const TITLES: [RegExp, string][] = [
   [/^\/$/, "Dashboard"],
+  [/^\/projects\/new$/, "New project"],
   [/^\/projects\/[^/]+/, "Project"],
   [/^\/projects/, "Projects"],
   [/^\/catalog/, "Template catalog"],
@@ -98,6 +104,14 @@ export const routes: RouteObject[] = [
     children: [
       { index: true, element: <DashboardPage /> },
       { path: "projects", element: <ProjectsPage /> },
+      {
+        path: "projects/new",
+        element: (
+          <Suspense fallback={<LoadingState label="Loading project setup" />}>
+            <NewProjectWizard />
+          </Suspense>
+        ),
+      },
       { path: "projects/:projectId", element: <ProjectDetailPage /> },
       { path: "catalog", element: <CatalogPage /> },
       { path: "audit", element: <AuditPage /> },

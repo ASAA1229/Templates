@@ -6,9 +6,9 @@ import {
   SOURCE_TYPES,
   type CatalogItemView,
 } from "@asaa/contracts";
-import { Plus, Search, ShieldAlert, ShieldCheck } from "lucide-react";
+import { Plus, Rocket, Search, ShieldAlert, ShieldCheck } from "lucide-react";
 import { useState, type FormEvent } from "react";
-import { useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { EmptyState, ErrorState, Field, LoadingState, PageHeader, StatusBadge } from "@/components/common";
 import {
   Alert,
@@ -26,6 +26,7 @@ import {
 import { ApiError, api } from "@/lib/api";
 import { useResource } from "@/lib/hooks";
 import { humanize } from "@/lib/utils";
+import { TemplateLibraryPanel } from "./TemplateLibraryPanel";
 
 const csv = (value: string) =>
   value
@@ -78,6 +79,8 @@ export function CatalogPage() {
           </CardContent>
         </Card>
       )}
+
+      <TemplateLibraryPanel onApproved={catalog.reload} />
 
       <form
         role="search"
@@ -237,6 +240,19 @@ function CatalogCard({ item, onChanged }: { item: CatalogItemView; onChanged: ()
             Activate
           </Button>
         )}
+        {item.kind === "TEMPLATE" &&
+          item.contentRef &&
+          item.lifecycle === "ACTIVE" &&
+          item.trustStatus === "TRUSTED" && (
+            <Button size="sm" asChild>
+              <Link
+                to={`/projects/new?template=${item.id}`}
+                aria-label={`Use template ${item.title} to start a project`}
+              >
+                <Rocket aria-hidden="true" /> Use template
+              </Link>
+            </Button>
+          )}
         {item.lifecycle === "ACTIVE" && (
           <Button size="sm" variant="ghost" onClick={() => void patch({ lifecycle: "DEPRECATED" })}>
             Deprecate

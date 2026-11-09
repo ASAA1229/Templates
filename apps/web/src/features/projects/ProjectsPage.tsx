@@ -1,5 +1,5 @@
 import { PROJECT_STATUSES, type ProjectView } from "@asaa/contracts";
-import { FolderPlus, Search } from "lucide-react";
+import { FolderPlus, Rocket, Search } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { EmptyState, ErrorState, LoadingState, PageHeader, StatusBadge } from "@/components/common";
@@ -39,9 +39,16 @@ export function ProjectsPage() {
         breadcrumbs={[{ label: "Dashboard", to: "/" }, { label: "Projects" }]}
         actions={
           !creating && (
-            <Button onClick={() => update("new", "1")}>
-              <FolderPlus aria-hidden="true" /> New project
-            </Button>
+            <>
+              <Button asChild>
+                <Link to="/projects/new">
+                  <Rocket aria-hidden="true" /> Initialize project
+                </Link>
+              </Button>
+              <Button variant="outline" onClick={() => update("new", "1")}>
+                <FolderPlus aria-hidden="true" /> New project
+              </Button>
+            </>
           )
         }
       />
