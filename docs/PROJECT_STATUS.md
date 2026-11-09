@@ -6,7 +6,7 @@
 ## Repository status
 - Repository: private `ASAA1229/Templates`.
 - Branch baseline initially contained only `main`; `dev`, `new`, `fix` and `test` have now been created from the initial baseline.
-- POC, user stories, branching strategy and supporting product documents are being committed on `new`.
+- POC, user stories, branching strategy and supporting product documents are committed on `new` (commit `4e2ec4d`); PR #1 is open from `new` to `dev`.
 - No application code, production runtime, template engine, project generator, catalog UI or CI/CD pipeline has been implemented by this documentation update.
 - No build, automated test, integration test, security test or deployment has been run as part of this update.
 
