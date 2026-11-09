@@ -5,7 +5,8 @@
   "description": "ASAA Templates API — Express modular monolith on PostgreSQL/Prisma.",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch --env-file=.env src/server.ts",
+    "dev": "tsx watch --env-file-if-exists=.env src/server.ts",
+    "serve:ts": "tsx --env-file-if-exists=.env src/server.ts",
     "build": "prisma generate && tsc -p tsconfig.build.json",
     "start": "node --env-file-if-exists=.env dist/server.js",
     "typecheck": "prisma generate && tsc -p tsconfig.json --noEmit",
@@ -13,8 +14,8 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:status": "prisma migrate status",
-    "owner:init": "tsx --env-file=.env src/cli/owner.ts init",
-    "owner:recover": "tsx --env-file=.env src/cli/owner.ts recover"
+    "owner:init": "tsx --env-file-if-exists=.env src/cli/owner.ts init",
+    "owner:recover": "tsx --env-file-if-exists=.env src/cli/owner.ts recover"
   },
   "dependencies": {
     "@asaa/contracts": "0.1.0",
@@ -29,10 +30,10 @@
     "@types/express": "5.0.6",
     "@types/node": "24.19.2",
     "@types/supertest": "6.0.3",
-    "@vitest/coverage-v8": "3.2.7",
+    "@vitest/coverage-v8": "4.1.12",
     "prisma": "6.19.3",
     "supertest": "7.3.2",
     "tsx": "4.23.15",
-    "vitest": "3.2.7"
+    "vitest": "4.1.12"
   }
 }

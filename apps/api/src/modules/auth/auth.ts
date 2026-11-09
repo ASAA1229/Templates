@@ -91,7 +91,11 @@ export function authRouter(ctx: AppContext): Router {
       // Always run one scrypt verification so response time does not reveal whether the account exists.
       const valid = await verifyPassword(parsed.data.password, owner?.passwordHash ?? (await timingDummyHash()));
       if (!owner || !valid) {
-        await audit(ctx, req, { action: "auth.login", outcome: "FAILURE", metadata: { reason: "invalid_credentials" } });
+        await audit(ctx, req, {
+          action: "auth.login",
+          outcome: "FAILURE",
+          metadata: { reason: "invalid_credentials" },
+        });
         throw new AppError(401, "UNAUTHENTICATED", INVALID_LOGIN);
       }
       if (needsRehash(owner.passwordHash)) {
@@ -128,7 +132,12 @@ export function authRouter(ctx: AppContext): Router {
     try {
       if (req.sessionId) {
         await ctx.prisma.session.update({ where: { id: req.sessionId }, data: { revokedAt: ctx.now() } });
-        await audit(ctx, req, { action: "auth.logout", outcome: "SUCCESS", targetType: "session", targetId: req.sessionId });
+        await audit(ctx, req, {
+          action: "auth.logout",
+          outcome: "SUCCESS",
+          targetType: "session",
+          targetId: req.sessionId,
+        });
       }
       res.clearCookie(SESSION_COOKIE, cookieOptions(ctx));
       res.status(204).end();
@@ -183,7 +192,11 @@ export function authRouter(ctx: AppContext): Router {
         where: { ownerId: req.owner!.id, revokedAt: null, NOT: { id: req.sessionId! } },
         data: { revokedAt: ctx.now() },
       });
-      await audit(ctx, req, { action: "auth.session.revoke_others", outcome: "SUCCESS", metadata: { revoked: result.count } });
+      await audit(ctx, req, {
+        action: "auth.session.revoke_others",
+        outcome: "SUCCESS",
+        metadata: { revoked: result.count },
+      });
       res.json({ revoked: result.count });
     } catch (error) {
       next(error);
@@ -195,7 +208,11 @@ export function authRouter(ctx: AppContext): Router {
       const input = changePasswordSchema.parse(req.body);
       const owner = await ctx.prisma.owner.findUniqueOrThrow({ where: { id: req.owner!.id } });
       if (!(await verifyPassword(input.currentPassword, owner.passwordHash))) {
-        await audit(ctx, req, { action: "auth.password.change", outcome: "FAILURE", metadata: { reason: "wrong_current" } });
+        await audit(ctx, req, {
+          action: "auth.password.change",
+          outcome: "FAILURE",
+          metadata: { reason: "wrong_current" },
+        });
         throw validationFailed({ currentPassword: "Current password is incorrect." });
       }
       const now = ctx.now();
@@ -220,7 +237,12 @@ export function authRouter(ctx: AppContext): Router {
         },
       });
       res.cookie(SESSION_COOKIE, token, { ...cookieOptions(ctx), expires: session.expiresAt });
-      await audit(ctx, req, { action: "auth.password.change", outcome: "SUCCESS", targetType: "owner", targetId: owner.id });
+      await audit(ctx, req, {
+        action: "auth.password.change",
+        outcome: "SUCCESS",
+        targetType: "owner",
+        targetId: owner.id,
+      });
       res.status(204).end();
     } catch (error) {
       next(error);

@@ -31,29 +31,55 @@ export function dashboardRouter(ctx: AppContext): Router {
     try {
       const ownerId = req.owner!.id;
       const projectScope = { project: { ownerId, archivedAt: null } };
-      const [projectGroups, archived, requirementGroups, flagged, missing, catalogTotal, untrusted, recent, flaggedSample, missingSample] =
-        await Promise.all([
-          ctx.prisma.project.groupBy({ by: ["status"], where: { ownerId, archivedAt: null }, _count: true }),
-          ctx.prisma.project.count({ where: { ownerId, archivedAt: { not: null } } }),
-          ctx.prisma.requirement.groupBy({ by: ["status"], where: projectScope, _count: true }),
-          ctx.prisma.requirement.count({ where: { ...projectScope, flaggedForReview: true } }),
-          ctx.prisma.requirement.count({
-            where: { ...projectScope, status: { in: ["DEVELOPED", "BUILT", "TESTED", "RELEASED"] }, links: { none: { kind: "TEST", evidenceStatus: "PASSED" } } },
-          }),
-          ctx.prisma.catalogItem.count(),
-          ctx.prisma.catalogItem.count({ where: { trustStatus: { not: "TRUSTED" } } }),
-          ctx.prisma.auditEvent.findMany({ orderBy: { id: "desc" }, take: 10 }),
-          ctx.prisma.requirement.findMany({ where: { ...projectScope, flaggedForReview: true }, take: 5, select: { code: true, title: true, projectId: true } }),
-          ctx.prisma.requirement.findMany({
-            where: { ...projectScope, status: { in: ["DEVELOPED", "BUILT", "TESTED", "RELEASED"] }, links: { none: { kind: "TEST", evidenceStatus: "PASSED" } } },
-            take: 5,
-            select: { code: true, title: true, projectId: true, status: true },
-          }),
-        ]);
+      const [
+        projectGroups,
+        archived,
+        requirementGroups,
+        flagged,
+        missing,
+        catalogTotal,
+        untrusted,
+        recent,
+        flaggedSample,
+        missingSample,
+      ] = await Promise.all([
+        ctx.prisma.project.groupBy({ by: ["status"], where: { ownerId, archivedAt: null }, _count: true }),
+        ctx.prisma.project.count({ where: { ownerId, archivedAt: { not: null } } }),
+        ctx.prisma.requirement.groupBy({ by: ["status"], where: projectScope, _count: true }),
+        ctx.prisma.requirement.count({ where: { ...projectScope, flaggedForReview: true } }),
+        ctx.prisma.requirement.count({
+          where: {
+            ...projectScope,
+            status: { in: ["DEVELOPED", "BUILT", "TESTED", "RELEASED"] },
+            links: { none: { kind: "TEST", evidenceStatus: "PASSED" } },
+          },
+        }),
+        ctx.prisma.catalogItem.count(),
+        ctx.prisma.catalogItem.count({ where: { trustStatus: { not: "TRUSTED" } } }),
+        ctx.prisma.auditEvent.findMany({ orderBy: { id: "desc" }, take: 10 }),
+        ctx.prisma.requirement.findMany({
+          where: { ...projectScope, flaggedForReview: true },
+          take: 5,
+          select: { code: true, title: true, projectId: true },
+        }),
+        ctx.prisma.requirement.findMany({
+          where: {
+            ...projectScope,
+            status: { in: ["DEVELOPED", "BUILT", "TESTED", "RELEASED"] },
+            links: { none: { kind: "TEST", evidenceStatus: "PASSED" } },
+          },
+          take: 5,
+          select: { code: true, title: true, projectId: true, status: true },
+        }),
+      ]);
 
-      const byStatus = Object.fromEntries(PROJECT_STATUSES.map((status) => [status, 0])) as DashboardView["projects"]["byStatus"];
+      const byStatus = Object.fromEntries(
+        PROJECT_STATUSES.map((status) => [status, 0]),
+      ) as DashboardView["projects"]["byStatus"];
       for (const group of projectGroups) byStatus[group.status] = group._count;
-      const requirementsByStatus = Object.fromEntries(REQUIREMENT_STATUSES.map((status) => [status, 0])) as DashboardView["requirements"]["byStatus"];
+      const requirementsByStatus = Object.fromEntries(
+        REQUIREMENT_STATUSES.map((status) => [status, 0]),
+      ) as DashboardView["requirements"]["byStatus"];
       for (const group of requirementGroups) requirementsByStatus[group.status] = group._count;
 
       const view: DashboardView = {
@@ -77,7 +103,13 @@ export function dashboardRouter(ctx: AppContext): Router {
             href: `/projects/${item.projectId}`,
           })),
           ...(untrusted
-            ? [{ kind: "UNTRUSTED_IMPORT" as const, message: `${untrusted} catalog item(s) await source review.`, href: "/catalog" }]
+            ? [
+                {
+                  kind: "UNTRUSTED_IMPORT" as const,
+                  message: `${untrusted} catalog item(s) await source review.`,
+                  href: "/catalog",
+                },
+              ]
             : []),
         ],
         recentActivity: recent.map(auditView),

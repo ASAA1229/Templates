@@ -1,9 +1,4 @@
-import {
-  createProjectSchema,
-  projectListQuerySchema,
-  updateProjectSchema,
-  type ProjectView,
-} from "@asaa/contracts";
+import { createProjectSchema, projectListQuerySchema, updateProjectSchema, type ProjectView } from "@asaa/contracts";
 import type { Prisma, Project } from "@prisma/client";
 import { Router } from "express";
 import type { AppContext } from "../../context.js";
@@ -44,7 +39,11 @@ export function projectsRouter(ctx: AppContext): Router {
       const where: Prisma.ProjectWhereInput = {
         ownerId: req.owner!.id,
         ...(query.status ? { status: query.status } : {}),
-        ...(query.archived === "exclude" ? { archivedAt: null } : query.archived === "only" ? { archivedAt: { not: null } } : {}),
+        ...(query.archived === "exclude"
+          ? { archivedAt: null }
+          : query.archived === "only"
+            ? { archivedAt: { not: null } }
+            : {}),
         ...(query.q
           ? {
               OR: [
@@ -71,7 +70,13 @@ export function projectsRouter(ctx: AppContext): Router {
     try {
       const input = createProjectSchema.parse(req.body);
       const project = await ctx.prisma.project.create({ data: { ...input, ownerId: req.owner!.id } });
-      await audit(ctx, req, { action: "project.create", outcome: "SUCCESS", targetType: "project", targetId: project.id, metadata: { key: project.key } });
+      await audit(ctx, req, {
+        action: "project.create",
+        outcome: "SUCCESS",
+        targetType: "project",
+        targetId: project.id,
+        metadata: { key: project.key },
+      });
       res.status(201).json({ project: projectView(project) });
     } catch (error) {
       next(error);
@@ -113,14 +118,20 @@ export function projectsRouter(ctx: AppContext): Router {
       if (result.count === 0) throw conflict("This project was changed elsewhere. Reload and try again.");
       const updated = await ctx.prisma.project.findUniqueOrThrow({ where: { id: project.id } });
       const changed = Object.fromEntries(
-        Object.entries(changes).filter(([key, value]) => value !== undefined && project[key as keyof Project] !== value),
+        Object.entries(changes).filter(
+          ([key, value]) => value !== undefined && project[key as keyof Project] !== value,
+        ),
       );
       await audit(ctx, req, {
         action: "project.update",
         outcome: "SUCCESS",
         targetType: "project",
         targetId: project.id,
-        metadata: { changed: Object.keys(changed), before: Object.fromEntries(Object.keys(changed).map((key) => [key, project[key as keyof Project]])), after: changed },
+        metadata: {
+          changed: Object.keys(changed),
+          before: Object.fromEntries(Object.keys(changed).map((key) => [key, project[key as keyof Project]])),
+          after: changed,
+        },
       });
       res.json({ project: projectView(updated) });
     } catch (error) {
@@ -139,7 +150,12 @@ export function projectsRouter(ctx: AppContext): Router {
           where: { id: project.id },
           data: { archivedAt: action === "archive" ? ctx.now() : null, version: { increment: 1 } },
         });
-        await audit(ctx, req, { action: `project.${action}`, outcome: "SUCCESS", targetType: "project", targetId: project.id });
+        await audit(ctx, req, {
+          action: `project.${action}`,
+          outcome: "SUCCESS",
+          targetType: "project",
+          targetId: project.id,
+        });
         res.json({ project: projectView(updated) });
       } catch (error) {
         next(error);

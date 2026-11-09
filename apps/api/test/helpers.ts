@@ -38,7 +38,8 @@ export interface TestHarness {
 
 function agentFor(app: ReturnType<typeof createApp>) {
   const agent = supertest.agent(app);
-  const withCsrf = <T extends { set: (name: string, value: string) => T }>(request: T) => request.set(CSRF_HEADER, CSRF_VALUE);
+  const withCsrf = <T extends { set: (name: string, value: string) => T }>(request: T) =>
+    request.set(CSRF_HEADER, CSRF_VALUE);
   return {
     raw: agent,
     get: (url: string) => agent.get(url),

@@ -10,8 +10,7 @@ import { z } from "zod";
 export const CONTRACTS_VERSION = 1;
 
 const trimmed = (max: number) => z.string().trim().max(max);
-const required = (max: number, label: string) =>
-  trimmed(max).min(1, `${label} is required.`);
+const required = (max: number, label: string) => trimmed(max).min(1, `${label} is required.`);
 
 // ───── Errors ─────
 
@@ -150,14 +149,7 @@ export const REQUIREMENT_STATUSES = [
   "TESTED",
   "RELEASED",
 ] as const;
-export const TRACE_KINDS = [
-  "TASK",
-  "CODE_CHANGE",
-  "TEST",
-  "DEFECT",
-  "DOCUMENTATION",
-  "RELEASE",
-] as const;
+export const TRACE_KINDS = ["TASK", "CODE_CHANGE", "TEST", "DEFECT", "DOCUMENTATION", "RELEASE"] as const;
 export const EVIDENCE_STATUSES = ["PLANNED", "PASSED", "FAILED"] as const;
 
 export type RequirementStatus = (typeof REQUIREMENT_STATUSES)[number];

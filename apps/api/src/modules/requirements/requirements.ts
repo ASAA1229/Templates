@@ -90,7 +90,8 @@ async function validateDependencies(
       select: { requirementId: true, dependsOnId: true },
     });
     const graph = new Map<string, string[]>();
-    for (const edge of edges) graph.set(edge.requirementId, [...(graph.get(edge.requirementId) ?? []), edge.dependsOnId]);
+    for (const edge of edges)
+      graph.set(edge.requirementId, [...(graph.get(edge.requirementId) ?? []), edge.dependsOnId]);
     const stack = [...unique];
     const seen = new Set<string>();
     while (stack.length) {
@@ -154,11 +155,22 @@ export function requirementsRouter(ctx: AppContext): Router {
           include,
         });
         await tx.requirementVersion.create({
-          data: { requirementId: requirement.id, version: 1, snapshot: snapshot(requirement, dependencyIds), changeNote: "Created" },
+          data: {
+            requirementId: requirement.id,
+            version: 1,
+            snapshot: snapshot(requirement, dependencyIds),
+            changeNote: "Created",
+          },
         });
         return requirement;
       });
-      await audit(ctx, req, { action: "requirement.create", outcome: "SUCCESS", targetType: "requirement", targetId: created.id, metadata: { projectId, code: created.code } });
+      await audit(ctx, req, {
+        action: "requirement.create",
+        outcome: "SUCCESS",
+        targetType: "requirement",
+        targetId: created.id,
+        metadata: { projectId, code: created.code },
+      });
       res.status(201).json({ requirement: requirementView(created) });
     } catch (error) {
       next(error);
@@ -201,11 +213,18 @@ export function requirementsRouter(ctx: AppContext): Router {
         if (dependencyIds) {
           deps = await validateDependencies(tx, projectId, current.id, dependencyIds);
           await tx.requirementDependency.deleteMany({ where: { requirementId: current.id } });
-          await tx.requirementDependency.createMany({ data: deps.map((dependsOnId) => ({ requirementId: current.id, dependsOnId })) });
+          await tx.requirementDependency.createMany({
+            data: deps.map((dependsOnId) => ({ requirementId: current.id, dependsOnId })),
+          });
         }
         const requirement = await tx.requirement.findUniqueOrThrow({ where: { id: current.id }, include });
         await tx.requirementVersion.create({
-          data: { requirementId: current.id, version: requirement.version, snapshot: snapshot(requirement, deps), changeNote: changeNote || null },
+          data: {
+            requirementId: current.id,
+            version: requirement.version,
+            snapshot: snapshot(requirement, deps),
+            changeNote: changeNote || null,
+          },
         });
         return requirement;
       });
@@ -214,7 +233,11 @@ export function requirementsRouter(ctx: AppContext): Router {
         outcome: "SUCCESS",
         targetType: "requirement",
         targetId: current.id,
-        metadata: { projectId, version: updated.version, fields: [...Object.keys(changes), ...(dependencyIds ? ["dependencyIds"] : [])] },
+        metadata: {
+          projectId,
+          version: updated.version,
+          fields: [...Object.keys(changes), ...(dependencyIds ? ["dependencyIds"] : [])],
+        },
       });
       res.json({ requirement: requirementView(updated) });
     } catch (error) {
@@ -232,7 +255,12 @@ export function requirementsRouter(ctx: AppContext): Router {
         data: { flaggedForReview: input.flagged, flagReason: input.flagged ? input.reason! : null },
         include,
       });
-      await audit(ctx, req, { action: input.flagged ? "requirement.flag" : "requirement.unflag", outcome: "SUCCESS", targetType: "requirement", targetId: current.id });
+      await audit(ctx, req, {
+        action: input.flagged ? "requirement.flag" : "requirement.unflag",
+        outcome: "SUCCESS",
+        targetType: "requirement",
+        targetId: current.id,
+      });
       res.json({ requirement: requirementView(requirement) });
     } catch (error) {
       next(error);
@@ -246,7 +274,13 @@ export function requirementsRouter(ctx: AppContext): Router {
       if (current.links.length >= 100) throw conflict("A requirement can have at most 100 trace links.");
       await ctx.prisma.traceLink.create({ data: { ...input, title: input.title || null, requirementId: current.id } });
       const requirement = await ctx.prisma.requirement.findUniqueOrThrow({ where: { id: current.id }, include });
-      await audit(ctx, req, { action: "requirement.link.add", outcome: "SUCCESS", targetType: "requirement", targetId: current.id, metadata: { kind: input.kind, evidenceStatus: input.evidenceStatus } });
+      await audit(ctx, req, {
+        action: "requirement.link.add",
+        outcome: "SUCCESS",
+        targetType: "requirement",
+        targetId: current.id,
+        metadata: { kind: input.kind, evidenceStatus: input.evidenceStatus },
+      });
       res.status(201).json({ requirement: requirementView(requirement) });
     } catch (error) {
       next(error);
@@ -260,7 +294,12 @@ export function requirementsRouter(ctx: AppContext): Router {
       if (!/^[0-9a-f-]{36}$/i.test(linkId)) throw notFound("Trace link");
       const result = await ctx.prisma.traceLink.deleteMany({ where: { id: linkId, requirementId: current.id } });
       if (result.count === 0) throw notFound("Trace link");
-      await audit(ctx, req, { action: "requirement.link.remove", outcome: "SUCCESS", targetType: "requirement", targetId: current.id });
+      await audit(ctx, req, {
+        action: "requirement.link.remove",
+        outcome: "SUCCESS",
+        targetType: "requirement",
+        targetId: current.id,
+      });
       const requirement = await ctx.prisma.requirement.findUniqueOrThrow({ where: { id: current.id }, include });
       res.json({ requirement: requirementView(requirement) });
     } catch (error) {

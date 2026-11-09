@@ -41,13 +41,20 @@ async function main() {
   const prisma = new PrismaClient();
   try {
     if (command === "init") {
-      if (await prisma.owner.findFirst()) throw new Error("An owner already exists. Use `owner:recover` to reset the password.");
+      if (await prisma.owner.findFirst())
+        throw new Error("An owner already exists. Use `owner:recover` to reset the password.");
       const email = loginSchema.shape.email.parse(process.env.OWNER_EMAIL ?? (await ask("Owner email: ")));
       const displayName = (process.env.OWNER_NAME ?? (await ask("Display name: "))).trim().slice(0, 120) || "Owner";
       const passwordHash = await hashPassword(await readPassword());
       const owner = await prisma.owner.create({ data: { email, displayName, passwordHash } });
       await prisma.auditEvent.create({
-        data: { actorType: "SYSTEM", action: "owner.init", outcome: "SUCCESS", targetType: "owner", targetId: owner.id },
+        data: {
+          actorType: "SYSTEM",
+          action: "owner.init",
+          outcome: "SUCCESS",
+          targetType: "owner",
+          targetId: owner.id,
+        },
       });
       console.log(`Owner ${email} created.`);
     } else if (command === "recover") {
@@ -59,7 +66,14 @@ async function main() {
         prisma.owner.update({ where: { id: owner.id }, data: { passwordHash, passwordChangedAt: now } }),
         prisma.session.updateMany({ where: { ownerId: owner.id, revokedAt: null }, data: { revokedAt: now } }),
         prisma.auditEvent.create({
-          data: { actorType: "SYSTEM", action: "owner.recover", outcome: "SUCCESS", targetType: "owner", targetId: owner.id, metadata: { via: "host-cli" } },
+          data: {
+            actorType: "SYSTEM",
+            action: "owner.recover",
+            outcome: "SUCCESS",
+            targetType: "owner",
+            targetId: owner.id,
+            metadata: { via: "host-cli" },
+          },
         }),
       ]);
       console.log(`Password reset for ${owner.email}; ${revoked.count} session(s) revoked.`);

@@ -10,9 +10,7 @@ import {
 
 describe("auth contracts", () => {
   it("normalises email and rejects malformed input", () => {
-    expect(loginSchema.parse({ email: " Owner@Example.COM ", password: "x" }).email).toBe(
-      "owner@example.com",
-    );
+    expect(loginSchema.parse({ email: " Owner@Example.COM ", password: "x" }).email).toBe("owner@example.com");
     expect(loginSchema.safeParse({ email: "nope", password: "" }).success).toBe(false);
   });
 
@@ -40,12 +38,10 @@ describe("project and requirement contracts", () => {
   });
 
   it("bounds acceptance criteria and dependency ids", () => {
-    expect(createRequirementSchema.safeParse({ title: "T", dependencyIds: ["not-a-uuid"] }).success).toBe(
+    expect(createRequirementSchema.safeParse({ title: "T", dependencyIds: ["not-a-uuid"] }).success).toBe(false);
+    expect(createRequirementSchema.safeParse({ title: "T", acceptanceCriteria: Array(31).fill("x") }).success).toBe(
       false,
     );
-    expect(
-      createRequirementSchema.safeParse({ title: "T", acceptanceCriteria: Array(31).fill("x") }).success,
-    ).toBe(false);
   });
 });
 

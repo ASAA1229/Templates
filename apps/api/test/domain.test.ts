@@ -33,7 +33,11 @@ describe("projects (US-C01)", () => {
 
   it("updates with optimistic concurrency and records audit history", async () => {
     const project = await createProject();
-    const updated = await agent.patch(`/api/projects/${project.id}`, { name: "Renamed", status: "ACTIVE", expectedVersion: 1 });
+    const updated = await agent.patch(`/api/projects/${project.id}`, {
+      name: "Renamed",
+      status: "ACTIVE",
+      expectedVersion: 1,
+    });
     expect(updated.status).toBe(200);
     expect(updated.body.project).toMatchObject({ name: "Renamed", status: "ACTIVE", version: 2 });
     const stale = await agent.patch(`/api/projects/${project.id}`, { name: "Stale", expectedVersion: 1 });
@@ -64,14 +68,22 @@ describe("requirements and traceability (US-C02, US-C04, US-I03)", () => {
   it("numbers requirements per project and versions every change", async () => {
     const project = await createProject();
     const base = `/api/projects/${project.id}/requirements`;
-    const first = await agent.post(base, { title: "Sign in", acceptanceCriteria: ["Valid credentials create a session"] });
+    const first = await agent.post(base, {
+      title: "Sign in",
+      acceptanceCriteria: ["Valid credentials create a session"],
+    });
     const second = await agent.post(base, { title: "Dashboard", dependencyIds: [first.body.requirement.id] });
     expect(first.body.requirement.code).toBe("REQ-1");
     expect(second.body.requirement.code).toBe("REQ-2");
     expect(second.body.requirement.dependencyIds).toEqual([first.body.requirement.id]);
 
     const id = first.body.requirement.id;
-    const updated = await agent.patch(`${base}/${id}`, { status: "READY", priority: "P0", changeNote: "Ready for build", expectedVersion: 1 });
+    const updated = await agent.patch(`${base}/${id}`, {
+      status: "READY",
+      priority: "P0",
+      changeNote: "Ready for build",
+      expectedVersion: 1,
+    });
     expect(updated.body.requirement).toMatchObject({ status: "READY", priority: "P0", version: 2 });
     expect((await agent.patch(`${base}/${id}`, { title: "x", expectedVersion: 1 })).status).toBe(409);
     const detail = await agent.get(`${base}/${id}`);
@@ -112,7 +124,11 @@ describe("requirements and traceability (US-C02, US-C04, US-I03)", () => {
       expect.arrayContaining(["FLAGGED", "MISSING_VERIFICATION"]),
     );
 
-    const linked = await agent.post(`${base}/${req.id}/links`, { kind: "TEST", reference: "apps/api/test/export.test.ts", evidenceStatus: "PASSED" });
+    const linked = await agent.post(`${base}/${req.id}/links`, {
+      kind: "TEST",
+      reference: "apps/api/test/export.test.ts",
+      evidenceStatus: "PASSED",
+    });
     expect(linked.status).toBe(201);
     expect(linked.body.requirement.missingVerification).toBe(false);
     dashboard = (await agent.get("/api/dashboard")).body;
@@ -131,29 +147,59 @@ describe("requirements and traceability (US-C02, US-C04, US-I03)", () => {
 });
 
 describe("template catalog (US-D01, US-D02)", () => {
-  const base = { title: "React starter", category: "Web", license: "MIT", ownership: "ASAA", technologies: ["React", "Vite"], tags: ["starter"] };
+  const base = {
+    title: "React starter",
+    category: "Web",
+    license: "MIT",
+    ownership: "ASAA",
+    technologies: ["React", "Vite"],
+    tags: ["starter"],
+  };
 
   it("registers, searches and filters catalog items", async () => {
-    expect((await agent.post("/api/catalog", { ...base, slug: "react-starter", lifecycle: "ACTIVE" })).status).toBe(201);
-    expect((await agent.post("/api/catalog", { ...base, slug: "express-api", title: "Express API", category: "API", technologies: ["node"] })).status).toBe(201);
+    expect((await agent.post("/api/catalog", { ...base, slug: "react-starter", lifecycle: "ACTIVE" })).status).toBe(
+      201,
+    );
+    expect(
+      (
+        await agent.post("/api/catalog", {
+          ...base,
+          slug: "express-api",
+          title: "Express API",
+          category: "API",
+          technologies: ["node"],
+        })
+      ).status,
+    ).toBe(201);
     expect((await agent.post("/api/catalog", { ...base, slug: "react-starter" })).status).toBe(409);
 
     const all = await agent.get("/api/catalog");
     expect(all.body.items).toHaveLength(2);
     expect(all.body.categories).toEqual(["API", "Web"]);
-    expect((await agent.get("/api/catalog?technology=react")).body.items.map((item: { slug: string }) => item.slug)).toEqual(["react-starter"]);
+    expect(
+      (await agent.get("/api/catalog?technology=react")).body.items.map((item: { slug: string }) => item.slug),
+    ).toEqual(["react-starter"]);
     expect((await agent.get("/api/catalog?q=express")).body.items).toHaveLength(1);
     expect((await agent.get("/api/catalog?lifecycle=ACTIVE")).body.items).toHaveLength(1);
     expect((await agent.get("/api/catalog?tag=starter")).body.items).toHaveLength(2);
   });
 
   it("treats imported source as untrusted until reviewed", async () => {
-    const created = await agent.post("/api/catalog", { ...base, slug: "legacy-crm", sourceType: "IMPORTED", sourceReference: "git@example:crm.git" });
+    const created = await agent.post("/api/catalog", {
+      ...base,
+      slug: "legacy-crm",
+      sourceType: "IMPORTED",
+      sourceReference: "git@example:crm.git",
+    });
     expect(created.body.item).toMatchObject({ trustStatus: "UNTRUSTED", lifecycle: "DRAFT", metadataSchemaVersion: 1 });
     const id = created.body.item.id;
     const activate = await agent.patch(`/api/catalog/${id}`, { lifecycle: "ACTIVE", expectedVersion: 1 });
     expect(activate.status).toBe(400);
-    const trusted = await agent.patch(`/api/catalog/${id}`, { trustStatus: "TRUSTED", lifecycle: "ACTIVE", expectedVersion: 1 });
+    const trusted = await agent.patch(`/api/catalog/${id}`, {
+      trustStatus: "TRUSTED",
+      lifecycle: "ACTIVE",
+      expectedVersion: 1,
+    });
     expect(trusted.body.item).toMatchObject({ trustStatus: "TRUSTED", lifecycle: "ACTIVE", rowVersion: 2 });
     const audit = await agent.get("/api/audit?action=catalog.trust_change");
     expect(audit.body.events).toHaveLength(1);

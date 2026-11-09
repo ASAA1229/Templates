@@ -67,7 +67,11 @@ export function catalogRouter(ctx: AppContext): Router {
       };
       const [items, categories] = await Promise.all([
         ctx.prisma.catalogItem.findMany({ where, orderBy: [{ lifecycle: "asc" }, { title: "asc" }], take: 200 }),
-        ctx.prisma.catalogItem.findMany({ distinct: ["category"], select: { category: true }, orderBy: { category: "asc" } }),
+        ctx.prisma.catalogItem.findMany({
+          distinct: ["category"],
+          select: { category: true },
+          orderBy: { category: "asc" },
+        }),
       ]);
       res.json({ items: items.map(catalogView), categories: categories.map((row) => row.category) });
     } catch (error) {
@@ -86,7 +90,13 @@ export function catalogRouter(ctx: AppContext): Router {
           metadataSchemaVersion: CATALOG_METADATA_SCHEMA_VERSION,
         },
       });
-      await audit(ctx, req, { action: "catalog.create", outcome: "SUCCESS", targetType: "catalog_item", targetId: item.id, metadata: { slug: item.slug, sourceType: item.sourceType } });
+      await audit(ctx, req, {
+        action: "catalog.create",
+        outcome: "SUCCESS",
+        targetType: "catalog_item",
+        targetId: item.id,
+        metadata: { slug: item.slug, sourceType: item.sourceType },
+      });
       res.status(201).json({ item: catalogView(item) });
     } catch (error) {
       next(error);
@@ -124,7 +134,10 @@ export function catalogRouter(ctx: AppContext): Router {
       if (result.count === 0) throw conflict("This catalog item was changed elsewhere. Reload and try again.");
       const item = await ctx.prisma.catalogItem.findUniqueOrThrow({ where: { id } });
       await audit(ctx, req, {
-        action: changes.trustStatus && changes.trustStatus !== current.trustStatus ? "catalog.trust_change" : "catalog.update",
+        action:
+          changes.trustStatus && changes.trustStatus !== current.trustStatus
+            ? "catalog.trust_change"
+            : "catalog.update",
         outcome: "SUCCESS",
         targetType: "catalog_item",
         targetId: id,

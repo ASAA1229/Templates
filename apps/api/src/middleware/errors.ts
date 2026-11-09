@@ -21,11 +21,15 @@ function send(res: Response, req: Request, error: AppError) {
 /** Standardised error responses; internal details are logged, never returned. */
 export function errorHandler(ctx: AppContext) {
   // Express identifies error middleware by its four-argument signature.
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   return (error: unknown, req: Request, res: Response, _next: NextFunction) => {
     if (error instanceof AppError) return send(res, req, error);
     if (error instanceof ZodError) {
-      return send(res, req, new AppError(400, "VALIDATION_FAILED", "Check the highlighted fields.", fieldErrors(error)));
+      return send(
+        res,
+        req,
+        new AppError(400, "VALIDATION_FAILED", "Check the highlighted fields.", fieldErrors(error)),
+      );
     }
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       return send(res, req, new AppError(409, "CONFLICT", "A record with that identifier already exists."));
@@ -45,6 +49,5 @@ export function errorHandler(ctx: AppContext) {
 }
 
 export function notFoundHandler() {
-  return (req: Request, res: Response) =>
-    send(res, req, new AppError(404, "NOT_FOUND", "No such API route."));
+  return (req: Request, res: Response) => send(res, req, new AppError(404, "NOT_FOUND", "No such API route."));
 }

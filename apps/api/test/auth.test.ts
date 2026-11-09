@@ -12,7 +12,10 @@ beforeEach(async () => {
 describe("owner sign-in (US-A01)", () => {
   it("creates an HttpOnly, SameSite=Strict session cookie and audits success", async () => {
     const agent = h.agent();
-    const response = await agent.post("/api/auth/login", { email: OWNER_EMAIL.toUpperCase(), password: OWNER_PASSWORD });
+    const response = await agent.post("/api/auth/login", {
+      email: OWNER_EMAIL.toUpperCase(),
+      password: OWNER_PASSWORD,
+    });
     expect(response.status).toBe(200);
     expect(response.body.owner.email).toBe(OWNER_EMAIL);
     const cookie = String(response.headers["set-cookie"]);
@@ -27,7 +30,9 @@ describe("owner sign-in (US-A01)", () => {
     expect(cookie).not.toContain(sessions[0]!.tokenHash);
     const events = await h.ctx.prisma.auditEvent.findMany({ where: { action: "auth.login" } });
     expect(events.map((event) => event.outcome)).toEqual(["SUCCESS"]);
-    expect(JSON.stringify(events, (_key, value) => (typeof value === "bigint" ? value.toString() : value))).not.toContain(OWNER_PASSWORD);
+    expect(
+      JSON.stringify(events, (_key, value) => (typeof value === "bigint" ? value.toString() : value)),
+    ).not.toContain(OWNER_PASSWORD);
   });
 
   it("returns the same generic error for a wrong password and an unknown account", async () => {
@@ -110,13 +115,19 @@ describe("sessions (US-A02)", () => {
   it("password change requires the current password and ends other sessions", async () => {
     const first = await h.signedIn();
     const second = await h.signedIn();
-    const wrong = await first.post("/api/auth/password", { currentPassword: "nope", newPassword: "another long password" });
+    const wrong = await first.post("/api/auth/password", {
+      currentPassword: "nope",
+      newPassword: "another long password",
+    });
     expect(wrong.status).toBe(400);
     expect(wrong.body.error.fields.currentPassword).toBeDefined();
     const weak = await first.post("/api/auth/password", { currentPassword: OWNER_PASSWORD, newPassword: "short" });
     expect(weak.status).toBe(400);
 
-    const changed = await first.post("/api/auth/password", { currentPassword: OWNER_PASSWORD, newPassword: "another long password" });
+    const changed = await first.post("/api/auth/password", {
+      currentPassword: OWNER_PASSWORD,
+      newPassword: "another long password",
+    });
     expect(changed.status).toBe(204);
     expect((await second.get("/api/projects")).status).toBe(401);
     expect((await first.get("/api/projects")).status).toBe(200);
@@ -170,7 +181,9 @@ describe("audit trail integrity (US-I02)", () => {
   it("rejects updates and deletes of audit events at the database level", async () => {
     await h.signedIn();
     const event = await h.ctx.prisma.auditEvent.findFirstOrThrow();
-    await expect(h.ctx.prisma.auditEvent.update({ where: { id: event.id }, data: { action: "x" } })).rejects.toThrow(/append-only/);
+    await expect(h.ctx.prisma.auditEvent.update({ where: { id: event.id }, data: { action: "x" } })).rejects.toThrow(
+      /append-only/,
+    );
     await expect(h.ctx.prisma.auditEvent.delete({ where: { id: event.id } })).rejects.toThrow(/append-only/);
   });
 

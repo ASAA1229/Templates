@@ -5,11 +5,19 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "staging", "production"]).default("development"),
   PORT: z.coerce.number().int().min(1).max(65535).default(4000),
   WEB_ORIGIN: z.string().url().default("http://localhost:5173"),
-  DATABASE_URL: z
-    .string()
-    .regex(/^postgres(?:ql)?:\/\//, "DATABASE_URL must be a PostgreSQL connection string."),
-  SESSION_ABSOLUTE_MINUTES: z.coerce.number().int().min(5).max(7 * 24 * 60).default(720),
-  SESSION_IDLE_MINUTES: z.coerce.number().int().min(1).max(24 * 60).default(30),
+  DATABASE_URL: z.string().regex(/^postgres(?:ql)?:\/\//, "DATABASE_URL must be a PostgreSQL connection string."),
+  SESSION_ABSOLUTE_MINUTES: z.coerce
+    .number()
+    .int()
+    .min(5)
+    .max(7 * 24 * 60)
+    .default(720),
+  SESSION_IDLE_MINUTES: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(24 * 60)
+    .default(30),
   COOKIE_SECURE: z
     .enum(["true", "false"])
     .default("false")
@@ -23,9 +31,7 @@ export type AppConfig = z.infer<typeof envSchema>;
 export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
   const parsed = envSchema.safeParse(source);
   if (!parsed.success) {
-    const problems = parsed.error.issues
-      .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
-      .join("; ");
+    const problems = parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; ");
     throw new Error(`Invalid configuration: ${problems}`);
   }
   const config = parsed.data;

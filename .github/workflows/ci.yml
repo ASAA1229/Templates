@@ -1,0 +1,68 @@
+# Continuous validation (US-H02). Runs on GitHub-hosted runners within the free
+# monthly allowance; no paid services, registries or secrets are required.
+# Database: ephemeral PostgreSQL service container with throwaway credentials.
+name: CI
+
+on:
+  push:
+    branches: [new, dev, fix, test]
+  pull_request:
+    branches: [dev, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: "true"
+  # Ephemeral CI-only database; not a secret and not used anywhere else.
+  DATABASE_URL: postgresql://templates:templates_ci@127.0.0.1:5432/templates_ci?schema=public
+  TEST_DATABASE_URL: postgresql://templates:templates_ci@127.0.0.1:5432/templates_ci?schema=public
+
+jobs:
+  validate:
+    name: Format, lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: templates
+          POSTGRES_PASSWORD: templates_ci
+          POSTGRES_DB: templates_ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U templates" --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Dependency audit (fails on high/critical)
+        run: npm run audit:deps
+      - name: Apply database migrations
+        run: npm run db:deploy
+      - name: Validate (format, lint, typecheck, unit + integration tests, build)
+        run: npm run validate
+      - name: Smoke test built application
+        run: npm run smoke
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+        working-directory: apps/web
+      - name: End-to-end and accessibility tests
+        run: npm run test:e2e
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ github.sha }}
+          path: apps/web/playwright-report
+          retention-days: 14
+          if-no-files-found: ignore

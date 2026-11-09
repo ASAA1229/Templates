@@ -24,7 +24,10 @@
     "format:check": "prettier --check .",
     "test": "npm run build:contracts && npm run test --workspaces --if-present",
     "test:e2e": "npm run test:e2e -w @asaa/web",
-    "validate": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build"
+    "validate": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build",
+    "smoke": "node scripts/smoke.mjs",
+    "audit:deps": "npm audit --audit-level=high",
+    "db:deploy": "npm run db:deploy -w @asaa/api"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",
@@ -35,5 +38,11 @@
     "prettier": "3.9.10",
     "typescript": "5.9.3",
     "typescript-eslint": "8.72.1"
+  },
+  "overrides": {
+    "deepmerge-ts": "8.0.2",
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "11.0.5"
+    }
   }
 }

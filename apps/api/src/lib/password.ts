@@ -13,8 +13,12 @@ const MAX_MEMORY = 128 * N * R * 2;
 
 function derive(password: string, salt: Buffer, n: number, r: number, p: number): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    scryptCallback(password.normalize("NFKC"), salt, KEY_LENGTH, { N: n, r, p, maxmem: Math.max(MAX_MEMORY, 128 * n * r * 2) }, (error, key) =>
-      error ? reject(error) : resolve(key),
+    scryptCallback(
+      password.normalize("NFKC"),
+      salt,
+      KEY_LENGTH,
+      { N: n, r, p, maxmem: Math.max(MAX_MEMORY, 128 * n * r * 2) },
+      (error, key) => (error ? reject(error) : resolve(key)),
     );
   });
 }
