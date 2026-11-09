@@ -28,3 +28,18 @@ export async function expectAccessible(page: Page) {
 export function unique(prefix: string) {
   return `${prefix}${Date.now().toString(36).toUpperCase().slice(-5)}`;
 }
+
+/** Generate a scratch project through the API (same session cookies as the page). */
+export async function generateProject(page: Page, key: string) {
+  const response = await page.request.post("/api/generations", {
+    headers: { "x-requested-with": "asaa-templates" },
+    data: {
+      mode: "SCRATCH",
+      projectType: "web-app",
+      project: { key, name: `${key} workspace`, purpose: "Workspace journey" },
+      inputs: {},
+    },
+  });
+  expect(response.status()).toBe(201);
+  return (await response.json()).generation as { projectId: string };
+}

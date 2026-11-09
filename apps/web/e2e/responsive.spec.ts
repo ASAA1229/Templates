@@ -1,11 +1,20 @@
 import { expect, test } from "@playwright/test";
-import { expectAccessible, signIn } from "./fixtures";
+import { expectAccessible, generateProject, signIn, unique } from "./fixtures";
 
 test.describe("responsive layout (US-B04)", () => {
   test("mobile navigation drawer works and pages never scroll horizontally", async ({ page }) => {
     await signIn(page, "/");
     await expect(page.getByRole("heading", { name: /Welcome/ })).toBeVisible();
-    for (const path of ["/", "/projects", "/projects/new", "/catalog", "/audit", "/security"]) {
+    const { projectId } = await generateProject(page, unique("MOB"));
+    for (const path of [
+      "/",
+      "/projects",
+      "/projects/new",
+      `/projects/${projectId}/workspace`,
+      "/catalog",
+      "/audit",
+      "/security",
+    ]) {
       await page.goto(path);
       await expect(page.locator("main#main h1")).toBeVisible();
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);

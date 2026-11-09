@@ -1,7 +1,7 @@
 import type { GenerationView, ProjectView, RequirementView } from "@asaa/contracts";
-import { Archive, ArchiveRestore, Pencil, Plus } from "lucide-react";
+import { Archive, ArchiveRestore, Code2, Pencil, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import { EmptyState, ErrorState, LoadingState, PageHeader, StatusBadge } from "@/components/common";
 import { Alert, Badge, Button, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
@@ -64,6 +64,13 @@ export function ProjectDetailPage() {
         breadcrumbs={[{ label: "Dashboard", to: "/" }, { label: "Projects", to: "/projects" }, { label: project.key }]}
         actions={
           <>
+            {generations.state === "ready" && generations.data.generations[0]?.status === "SUCCEEDED" && (
+              <Button asChild>
+                <Link to={`/projects/${project.id}/workspace`}>
+                  <Code2 aria-hidden="true" /> Engineering workspace
+                </Link>
+              </Button>
+            )}
             {!archived && !editing && (
               <Button variant="outline" onClick={() => setEditing(true)}>
                 <Pencil aria-hidden="true" /> Edit

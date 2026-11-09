@@ -48,7 +48,7 @@ export default defineConfig({
     {
       name: "desktop-dark",
       use: { ...devices["Desktop Chrome"], channel, colorScheme: "dark" },
-      testMatch: /(journey|generation)\.spec\.ts/,
+      testMatch: /(journey|generation|workspace)\.spec\.ts/,
     },
   ],
   webServer: [

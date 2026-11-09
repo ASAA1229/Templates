@@ -13,6 +13,9 @@ import { SecurityPage } from "@/features/security/SecurityPage";
 import { AuthProvider, useAuth } from "@/lib/auth";
 
 // Project initialization is loaded on demand to keep the initial bundle small.
+const WorkspacePage = lazy(() =>
+  import("@/features/workspace/WorkspacePage").then((module) => ({ default: module.WorkspacePage })),
+);
 const NewProjectWizard = lazy(() =>
   import("@/features/generation/NewProjectWizard").then((module) => ({ default: module.NewProjectWizard })),
 );
@@ -20,6 +23,7 @@ const NewProjectWizard = lazy(() =>
 const TITLES: [RegExp, string][] = [
   [/^\/$/, "Dashboard"],
   [/^\/projects\/new$/, "New project"],
+  [/^\/projects\/[^/]+\/workspace$/, "Engineering workspace"],
   [/^\/projects\/[^/]+/, "Project"],
   [/^\/projects/, "Projects"],
   [/^\/catalog/, "Template catalog"],
@@ -109,6 +113,14 @@ export const routes: RouteObject[] = [
         element: (
           <Suspense fallback={<LoadingState label="Loading project setup" />}>
             <NewProjectWizard />
+          </Suspense>
+        ),
+      },
+      {
+        path: "projects/:projectId/workspace",
+        element: (
+          <Suspense fallback={<LoadingState label="Loading engineering workspace" />}>
+            <WorkspacePage />
           </Suspense>
         ),
       },
