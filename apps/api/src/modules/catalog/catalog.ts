@@ -30,6 +30,8 @@ export function catalogView(item: CatalogItem): CatalogItemView {
     license: item.license,
     ownership: item.ownership,
     dependencies: Array.isArray(item.dependencies) ? (item.dependencies as { name: string; version: string }[]) : [],
+    contentRef: item.contentRef,
+    contentDigest: item.contentDigest,
     metadataSchemaVersion: item.metadataSchemaVersion,
     createdAt: item.createdAt.toISOString(),
     updatedAt: item.updatedAt.toISOString(),

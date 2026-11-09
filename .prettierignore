@@ -7,3 +7,4 @@ apps/api/prisma/migrations
 playwright-report
 test-results
 *.md
+apps/api/template-library

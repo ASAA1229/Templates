@@ -1,0 +1,113 @@
+{
+  "manifestVersion": 1,
+  "id": "landing-page",
+  "version": "1.0.0",
+  "kind": "template",
+  "title": "Business landing page",
+  "category": "Marketing",
+  "description": "Responsive, accessible static landing page with a hero, feature highlights and an optional contact page. No build step or runtime dependencies.",
+  "technologies": [
+    {
+      "name": "HTML",
+      "version": "5"
+    },
+    {
+      "name": "CSS",
+      "version": "3"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "headline",
+      "label": "Headline",
+      "type": "string",
+      "required": true,
+      "maxLength": 120,
+      "description": "Main message shown at the top of the page."
+    },
+    {
+      "id": "tagline",
+      "label": "Tagline",
+      "type": "text",
+      "maxLength": 300,
+      "description": "Supporting sentence under the headline."
+    },
+    {
+      "id": "accentColor",
+      "label": "Accent colour",
+      "type": "string",
+      "format": "color",
+      "default": "#1d4ed8",
+      "maxLength": 7,
+      "description": "Hex colour for buttons and highlights."
+    },
+    {
+      "id": "includeContact",
+      "label": "Include a contact page",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "id": "contactEmail",
+      "label": "Contact email",
+      "type": "string",
+      "format": "email",
+      "maxLength": 200,
+      "description": "Shown on the contact page when included."
+    }
+  ],
+  "files": [
+    {
+      "source": "index.html",
+      "target": "index.html",
+      "substitute": "html"
+    },
+    {
+      "source": "styles.css",
+      "target": "assets/styles.css",
+      "substitute": "text"
+    },
+    {
+      "source": "contact.html",
+      "target": "contact.html",
+      "substitute": "html",
+      "when": {
+        "input": "includeContact",
+        "equals": true
+      }
+    },
+    {
+      "source": "site.json",
+      "target": "site.json",
+      "substitute": "json"
+    },
+    {
+      "source": "README.txt",
+      "target": "README.txt",
+      "substitute": "text"
+    }
+  ],
+  "directories": [
+    "assets/images"
+  ],
+  "compatibility": {
+    "generator": 1
+  },
+  "license": {
+    "spdx": "MIT",
+    "notice": "Generated starter content may be used without attribution."
+  },
+  "provenance": {
+    "origin": "local",
+    "maintainer": "ASAA platform owner",
+    "repository": "ASAA1229/Templates"
+  },
+  "validation": {
+    "requiredOutputs": [
+      "index.html",
+      "assets/styles.css"
+    ],
+    "maxFiles": 20,
+    "maxTotalBytes": 131072
+  }
+}

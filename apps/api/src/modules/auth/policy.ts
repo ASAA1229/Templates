@@ -18,6 +18,10 @@ export const PERMISSIONS = [
   "requirement:write",
   "catalog:read",
   "catalog:write",
+  "template:read",
+  "template:approve",
+  "generation:read",
+  "generation:write",
   "audit:read",
   "session:manage",
 ] as const;

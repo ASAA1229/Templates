@@ -1,0 +1,6 @@
+{
+  "key": "{{projectKey}}",
+  "name": "{{projectName}}",
+  "purpose": "{{projectPurpose}}",
+  "summary": "{{summary}}"
+}

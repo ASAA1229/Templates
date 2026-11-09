@@ -19,3 +19,5 @@ export const validationFailed = (fields: Record<string, string>, message = "Chec
   new AppError(400, "VALIDATION_FAILED", message, fields);
 export const unauthenticated = () => new AppError(401, "UNAUTHENTICATED", "Sign in to continue.");
 export const forbidden = () => new AppError(403, "FORBIDDEN", "You do not have permission for this action.");
+export const notEligible = (message: string, fields?: Record<string, string>) =>
+  new AppError(422, "NOT_ELIGIBLE", message, fields);

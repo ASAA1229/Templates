@@ -47,6 +47,9 @@ async function check(base) {
   const anonymous = await fetch(`${base}/api/projects`);
   record("protected API rejects anonymous access", anonymous.status === 401, String(anonymous.status));
 
+  const generation = await fetch(`${base}/api/templates/options`);
+  record("project generation API rejects anonymous access", generation.status === 401, String(generation.status));
+
   const headers = (await fetch(`${base}/`)).headers;
   record("CSP header present", Boolean(headers.get("content-security-policy")));
   record("nosniff header present", headers.get("x-content-type-options") === "nosniff");

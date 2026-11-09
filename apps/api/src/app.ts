@@ -9,6 +9,7 @@ import { csrfProtection, requestId } from "./middleware/security.js";
 import { authenticate, authRouter, requireOwner } from "./modules/auth/auth.js";
 import { catalogRouter } from "./modules/catalog/catalog.js";
 import { dashboardRouter } from "./modules/dashboard/dashboard.js";
+import { createGenerationService, generationsRouter, templatesRouter } from "./modules/generation/generation.js";
 import { projectsRouter } from "./modules/projects/projects.js";
 import { requirementsRouter } from "./modules/requirements/requirements.js";
 
@@ -64,6 +65,9 @@ export function createApp(ctx: AppContext): Express {
   api.use("/projects/:projectId/requirements", requirementsRouter(ctx));
   api.use("/projects", projectsRouter(ctx));
   api.use("/catalog", catalogRouter(ctx));
+  const generation = createGenerationService(ctx);
+  api.use("/templates", templatesRouter(ctx, generation));
+  api.use("/generations", generationsRouter(ctx, generation));
   api.use("/", dashboardRouter(ctx));
   api.use(notFoundHandler());
   app.use("/api", api);

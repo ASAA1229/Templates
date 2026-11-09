@@ -1,0 +1,168 @@
+{
+  "manifestVersion": 1,
+  "id": "starter-web-app",
+  "version": "1.0.0",
+  "kind": "starter",
+  "projectType": "web-app",
+  "title": "Web application (React + Vite)",
+  "category": "Starter",
+  "description": "Single-page web application using React, Vite and TypeScript with strict compiler settings and accessible defaults.",
+  "technologies": [
+    {
+      "name": "React",
+      "version": "19"
+    },
+    {
+      "name": "Vite",
+      "version": "7"
+    },
+    {
+      "name": "TypeScript",
+      "version": "5.9"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "nodeVersion",
+      "label": "Node.js version",
+      "type": "select",
+      "required": true,
+      "default": "24",
+      "options": [
+        {
+          "value": "24",
+          "label": "Node.js 24 LTS"
+        },
+        {
+          "value": "22",
+          "label": "Node.js 22 LTS"
+        }
+      ]
+    },
+    {
+      "id": "includeTests",
+      "label": "Include a unit test setup",
+      "type": "boolean",
+      "default": true,
+      "description": "Adds Vitest and a first test."
+    }
+  ],
+  "files": [
+    {
+      "source": "README.txt",
+      "target": "README.txt",
+      "substitute": "text"
+    },
+    {
+      "source": "gitignore",
+      "target": ".gitignore",
+      "substitute": "none"
+    },
+    {
+      "source": "editorconfig",
+      "target": ".editorconfig",
+      "substitute": "none"
+    },
+    {
+      "source": "nvmrc",
+      "target": ".nvmrc",
+      "substitute": "text"
+    },
+    {
+      "source": "package.with-tests.json",
+      "target": "package.json",
+      "substitute": "json",
+      "when": {
+        "input": "includeTests",
+        "equals": true
+      }
+    },
+    {
+      "source": "package.json",
+      "target": "package.json",
+      "substitute": "json",
+      "when": {
+        "input": "includeTests",
+        "equals": false
+      }
+    },
+    {
+      "source": "index.html",
+      "target": "index.html",
+      "substitute": "html"
+    },
+    {
+      "source": "tsconfig.json",
+      "target": "tsconfig.json",
+      "substitute": "none"
+    },
+    {
+      "source": "vite.config.ts",
+      "target": "vite.config.ts",
+      "substitute": "none"
+    },
+    {
+      "source": "src/main.tsx",
+      "target": "src/main.tsx",
+      "substitute": "none"
+    },
+    {
+      "source": "src/App.tsx",
+      "target": "src/App.tsx",
+      "substitute": "json"
+    },
+    {
+      "source": "src/styles.css",
+      "target": "src/styles.css",
+      "substitute": "none"
+    },
+    {
+      "source": "src/App.test.ts",
+      "target": "src/App.test.ts",
+      "substitute": "none",
+      "when": {
+        "input": "includeTests",
+        "equals": true
+      }
+    }
+  ],
+  "directories": [
+    "public"
+  ],
+  "dependencies": [
+    {
+      "name": "react",
+      "version": "19.1.1"
+    },
+    {
+      "name": "vite",
+      "version": "7.3.8"
+    },
+    {
+      "name": "typescript",
+      "version": "5.9.3"
+    }
+  ],
+  "compatibility": {
+    "generator": 1,
+    "node": ">=22"
+  },
+  "license": {
+    "spdx": "MIT",
+    "notice": "Generated starter content may be used without attribution."
+  },
+  "provenance": {
+    "origin": "local",
+    "maintainer": "ASAA platform owner",
+    "repository": "ASAA1229/Templates"
+  },
+  "validation": {
+    "requiredOutputs": [
+      "package.json",
+      "index.html",
+      "src/main.tsx"
+    ],
+    "maxFiles": 40,
+    "maxTotalBytes": 262144
+  }
+}

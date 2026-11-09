@@ -1,0 +1,150 @@
+{
+  "manifestVersion": 1,
+  "id": "starter-api-service",
+  "version": "1.0.0",
+  "kind": "starter",
+  "projectType": "api-service",
+  "title": "API service (Node.js + Express)",
+  "category": "Starter",
+  "description": "HTTP API service using Express 5 and TypeScript with a health endpoint, security headers and environment-based configuration.",
+  "technologies": [
+    {
+      "name": "Node.js",
+      "version": "24"
+    },
+    {
+      "name": "Express",
+      "version": "5"
+    },
+    {
+      "name": "TypeScript",
+      "version": "5.9"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "nodeVersion",
+      "label": "Node.js version",
+      "type": "select",
+      "required": true,
+      "default": "24",
+      "options": [
+        {
+          "value": "24",
+          "label": "Node.js 24 LTS"
+        },
+        {
+          "value": "22",
+          "label": "Node.js 22 LTS"
+        }
+      ]
+    },
+    {
+      "id": "port",
+      "label": "Default port",
+      "type": "select",
+      "required": true,
+      "default": "3000",
+      "options": [
+        {
+          "value": "3000",
+          "label": "3000"
+        },
+        {
+          "value": "4000",
+          "label": "4000"
+        },
+        {
+          "value": "8080",
+          "label": "8080"
+        }
+      ]
+    }
+  ],
+  "files": [
+    {
+      "source": "README.txt",
+      "target": "README.txt",
+      "substitute": "text"
+    },
+    {
+      "source": "gitignore",
+      "target": ".gitignore",
+      "substitute": "none"
+    },
+    {
+      "source": "editorconfig",
+      "target": ".editorconfig",
+      "substitute": "none"
+    },
+    {
+      "source": "nvmrc",
+      "target": ".nvmrc",
+      "substitute": "text"
+    },
+    {
+      "source": "env.example",
+      "target": ".env.example",
+      "substitute": "text"
+    },
+    {
+      "source": "package.json",
+      "target": "package.json",
+      "substitute": "json"
+    },
+    {
+      "source": "tsconfig.json",
+      "target": "tsconfig.json",
+      "substitute": "none"
+    },
+    {
+      "source": "src/app.ts",
+      "target": "src/app.ts",
+      "substitute": "json"
+    },
+    {
+      "source": "src/server.ts",
+      "target": "src/server.ts",
+      "substitute": "text"
+    }
+  ],
+  "directories": [
+    "test"
+  ],
+  "dependencies": [
+    {
+      "name": "express",
+      "version": "5.3.0"
+    },
+    {
+      "name": "helmet",
+      "version": "8.3.0"
+    },
+    {
+      "name": "typescript",
+      "version": "5.9.3"
+    }
+  ],
+  "compatibility": {
+    "generator": 1,
+    "node": ">=22"
+  },
+  "license": {
+    "spdx": "MIT",
+    "notice": "Generated starter content may be used without attribution."
+  },
+  "provenance": {
+    "origin": "local",
+    "maintainer": "ASAA platform owner",
+    "repository": "ASAA1229/Templates"
+  },
+  "validation": {
+    "requiredOutputs": [
+      "package.json",
+      "src/server.ts",
+      ".env.example"
+    ],
+    "maxFiles": 40,
+    "maxTotalBytes": 262144
+  }
+}

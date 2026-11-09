@@ -12,6 +12,8 @@ export default tseslint.config(
       ".local/**",
       "**/playwright-report/**",
       "**/test-results/**",
+      // Template content is raw source with placeholders, validated by the template library loader.
+      "apps/api/template-library/**",
     ],
   },
   js.configs.recommended,

@@ -50,7 +50,7 @@ export function requirementView(requirement: RequirementWithRelations): Requirem
 }
 
 /** Snapshot of the editable fields, stored as an immutable version (US-C02). */
-function snapshot(requirement: Requirement, dependencyIds: string[]): Prisma.InputJsonValue {
+export function snapshot(requirement: Requirement, dependencyIds: string[]): Prisma.InputJsonValue {
   return {
     kind: requirement.kind,
     title: requirement.title,

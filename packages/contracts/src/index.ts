@@ -23,6 +23,7 @@ export type ApiErrorCode =
   | "RATE_LIMITED"
   | "CSRF_REJECTED"
   | "PAYLOAD_TOO_LARGE"
+  | "NOT_ELIGIBLE"
   | "INTERNAL";
 
 export interface ApiErrorBody {
@@ -335,6 +336,10 @@ export interface CatalogItemView {
   license: string;
   ownership: string;
   dependencies: { name: string; version: string }[];
+  /** Approved template content linked to this record (library template id), if any. */
+  contentRef: string | null;
+  /** SHA-256 of the template content at approval time. */
+  contentDigest: string | null;
   metadataSchemaVersion: number;
   createdAt: string;
   updatedAt: string;
@@ -373,3 +378,398 @@ export const auditQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(200).default(50),
   before: z.string().regex(/^\d+$/).optional(),
 });
+
+// ───── Template manifests and project generation (US-E01, US-E02) ─────
+
+/** Version of the template manifest format below. Bump on breaking manifest changes. */
+export const TEMPLATE_MANIFEST_VERSION = 1;
+/** Generator engine version recorded with every generation; manifests declare the major they target. */
+export const GENERATOR_VERSION = "1.0.0";
+export const GENERATOR_MAJOR = 1;
+/** Folder inside every generated output that holds platform provenance; templates may not write to it. */
+export const PROVENANCE_DIR = ".asaa";
+/** Values supplied by the platform for every generation; manifests cannot redefine them. */
+export const RESERVED_VARIABLES = ["projectKey", "projectName", "projectSlug", "projectPurpose"] as const;
+export const PROJECT_TYPES = ["web-app", "api-service", "blank"] as const;
+export type ProjectType = (typeof PROJECT_TYPES)[number];
+export const TEMPLATE_KINDS = ["template", "starter"] as const;
+export const SUBSTITUTION_MODES = ["none", "text", "json", "html"] as const;
+export const STRING_FORMATS = ["text", "identifier", "color", "email"] as const;
+
+const PLACEHOLDER_PATTERN = /\{\{\s*([A-Za-z][A-Za-z0-9]*)\s*\}\}/g;
+
+/** Names of every `{{ placeholder }}` in a text, in order of first appearance. */
+export function placeholdersIn(text: string): string[] {
+  return [...new Set([...text.matchAll(PLACEHOLDER_PATTERN)].map((match) => match[1]!))];
+}
+
+/**
+ * Single-pass `{{ name }}` substitution. Values are inserted literally and never
+ * re-scanned, so a value containing braces cannot trigger further expansion.
+ * Unknown names throw instead of rendering silently.
+ */
+export function substitutePlaceholders(
+  text: string,
+  values: Record<string, string>,
+  escape: (value: string) => string = (value) => value,
+): string {
+  return text.replace(PLACEHOLDER_PATTERN, (_match, name: string) => {
+    const value = values[name];
+    if (value === undefined) throw new Error(`Unknown placeholder "${name}".`);
+    return escape(value);
+  });
+}
+
+const WINDOWS_RESERVED = /^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\..*)?$/i;
+const SAFE_SEGMENT = /^[A-Za-z0-9._-]{1,100}$/;
+
+/**
+ * Validate a generated/relative path: forward slashes only, no absolute paths,
+ * drive letters, traversal, empty or reserved segments, or characters outside a
+ * portable set. Returns a reason when unsafe, or null when the path is safe.
+ */
+export function unsafePathReason(candidate: string): string | null {
+  if (typeof candidate !== "string" || candidate.length === 0) return "Path is empty.";
+  if (candidate.length > 240) return "Path is longer than 240 characters.";
+  if (candidate.includes("\\")) return "Use forward slashes in paths.";
+  if (candidate.startsWith("/") || /^[A-Za-z]:/.test(candidate)) return "Absolute paths are not allowed.";
+  const segments = candidate.split("/");
+  if (segments.length > 12) return "Path is nested more than 12 levels deep.";
+  for (const segment of segments) {
+    if (segment === "" || segment === "." || segment === "..") {
+      return "Path traversal and empty segments are not allowed.";
+    }
+    if (!SAFE_SEGMENT.test(segment)) return `"${segment}" contains characters that are not allowed in file names.`;
+    if (segment.endsWith(".")) return `"${segment}" must not end with a dot.`;
+    if (WINDOWS_RESERVED.test(segment)) return `"${segment}" is a reserved device name.`;
+  }
+  return null;
+}
+
+const templateIdSchema = z
+  .string()
+  .regex(/^[a-z0-9][a-z0-9-]{1,79}$/, "Use 2–80 lowercase letters, digits or hyphens.");
+const inputIdSchema = z
+  .string()
+  .regex(/^[a-z][A-Za-z0-9]{0,39}$/, "Input ids start with a lowercase letter and use letters and digits.");
+const optionValueSchema = z.string().regex(/^[A-Za-z0-9._-]{1,60}$/, "Option values use letters, digits, . _ or -.");
+const versionedNameSchema = z.object({ name: required(80, "Name"), version: required(40, "Version") });
+
+const inputBase = {
+  id: inputIdSchema,
+  label: required(80, "Label"),
+  description: trimmed(300).optional(),
+  required: z.boolean().default(false),
+};
+
+export const templateInputSchema = z.discriminatedUnion("type", [
+  z.object({
+    ...inputBase,
+    type: z.literal("string"),
+    format: z.enum(STRING_FORMATS).default("text"),
+    maxLength: z.number().int().min(1).max(200).default(80),
+    default: z.string().max(200).optional(),
+  }),
+  z.object({
+    ...inputBase,
+    type: z.literal("text"),
+    maxLength: z.number().int().min(1).max(2000).default(500),
+    default: z.string().max(2000).optional(),
+  }),
+  z.object({ ...inputBase, type: z.literal("boolean"), default: z.boolean().optional() }),
+  z.object({
+    ...inputBase,
+    type: z.literal("select"),
+    options: z
+      .array(z.object({ value: optionValueSchema, label: required(80, "Option label") }))
+      .min(1)
+      .max(30),
+    default: optionValueSchema.optional(),
+  }),
+]);
+export type TemplateInput = z.infer<typeof templateInputSchema>;
+
+const templateFileSchema = z.object({
+  /** Path of the source file inside the template's files/ folder. */
+  source: z.string(),
+  /** Output path; may contain `{{ placeholders }}`. */
+  target: z.string().max(240),
+  /** How placeholder values are escaped in the file content; "none" copies bytes unchanged. */
+  substitute: z.enum(SUBSTITUTION_MODES).default("text"),
+  /** Include the file only when a boolean/select input has this value. */
+  when: z.object({ input: inputIdSchema, equals: z.union([z.string(), z.boolean()]) }).optional(),
+});
+
+const DEFAULT_VALIDATION = { requiredOutputs: [] as string[], maxFiles: 200, maxTotalBytes: 2 * 1024 * 1024 };
+
+/**
+ * Versioned template manifest (template definition). Catalog records describe a
+ * template for discovery; the manifest plus its files/ folder is the template
+ * content that generation actually uses.
+ */
+export const templateManifestSchema = z
+  .object({
+    manifestVersion: z.number().int(),
+    id: templateIdSchema,
+    version: z.string().regex(/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/, "Use a semantic version such as 1.0.0."),
+    kind: z.enum(TEMPLATE_KINDS),
+    title: required(160, "Title"),
+    description: trimmed(2000).default(""),
+    category: required(80, "Category"),
+    /** For starters: the from-scratch project type this starter implements. */
+    projectType: z.enum(PROJECT_TYPES).optional(),
+    technologies: z.array(versionedNameSchema).min(1).max(20),
+    inputs: z.array(templateInputSchema).max(30).default([]),
+    files: z.array(templateFileSchema).min(1).max(200),
+    directories: z.array(z.string().max(240)).max(50).default([]),
+    dependencies: z.array(versionedNameSchema).max(100).default([]),
+    compatibility: z.object({ generator: z.number().int().positive(), node: trimmed(40).optional() }),
+    license: z.object({ spdx: required(80, "License"), notice: trimmed(1000).optional() }),
+    provenance: z.object({
+      origin: z.literal("local"),
+      maintainer: required(120, "Maintainer"),
+      repository: trimmed(300).optional(),
+    }),
+    validation: z
+      .object({
+        requiredOutputs: z.array(z.string().max(240)).max(50).default([]),
+        maxFiles: z.number().int().min(1).max(500).default(200),
+        maxTotalBytes: z
+          .number()
+          .int()
+          .min(1)
+          .max(5 * 1024 * 1024)
+          .default(2 * 1024 * 1024),
+      })
+      .default(DEFAULT_VALIDATION),
+  })
+  .superRefine((manifest, ctx) => {
+    const issue = (path: (string | number)[], message: string) => ctx.addIssue({ code: "custom", path, message });
+    if (manifest.manifestVersion !== TEMPLATE_MANIFEST_VERSION) {
+      issue(["manifestVersion"], `Unsupported manifest version ${manifest.manifestVersion}.`);
+    }
+    if (manifest.kind === "starter" && !manifest.projectType) {
+      issue(["projectType"], "Starters must declare the project type they implement.");
+    }
+    const inputs = new Map<string, TemplateInput>();
+    manifest.inputs.forEach((input, index) => {
+      if (inputs.has(input.id)) issue(["inputs", index, "id"], `Duplicate input "${input.id}".`);
+      if ((RESERVED_VARIABLES as readonly string[]).includes(input.id)) {
+        issue(["inputs", index, "id"], `"${input.id}" is reserved by the platform.`);
+      }
+      if (input.type === "select" && input.default && !input.options.some((o) => o.value === input.default)) {
+        issue(["inputs", index, "default"], "Default must be one of the options.");
+      }
+      inputs.set(input.id, input);
+    });
+    const known = new Set<string>([...RESERVED_VARIABLES, ...inputs.keys()]);
+    const checkTemplatePath = (value: string, path: (string | number)[]) => {
+      for (const name of placeholdersIn(value)) {
+        if (!known.has(name)) issue(path, `Unknown placeholder "${name}".`);
+      }
+      const sample = value.replace(PLACEHOLDER_PATTERN, "x");
+      const reason = unsafePathReason(sample);
+      if (reason) issue(path, reason);
+      else if (sample.split("/")[0] === PROVENANCE_DIR) issue(path, `${PROVENANCE_DIR}/ is reserved for provenance.`);
+    };
+    const sources = new Set<string>();
+    const unconditionalTargets = new Set<string>();
+    manifest.files.forEach((file, index) => {
+      const reason = unsafePathReason(file.source);
+      if (reason) issue(["files", index, "source"], reason);
+      if (sources.has(file.source)) issue(["files", index, "source"], "Each source file may be listed once.");
+      sources.add(file.source);
+      checkTemplatePath(file.target, ["files", index, "target"]);
+      if (!file.when) {
+        if (unconditionalTargets.has(file.target)) issue(["files", index, "target"], "Duplicate output path.");
+        unconditionalTargets.add(file.target);
+        return;
+      }
+      const input = inputs.get(file.when.input);
+      if (!input || (input.type !== "boolean" && input.type !== "select")) {
+        issue(["files", index, "when", "input"], "Conditions must reference a boolean or select input.");
+      } else if (input.type === "boolean" && typeof file.when.equals !== "boolean") {
+        issue(["files", index, "when", "equals"], "Boolean conditions compare with true or false.");
+      } else if (input.type === "select" && !input.options.some((o) => o.value === file.when!.equals)) {
+        issue(["files", index, "when", "equals"], "Condition value must be one of the options.");
+      }
+    });
+    manifest.directories.forEach((dir, index) => checkTemplatePath(dir, ["directories", index]));
+    manifest.validation.requiredOutputs.forEach((out, index) =>
+      checkTemplatePath(out, ["validation", "requiredOutputs", index]),
+    );
+  });
+export type TemplateManifest = z.infer<typeof templateManifestSchema>;
+
+// eslint-disable-next-line no-control-regex
+const CONTROL_CHARS_MULTILINE = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/;
+// eslint-disable-next-line no-control-regex
+const CONTROL_CHARS_SINGLE_LINE = /[\u0000-\u001F\u007F]/;
+const FORMAT_RULES: Record<(typeof STRING_FORMATS)[number], { pattern: RegExp; message: string } | null> = {
+  text: null,
+  identifier: { pattern: /^[a-z][a-z0-9-]{0,62}$/, message: "Use lowercase letters, digits and hyphens." },
+  color: { pattern: /^#[0-9a-fA-F]{6}$/, message: "Use a hex colour such as #2563eb." },
+  email: { pattern: /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/, message: "Enter a valid email address." },
+};
+
+/**
+ * Build the schema for one template's configuration values from its manifest.
+ * Used by the browser for form feedback and by the API as the authority.
+ * Unknown keys are rejected; defaults are applied; braces are refused as a
+ * defence-in-depth measure against placeholder injection.
+ */
+export function templateInputValuesSchema(inputs: TemplateInput[]) {
+  const shape: Record<string, z.ZodType> = {};
+  for (const input of inputs) {
+    if (input.type === "boolean") {
+      shape[input.id] = z.boolean({ message: `${input.label} must be yes or no.` }).default(input.default ?? false);
+      continue;
+    }
+    if (input.type === "select") {
+      const values = input.options.map((option) => option.value) as [string, ...string[]];
+      const base = z.enum(values, { message: `Choose a ${input.label.toLowerCase()}.` });
+      shape[input.id] =
+        input.default !== undefined ? base.default(input.default) : input.required ? base : base.optional();
+      continue;
+    }
+    const controlChars = input.type === "text" ? CONTROL_CHARS_MULTILINE : CONTROL_CHARS_SINGLE_LINE;
+    const rule = input.type === "string" ? FORMAT_RULES[input.format] : null;
+    const base = z
+      .string({ message: `${input.label} is required.` })
+      .trim()
+      .max(input.maxLength, `Use at most ${input.maxLength} characters.`)
+      .refine((value) => !value.includes("{{") && !value.includes("}}"), "Curly-brace placeholders are not allowed.")
+      .refine((value) => !controlChars.test(value), "Remove control characters.")
+      .refine((value) => !rule || value === "" || rule.pattern.test(value), rule?.message ?? "Invalid value.")
+      .refine((value) => !input.required || value.length > 0, `${input.label} is required.`);
+    shape[input.id] = input.default !== undefined || !input.required ? base.default(input.default ?? "") : base;
+  }
+  return z.object(shape).strict();
+}
+export type TemplateInputValues = Record<string, string | boolean>;
+
+const inputValuesRecord = z
+  .record(z.string().max(40), z.union([z.string().max(2000), z.boolean()]))
+  .refine((value) => Object.keys(value).length <= 40, "Too many configuration values.")
+  .default({});
+
+export const generationProjectSchema = z.object({
+  key: projectKeySchema,
+  name: required(120, "Name"),
+  purpose: trimmed(2000).default(""),
+});
+
+export const GENERATION_MODES = ["SCRATCH", "TEMPLATE"] as const;
+export const GENERATION_STATUSES = ["PENDING", "SUCCEEDED", "FAILED"] as const;
+
+const initialRequirements = z
+  .array(required(200, "Requirement"))
+  .max(20, "Add at most 20 initial requirements.")
+  .default([]);
+
+export const createGenerationSchema = z.discriminatedUnion("mode", [
+  z.object({
+    mode: z.literal("SCRATCH"),
+    projectType: z.enum(PROJECT_TYPES, { message: "Choose a project type." }),
+    project: generationProjectSchema,
+    inputs: inputValuesRecord,
+    /** Initial requirements captured by the wizard; created as draft user stories. */
+    requirements: initialRequirements,
+  }),
+  z.object({
+    mode: z.literal("TEMPLATE"),
+    catalogItemId: z.string().uuid("Choose a template."),
+    project: generationProjectSchema,
+    inputs: inputValuesRecord,
+    requirements: initialRequirements,
+  }),
+]);
+export type CreateGenerationInput = z.input<typeof createGenerationSchema>;
+
+export const generationActionSchema = z.object({ expectedVersion: z.number().int().positive() });
+
+export const generationListQuerySchema = z.object({
+  projectId: z.string().uuid().optional(),
+  status: z.enum(GENERATION_STATUSES).optional(),
+});
+
+export interface TemplateSummaryView {
+  id: string;
+  version: string;
+  kind: (typeof TEMPLATE_KINDS)[number] | null;
+  title: string;
+  description: string;
+  category: string;
+  projectType: ProjectType | null;
+  technologies: { name: string; version: string }[];
+  license: string;
+  digest: string | null;
+  valid: boolean;
+  problems: string[];
+  /** For library templates: the catalog record linked to this content, if any. */
+  catalogItemId: string | null;
+  /** The linked catalog record approved exactly this content (digest match). */
+  approved: boolean;
+}
+
+export interface TemplateOptionView {
+  catalogItem: CatalogItemView;
+  /** Raw manifest; the browser re-validates it with templateManifestSchema before use. */
+  manifest: unknown;
+  files: { source: string; target: string }[];
+  eligible: boolean;
+  reasons: string[];
+}
+
+export interface StarterOptionView {
+  projectType: ProjectType;
+  manifest: unknown;
+  digest: string;
+}
+
+export interface GenerationPreviewView {
+  outputDir: string;
+  files: { path: string; bytes: number }[];
+  directories: string[];
+  totalBytes: number;
+  outputDigest: string;
+  template: { id: string; version: string; digest: string; kind: (typeof TEMPLATE_KINDS)[number] };
+  /** Problems that would stop generation right now (duplicate key, existing output folder). */
+  conflicts: string[];
+}
+
+export interface GenerationView {
+  id: string;
+  projectId: string;
+  projectKey: string;
+  projectName: string;
+  mode: (typeof GENERATION_MODES)[number];
+  status: (typeof GENERATION_STATUSES)[number];
+  templateId: string;
+  templateVersion: string;
+  templateDigest: string;
+  catalogItemId: string | null;
+  generatorVersion: string;
+  inputs: TemplateInputValues;
+  requirements: string[];
+  inputsHash: string;
+  outputDir: string;
+  outputDigest: string | null;
+  files: string[];
+  attempts: number;
+  error: string | null;
+  startedAt: string;
+  completedAt: string | null;
+  version: number;
+}
+
+export interface GenerationVerificationView {
+  /** Re-rendering the recorded inputs reproduces the recorded output digest. */
+  reproducible: boolean;
+  /** The files on disk still match the recorded output digest. */
+  outputIntact: boolean;
+  recordedDigest: string | null;
+  renderedDigest: string | null;
+  diskDigest: string | null;
+  problems: string[];
+}
