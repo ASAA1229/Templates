@@ -413,3 +413,44 @@ A story is Done only when:
 - Deployment/release state is recorded accurately.
 
 A merged commit or successful build alone does not make a story Done or production-ready.
+
+
+## 16. Approved implementation baseline and delivery mapping (2026-11-09)
+
+The owner-approved implementation stack for the initial platform is:
+- **Frontend:** React + Vite.
+- **Languages:** TypeScript by default, with JavaScript supported.
+- **Backend:** Node.js + Express.
+- **Database/data access:** PostgreSQL + Prisma.
+- **Styling/component foundation:** Tailwind CSS + shadcn/ui.
+
+This is a technology decision, not evidence that implementation has started. All existing stories retain their current **Not Started** status until code and acceptance evidence exist.
+
+### Initial implementation mapping
+
+| Implementation slice | Related stories | Expected evidence before marking Done |
+|---|---|---|
+| Repository/app foundation and conventions | US-F03, US-F04 | Reproducible local setup, pinned runtimes/dependencies, documented module boundaries |
+| Frontend shell and design foundation | US-B01, US-B02, US-B04, US-B05, US-B06 | Responsive routes, accessible component states, component tests and screen specifications |
+| Backend/API foundation | US-A01, US-A02, US-C01, US-C02 | Validated API contracts, server-side authorization, secure session behavior and API tests |
+| PostgreSQL/Prisma data foundation | US-C01, US-C02, US-C04, US-I02, US-I03 | Reviewed schema, migrations, constraints, audit and project-boundary tests |
+| Owner authentication vertical slice | US-A01, US-A02, US-I01 | Secure sign-in/session/recovery implementation with negative-path and security tests |
+| Project management vertical slice | US-C01, US-C02, US-C04, US-B01 | Create/read/update project and requirements flows with traceability and tests |
+| Template catalog foundation | US-D01, US-D02 | Validated catalog metadata, search/filter behavior and untrusted-import safeguards |
+
+### Sequencing and controls
+1. Complete architecture decisions and repository conventions.
+2. Scaffold the React/Vite frontend and Node/Express backend without introducing unnecessary services.
+3. Configure PostgreSQL and Prisma for local development; commit no credentials or environment secrets.
+4. Establish shared UI tokens/components and API validation/error conventions.
+5. Deliver owner authentication and project management as a tested vertical slice.
+6. Proceed to catalog and project initialization only after the foundation passes its gates.
+
+The exact test libraries and CI/deployment products remain undecided. Select only free/local-first options and record them in separate ADRs before adoption. Do not add paid APIs, hosting, runners or subscriptions without explicit owner approval.
+
+### Story status policy
+- Documentation and scaffolding alone do not complete a story.
+- A story moves to In Progress only when implementation work has actually begun.
+- Development Complete requires all acceptance criteria implemented and reviewed.
+- Build Verified, Testing Complete and Production Ready are separate evidence-backed states.
+- Never infer testing completion from a successful build or a merged commit.
