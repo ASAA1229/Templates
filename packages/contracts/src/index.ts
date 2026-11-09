@@ -24,6 +24,7 @@ export type ApiErrorCode =
   | "CSRF_REJECTED"
   | "PAYLOAD_TOO_LARGE"
   | "NOT_ELIGIBLE"
+  | "UNAVAILABLE"
   | "INTERNAL";
 
 export interface ApiErrorBody {
@@ -774,4 +775,382 @@ export interface GenerationVerificationView {
   renderedDigest: string | null;
   diskDigest: string | null;
   problems: string[];
+}
+
+// ───── Engineering workspace: source control and environment (US-F01, US-F02, US-F03) ─────
+
+export const REPOSITORY_PROVIDERS = ["LOCAL_GIT", "GITHUB", "GITLAB", "BITBUCKET"] as const;
+export type RepositoryProviderKind = (typeof REPOSITORY_PROVIDERS)[number];
+export const BRANCH_KINDS = ["integration", "feature", "fix", "test"] as const;
+export type BranchKind = (typeof BRANCH_KINDS)[number];
+
+/**
+ * Strict, portable branch-name rule (a subset of git check-ref-format): lowercase
+ * letters, digits, ".", "_", "-" and "/" separators; no leading "-" (option
+ * injection), no "..", "//", "@{", ".lock" or trailing "/" or ".". Returns a
+ * reason when invalid, or null.
+ */
+export function branchNameProblem(name: string): string | null {
+  if (typeof name !== "string" || name.length === 0) return "Branch name is required.";
+  if (name.length > 100) return "Use at most 100 characters.";
+  if (!/^[a-z0-9][a-z0-9._/-]*$/.test(name)) {
+    return "Use lowercase letters, digits, '.', '_', '-' and '/', starting with a letter or digit.";
+  }
+  if (name.includes("..") || name.includes("//") || name.includes("@{")) return "Branch name contains '..' or '//'.";
+  if (name.endsWith("/") || name.endsWith(".") || name.endsWith(".lock")) {
+    return "Branch name cannot end with '/', '.' or '.lock'.";
+  }
+  if (name.split("/").some((segment) => segment.startsWith("."))) return "Path segments cannot start with '.'.";
+  if (name === "head") return "'head' is reserved.";
+  return null;
+}
+
+export const branchNameSchema = z
+  .string()
+  .trim()
+  .superRefine((value, ctx) => {
+    const problem = branchNameProblem(value);
+    if (problem) ctx.addIssue({ code: "custom", message: problem });
+  });
+const branchPrefixSchema = z
+  .string()
+  .trim()
+  .regex(/^[a-z][a-z0-9-]{0,19}$/, "Use 1–20 lowercase letters, digits or hyphens.");
+export const branchTopicSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .regex(/^[a-z0-9][a-z0-9._-]{0,59}$/, "Use lowercase letters, digits, '.', '_' or '-' (max 60).")
+  .refine((value) => !value.includes("..") && !value.endsWith(".") && !value.endsWith(".lock"), {
+    message: "Topic cannot contain '..' or end with '.' or '.lock'.",
+  });
+
+/**
+ * Project branching policy, defaulting to the platform convention:
+ * main = production, dev = integration, new/fix/test = work branches.
+ * Merges are never automated; protection is advisory for local repositories
+ * and enforced by the hosting provider where supported.
+ */
+export const branchPolicySchema = z
+  .object({
+    productionBranch: branchNameSchema.default("main"),
+    integrationBranch: branchNameSchema.default("dev"),
+    featurePrefix: branchPrefixSchema.default("new"),
+    fixPrefix: branchPrefixSchema.default("fix"),
+    testPrefix: branchPrefixSchema.default("test"),
+    protectedBranches: z.array(branchNameSchema).max(10).default(["main", "dev"]),
+    requireReviewFor: z.array(branchNameSchema).max(10).default(["main", "dev"]),
+  })
+  .superRefine((policy, ctx) => {
+    if (policy.productionBranch === policy.integrationBranch) {
+      ctx.addIssue({ code: "custom", path: ["integrationBranch"], message: "Use a different branch from production." });
+    }
+    const prefixes = [policy.featurePrefix, policy.fixPrefix, policy.testPrefix];
+    if (new Set(prefixes).size !== prefixes.length) {
+      ctx.addIssue({ code: "custom", path: ["fixPrefix"], message: "Work branch prefixes must be different." });
+    }
+    if (prefixes.includes(policy.productionBranch) || prefixes.includes(policy.integrationBranch)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["featurePrefix"],
+        message: "Work prefixes cannot reuse the production or integration branch name.",
+      });
+    }
+    if (!policy.protectedBranches.includes(policy.productionBranch)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["protectedBranches"],
+        message: "The production branch must stay protected.",
+      });
+    }
+  });
+export type BranchPolicy = z.infer<typeof branchPolicySchema>;
+export const DEFAULT_BRANCH_POLICY: BranchPolicy = branchPolicySchema.parse({});
+
+// eslint-disable-next-line no-control-regex
+const NO_CONTROL = /^[^\u0000-\u001F\u007F]*$/;
+export const gitIdentitySchema = z.object({
+  name: required(100, "Name")
+    .regex(NO_CONTROL, "Remove control characters.")
+    .refine((value) => !/[<>]/.test(value), "Name cannot contain < or >."),
+  email: z.string().trim().toLowerCase().email("Enter a valid email address.").max(254),
+});
+export type GitIdentity = z.infer<typeof gitIdentitySchema>;
+
+/**
+ * Remote URLs are recorded for later use only; nothing is pushed or fetched.
+ * Only https:// or scp-style SSH URLs without embedded credentials are allowed,
+ * which rules out file://, ext:: and other local or command transports.
+ */
+export function remoteUrlProblem(url: string): string | null {
+  if (url.length > 500) return "Use at most 500 characters.";
+  if (/\s/.test(url) || !NO_CONTROL.test(url)) return "Remote URL cannot contain spaces or control characters.";
+  if (url.startsWith("-")) return "Remote URL cannot start with '-'.";
+  const ssh = /^git@[A-Za-z0-9.-]+:[A-Za-z0-9._~/-]+$/;
+  if (ssh.test(url)) return url.includes("..") ? "Remote path cannot contain '..'." : null;
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return "Use an https:// URL or git@host:owner/repo.git.";
+  }
+  if (parsed.protocol !== "https:") return "Only https:// and SSH (git@host:path) remotes are allowed.";
+  if (parsed.username || parsed.password)
+    return "Do not put credentials in the URL; configure them outside the platform.";
+  if (parsed.search || parsed.hash) return "Remote URL cannot contain a query or fragment.";
+  return null;
+}
+
+export const remoteUrlSchema = z
+  .string()
+  .trim()
+  .superRefine((value, ctx) => {
+    const problem = remoteUrlProblem(value);
+    if (problem) ctx.addIssue({ code: "custom", message: problem });
+  });
+
+export const initRepositorySchema = z.object({
+  identity: gitIdentitySchema,
+  policy: branchPolicySchema.default(DEFAULT_BRANCH_POLICY),
+  /** Commit the generated files as the first commit on the production branch. */
+  initialCommit: z.boolean().default(true),
+});
+export type InitRepositoryInput = z.input<typeof initRepositorySchema>;
+
+export const createBranchSchema = z.object({
+  kind: z.enum(BRANCH_KINDS, { message: "Choose a branch type." }),
+  /** Optional topic for work branches: new/<topic>, fix/<topic>, test/<topic>. */
+  topic: branchTopicSchema.optional().or(z.literal("").transform(() => undefined)),
+  /** Existing branch to start from; defaults per policy. */
+  from: branchNameSchema.optional(),
+  switchTo: z.boolean().default(false),
+});
+export type CreateBranchInput = z.input<typeof createBranchSchema>;
+
+export const updateIdentitySchema = z.object({
+  identity: gitIdentitySchema,
+  expectedVersion: z.number().int().positive(),
+});
+export const updatePolicySchema = z.object({
+  policy: branchPolicySchema,
+  expectedVersion: z.number().int().positive(),
+});
+export const updateRemoteSchema = z.object({
+  url: remoteUrlSchema.nullable(),
+  expectedVersion: z.number().int().positive(),
+});
+
+export interface RepositoryCapabilitiesView {
+  provider: RepositoryProviderKind;
+  label: string;
+  available: boolean;
+  initialize: boolean;
+  status: boolean;
+  branches: boolean;
+  history: boolean;
+  /** "configure-only": remotes are recorded but nothing is transmitted. */
+  remotes: "none" | "configure-only" | "sync";
+  pullRequests: boolean;
+  /** "advisory": warnings only; "enforced": provider rejects disallowed changes. */
+  branchProtection: "advisory" | "enforced";
+  note: string;
+}
+
+export interface RepositoryRecordView {
+  id: string;
+  provider: RepositoryProviderKind;
+  defaultBranch: string;
+  policy: BranchPolicy;
+  identity: GitIdentity;
+  remote: { name: string; url: string } | null;
+  adoptedExisting: boolean;
+  initializedAt: string;
+  updatedAt: string;
+  version: number;
+}
+
+export const WORKING_TREE_STATES = [
+  "added",
+  "modified",
+  "deleted",
+  "renamed",
+  "untracked",
+  "conflicted",
+  "typechange",
+] as const;
+
+export interface WorkingTreeEntryView {
+  path: string;
+  state: (typeof WORKING_TREE_STATES)[number];
+  staged: boolean;
+  from?: string;
+}
+
+export interface BranchView {
+  name: string;
+  sha: string;
+  current: boolean;
+  protected: boolean;
+  role: "production" | "integration" | "feature" | "fix" | "test" | "other";
+}
+
+export interface CommitView {
+  sha: string;
+  author: string;
+  email: string;
+  date: string;
+  subject: string;
+}
+
+export interface RepositoryStateView {
+  head: { branch: string | null; sha: string | null; detached: boolean };
+  branches: BranchView[];
+  status: { clean: boolean; entries: WorkingTreeEntryView[]; truncated: boolean };
+  commits: CommitView[];
+}
+
+export interface WorkspaceView {
+  project: { id: string; key: string; name: string; archived: boolean };
+  output: { available: boolean; outputDir: string | null; reason: string | null };
+  git: { available: boolean; version: string | null; message: string | null };
+  providers: RepositoryCapabilitiesView[];
+  /** none: no repository; existing: a .git folder exists but is not registered; registered: tracked by the platform. */
+  detection: "none" | "existing" | "registered" | "missing" | "unsafe";
+  repository: RepositoryRecordView | null;
+  state: RepositoryStateView | null;
+  warnings: string[];
+  activity: AuditEventView[];
+}
+
+export interface BranchCreateResultView {
+  branch: BranchView;
+  warnings: string[];
+}
+
+// ───── Reproducible environment specification (US-F03) ─────
+
+export const ENVIRONMENT_TOOLS = ["node", "npm", "pnpm", "yarn", "git", "postgresql", "docker"] as const;
+export type EnvironmentTool = (typeof ENVIRONMENT_TOOLS)[number];
+export const PACKAGE_MANAGERS = ["npm", "pnpm", "yarn", "none"] as const;
+export const DATABASE_ENGINES = ["none", "postgresql"] as const;
+
+/** "*", "24", "24.x", "24.1", "24.1.2" or ">=22[.1[.0]]". */
+export const versionRequirementSchema = z
+  .string()
+  .trim()
+  .regex(/^(\*|(>=)?\d{1,3}(\.\d{1,3}){0,2}|\d{1,3}\.x)$/, 'Use a version such as 24, 24.x, >=22 or "*".');
+
+const commandLines = z.array(trimmed(300).min(1).regex(NO_CONTROL, "Remove control characters.")).max(20).default([]);
+
+const SECRET_NAME = /(SECRET|TOKEN|PASSWORD|PASSWD|PRIVATE|API_?KEY|CREDENTIAL)/;
+
+export const environmentVariableSchema = z
+  .object({
+    name: z
+      .string()
+      .trim()
+      .regex(/^[A-Z][A-Z0-9_]{0,63}$/, "Use UPPER_SNAKE_CASE (max 64)."),
+    description: trimmed(300).default(""),
+    required: z.boolean().default(false),
+    /** Secret values are never stored; only the name and description are recorded. */
+    secret: z.boolean().default(false),
+    /** Non-secret example value, e.g. a port or local URL without credentials. */
+    example: trimmed(200).regex(NO_CONTROL, "Remove control characters.").default(""),
+  })
+  .superRefine((variable, ctx) => {
+    if (variable.secret && variable.example) {
+      ctx.addIssue({ code: "custom", path: ["example"], message: "Secret variables cannot have an example value." });
+    }
+    if (!variable.secret && SECRET_NAME.test(variable.name)) {
+      ctx.addIssue({ code: "custom", path: ["secret"], message: "This looks like a secret; mark it as secret." });
+    }
+    if (/:\/\/[^/\s:@]+:[^/\s@]+@/.test(variable.example)) {
+      ctx.addIssue({ code: "custom", path: ["example"], message: "Examples cannot contain credentials." });
+    }
+  });
+
+export const environmentSpecSchema = z
+  .object({
+    schemaVersion: z.literal(1).default(1),
+    tools: z
+      .array(
+        z.object({
+          name: z.enum(ENVIRONMENT_TOOLS),
+          version: versionRequirementSchema,
+          required: z.boolean().default(true),
+        }),
+      )
+      .max(ENVIRONMENT_TOOLS.length)
+      .default([]),
+    packageManager: z
+      .object({ name: z.enum(PACKAGE_MANAGERS), version: versionRequirementSchema.default("*") })
+      .default({ name: "none", version: "*" }),
+    commands: z
+      .object({ install: commandLines, dev: commandLines, build: commandLines, test: commandLines })
+      .default({ install: [], dev: [], build: [], test: [] }),
+    variables: z.array(environmentVariableSchema).max(50).default([]),
+    database: z
+      .object({ engine: z.enum(DATABASE_ENGINES), version: versionRequirementSchema.default("*") })
+      .default({ engine: "none", version: "*" }),
+    notes: trimmed(2000).default(""),
+  })
+  .superRefine((spec, ctx) => {
+    const tools = spec.tools.map((tool) => tool.name);
+    if (new Set(tools).size !== tools.length)
+      ctx.addIssue({ code: "custom", path: ["tools"], message: "List each tool once." });
+    const names = spec.variables.map((variable) => variable.name);
+    if (new Set(names).size !== names.length) {
+      ctx.addIssue({ code: "custom", path: ["variables"], message: "Each variable name may appear once." });
+    }
+  });
+export type EnvironmentSpec = z.infer<typeof environmentSpecSchema>;
+
+export const updateEnvironmentSchema = z.object({
+  spec: environmentSpecSchema,
+  expectedVersion: z.number().int().nonnegative(),
+});
+
+/** True when a concrete version (e.g. "24.16.0") meets a requirement. */
+export function versionSatisfies(actual: string, requirement: string): boolean {
+  if (requirement === "*") return true;
+  const parts = (value: string) =>
+    value
+      .replace(/^v/, "")
+      .split(/[.+-]/)
+      .slice(0, 3)
+      .map((part) => Number(part) || 0);
+  const have = parts(actual);
+  if (requirement.startsWith(">=")) {
+    const want = parts(requirement.slice(2));
+    for (let i = 0; i < 3; i++) {
+      if ((have[i] ?? 0) !== (want[i] ?? 0)) return (have[i] ?? 0) > (want[i] ?? 0);
+    }
+    return true;
+  }
+  const want = requirement.replace(/\.x$/, "").split(".").map(Number);
+  return want.every((value, index) => have[index] === value);
+}
+
+export interface EnvironmentCheckResultView {
+  name: EnvironmentTool;
+  requirement: string;
+  required: boolean;
+  found: boolean;
+  version: string | null;
+  ok: boolean;
+  message: string;
+}
+
+export interface EnvironmentView {
+  spec: EnvironmentSpec;
+  /** 0 when the spec is inferred and not yet saved. */
+  version: number;
+  source: "inferred" | "saved";
+  updatedAt: string | null;
+}
+
+export interface EnvironmentCheckView {
+  checkedAt: string;
+  ok: boolean;
+  results: EnvironmentCheckResultView[];
 }

@@ -45,6 +45,7 @@ function agentFor(app: ReturnType<typeof createApp>) {
     get: (url: string) => agent.get(url),
     post: (url: string, body?: object) => withCsrf(agent.post(url)).send(body ?? {}),
     patch: (url: string, body?: object) => withCsrf(agent.patch(url)).send(body ?? {}),
+    put: (url: string, body?: object) => withCsrf(agent.put(url)).send(body ?? {}),
     delete: (url: string) => withCsrf(agent.delete(url)),
   };
 }
@@ -74,7 +75,7 @@ export function createHarness(overrides: Record<string, string> = {}): TestHarne
       await prisma.$transaction([
         prisma.$executeRawUnsafe("SET LOCAL session_replication_role = replica"),
         prisma.$executeRawUnsafe(
-          'TRUNCATE "AuditEvent", "ProjectGeneration", "TraceLink", "RequirementVersion", "RequirementDependency", "Requirement", "Project", "Session", "Owner", "CatalogItem" RESTART IDENTITY CASCADE',
+          'TRUNCATE "AuditEvent", "ProjectRepository", "ProjectEnvironment", "ProjectGeneration", "TraceLink", "RequirementVersion", "RequirementDependency", "Requirement", "Project", "Session", "Owner", "CatalogItem" RESTART IDENTITY CASCADE',
         ),
       ]);
     },

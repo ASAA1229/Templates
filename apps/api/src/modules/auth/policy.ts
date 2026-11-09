@@ -22,6 +22,8 @@ export const PERMISSIONS = [
   "template:approve",
   "generation:read",
   "generation:write",
+  "workspace:read",
+  "workspace:write",
   "audit:read",
   "session:manage",
 ] as const;

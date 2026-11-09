@@ -34,6 +34,17 @@ const envSchema = z.object({
     .string()
     .optional()
     .transform((value) => path.resolve(value || path.join(API_ROOT, "template-library"))),
+  /** Git executable used by the local repository provider (absolute path or a name on PATH). */
+  GIT_EXECUTABLE: z
+    .string()
+    .trim()
+    .default("git")
+    .refine(
+      (value) => /^[A-Za-z0-9._-]+$/.test(value) || path.isAbsolute(value),
+      "Use a program name or an absolute path.",
+    ),
+  /** Upper bound for any single Git command. */
+  GIT_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120_000).default(20_000),
   /** Where independent project outputs are written; never inside the platform source. */
   GENERATION_OUTPUT_DIR: z
     .string()

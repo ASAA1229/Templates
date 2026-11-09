@@ -12,6 +12,7 @@ import { dashboardRouter } from "./modules/dashboard/dashboard.js";
 import { createGenerationService, generationsRouter, templatesRouter } from "./modules/generation/generation.js";
 import { projectsRouter } from "./modules/projects/projects.js";
 import { requirementsRouter } from "./modules/requirements/requirements.js";
+import { workspaceRouter } from "./modules/workspace/workspace.js";
 
 /**
  * Modular monolith composition root. Each domain module owns its router; this
@@ -63,6 +64,7 @@ export function createApp(ctx: AppContext): Express {
   api.use("/auth", authRouter(ctx));
   api.use(requireOwner());
   api.use("/projects/:projectId/requirements", requirementsRouter(ctx));
+  api.use("/projects/:projectId/workspace", workspaceRouter(ctx));
   api.use("/projects", projectsRouter(ctx));
   api.use("/catalog", catalogRouter(ctx));
   const generation = createGenerationService(ctx);
