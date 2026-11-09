@@ -25,7 +25,10 @@ import { GenerationError, projectVariables, renderPlan, type RenderPlan } from "
 import {
   digestOutput,
   nodeFs,
+  OutputBusyError,
+  OutputConflictError,
   outputExists,
+  readProvenance,
   removeOutput,
   resolveOutputRoot,
   writeOutput,
@@ -478,31 +481,59 @@ export class GenerationService {
       outputDigest: plan.digest,
       generatedAt: this.ctx.now().toISOString(),
     };
-    const auditBase = { targetType: "project", targetId: generation.projectId } as const;
     try {
       await writeOutput(this.options.outputRoot, generation.outputDir, generation.id, plan, provenance, this.fs);
     } catch (error) {
-      const message =
-        error instanceof Error && error.name === "OutputConflictError"
-          ? error.message
-          : "Writing the project files failed. No partial output was kept; you can retry.";
-      this.ctx.logger.error("generation write failed", {
-        generationId: generation.id,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      const failed = await this.prisma.projectGeneration.update({
-        where: { id: generation.id },
-        data: { status: "FAILED", error: message, completedAt: null, version: { increment: 1 } },
-        include: { project: true },
-      });
-      await audit(this.ctx, req, {
-        action: "generation.complete",
-        outcome: "FAILURE",
-        ...auditBase,
-        metadata: { generationId: generation.id, error: message, attempt: generation.attempts },
-      });
-      return failed;
+      // Idempotent retry: if this very generation already published a verified output
+      // (for example the process stopped before recording success), adopt it.
+      const adopted = error instanceof OutputConflictError && (await this.ownsOutput(generation, plan.digest));
+      if (!adopted) return this.recordWriteFailure(req, generation, error);
     }
+    return this.recordSuccess(req, generation, template, plan);
+  }
+
+  /** True when the existing output folder was written by this generation and is intact. */
+  private async ownsOutput(generation: GenerationWithProject, digest: string): Promise<boolean> {
+    const provenance = await readProvenance(this.options.outputRoot, generation.outputDir);
+    if (provenance?.generationId !== generation.id) return false;
+    return (await digestOutput(this.options.outputRoot, generation.outputDir)) === digest;
+  }
+
+  private async recordWriteFailure(
+    req: Request,
+    generation: GenerationWithProject,
+    error: unknown,
+  ): Promise<GenerationWithProject> {
+    const auditBase = { targetType: "project", targetId: generation.projectId } as const;
+    const message =
+      error instanceof OutputConflictError || error instanceof OutputBusyError
+        ? error.message
+        : "Writing the project files failed. No partial output was kept; you can retry.";
+    this.ctx.logger.error("generation write failed", {
+      generationId: generation.id,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    const failed = await this.prisma.projectGeneration.update({
+      where: { id: generation.id },
+      data: { status: "FAILED", error: message, completedAt: null, version: { increment: 1 } },
+      include: { project: true },
+    });
+    await audit(this.ctx, req, {
+      action: "generation.complete",
+      outcome: "FAILURE",
+      ...auditBase,
+      metadata: { generationId: generation.id, error: message, attempt: generation.attempts },
+    });
+    return failed;
+  }
+
+  private async recordSuccess(
+    req: Request,
+    generation: GenerationWithProject,
+    template: UsableTemplate,
+    plan: RenderPlan,
+  ): Promise<GenerationWithProject> {
+    const auditBase = { targetType: "project", targetId: generation.projectId } as const;
     try {
       const succeeded = await this.prisma.projectGeneration.update({
         where: { id: generation.id },

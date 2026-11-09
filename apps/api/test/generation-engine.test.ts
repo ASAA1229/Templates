@@ -1,4 +1,4 @@
-import { cp, mkdir, mkdtemp, readdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readdir, readFile, rm, stat, symlink, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -6,7 +6,18 @@ import { templateInputValuesSchema, type TemplateManifest } from "@asaa/contract
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { isUsable, TemplateLibrary, type LibraryTemplate } from "../src/modules/generation/library.js";
 import { GenerationError, projectVariables, renderPlan } from "../src/modules/generation/render.js";
-import { digestOutput, nodeFs, OutputConflictError, writeOutput } from "../src/modules/generation/writer.js";
+import {
+  acquireOutputLock,
+  cleanupStale,
+  digestOutput,
+  nodeFs,
+  OutputBusyError,
+  OutputConflictError,
+  readProvenance,
+  resolveOutputDir,
+  STALE_AFTER_MS,
+  writeOutput,
+} from "../src/modules/generation/writer.js";
 
 const LIBRARY = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../template-library");
 const project = projectVariables({ key: "SHOP", name: 'Acme "Shop" <Ltd>', purpose: "Sell things & more" });
@@ -288,6 +299,83 @@ describe("writing outputs", () => {
     await writeOutput(work, "shop", id, rendered, {});
     await writeFile(path.join(work, "shop", "README.txt"), "edited");
     expect(await digestOutput(work, "shop")).not.toBe(rendered.digest);
+  });
+});
+
+describe("publication safety (generator security review)", () => {
+  async function plan() {
+    const template = await usable("starter-blank");
+    return renderPlan(template.manifest, template.files, values(template, {}), project);
+  }
+  const ids = ["00000000-0000-4000-8000-00000000000a", "00000000-0000-4000-8000-00000000000b"];
+
+  it("lets exactly one of two simultaneous writers publish the same output name", async () => {
+    const rendered = await plan();
+    const results = await Promise.allSettled(
+      ids.map((id) => writeOutput(work, "race", id, rendered, { generationId: id })),
+    );
+    const fulfilled = results.filter((result) => result.status === "fulfilled");
+    const rejected = results.filter((result) => result.status === "rejected") as PromiseRejectedResult[];
+    expect(fulfilled).toHaveLength(1);
+    expect(rejected).toHaveLength(1);
+    expect(rejected[0]!.reason).toSatisfy(
+      (reason: unknown) => reason instanceof OutputBusyError || reason instanceof OutputConflictError,
+    );
+    // The published folder belongs to the winner only, and nothing else is left behind.
+    const provenance = await readProvenance(work, "race");
+    expect(ids).toContain(provenance?.generationId);
+    expect((await readdir(work)).sort()).toEqual(["race"]);
+  });
+
+  it("holds an exclusive lock per output name and replaces only stale locks", async () => {
+    const release = await acquireOutputLock(work, "held");
+    await expect(acquireOutputLock(work, "held")).rejects.toBeInstanceOf(OutputBusyError);
+    await release();
+    const again = await acquireOutputLock(work, "held");
+    await again();
+
+    // A lock file left by a crashed process is replaced once it is stale.
+    const lockPath = path.join(work, ".lock-crashed");
+    await writeFile(lockPath, "12345");
+    await expect(acquireOutputLock(work, "crashed")).rejects.toBeInstanceOf(OutputBusyError);
+    const old = new Date(Date.now() - STALE_AFTER_MS - 60_000);
+    await utimes(lockPath, old, old);
+    const recovered = await acquireOutputLock(work, "crashed");
+    await recovered();
+  });
+
+  it("removes abandoned staging folders and locks but keeps fresh ones", async () => {
+    await mkdir(path.join(work, ".staging-old"));
+    await writeFile(path.join(work, ".staging-old", "partial.txt"), "x");
+    await mkdir(path.join(work, ".staging-fresh"));
+    await writeFile(path.join(work, ".lock-old"), "1");
+    const old = new Date(Date.now() - STALE_AFTER_MS - 60_000);
+    await utimes(path.join(work, ".staging-old"), old, old);
+    await utimes(path.join(work, ".lock-old"), old, old);
+    expect((await cleanupStale(work)).sort()).toEqual([".lock-old", ".staging-old"]);
+    expect(await readdir(work)).toEqual([".staging-fresh"]);
+  });
+
+  it.skipIf(process.platform === "win32")("writes non-executable files regardless of template intent", async () => {
+    const out = await writeOutput(work, "modes", ids[0]!, await plan(), {});
+    const fileMode = (await stat(path.join(out, "README.txt"))).mode & 0o777;
+    expect(fileMode & 0o111).toBe(0);
+    expect((await stat(path.join(out, "docs"))).mode & 0o700).toBe(0o700);
+  });
+
+  it("ignores version-control metadata in the content digest but refuses linked outputs", async () => {
+    const rendered = await plan();
+    await writeOutput(work, "vcs", ids[0]!, rendered, {});
+    await mkdir(path.join(work, "vcs", ".git", "objects"), { recursive: true });
+    await writeFile(path.join(work, "vcs", ".git", "HEAD"), "ref: refs/heads/main");
+    expect(await digestOutput(work, "vcs")).toBe(rendered.digest);
+
+    const target = path.join(work, "elsewhere");
+    await mkdir(target);
+    await symlink(target, path.join(work, "linked"), process.platform === "win32" ? "junction" : "dir");
+    expect(await resolveOutputDir(work, "linked")).toBeNull();
+    expect(await digestOutput(work, "linked")).toBeNull();
+    expect(await readProvenance(work, "linked")).toBeNull();
   });
 });
 

@@ -115,7 +115,22 @@ describe("safe paths and substitution", () => {
   it("classifies paths", () => {
     expect(unsafePathReason("src/app/main.ts")).toBeNull();
     expect(unsafePathReason(".gitignore")).toBeNull();
-    for (const bad of ["", "/abs", "a\\b", "a//b", "..", "a/./b", "nul", "aux.txt", "a b", "x.", "a/b:c", "é"]) {
+    for (const bad of [
+      "",
+      "/abs",
+      "a\\b",
+      "a//b",
+      "..",
+      "a/./b",
+      "nul",
+      "aux.txt",
+      "a b",
+      "x.",
+      "a/b:c",
+      "é",
+      ".git/hooks/post-commit",
+      "src/.GIT/config",
+    ]) {
       expect(unsafePathReason(bad), bad).not.toBeNull();
     }
     expect(unsafePathReason(Array.from({ length: 13 }, () => "a").join("/"))).toMatch(/12 levels/);

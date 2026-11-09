@@ -363,6 +363,43 @@ describe("conflicts, failures and recovery", () => {
     expect(await readdir(output).catch(() => [])).toEqual([]);
   });
 
+  it("allows only one of two simultaneous generations for the same project key", async () => {
+    const responses = await Promise.all([
+      agent.post("/api/generations", scratch("TWIN")),
+      agent.post("/api/generations", scratch("TWIN")),
+    ]);
+    expect(responses.map((response) => response.status).sort()).toEqual([201, 409]);
+    expect(await h.ctx.prisma.project.count()).toBe(1);
+    expect(await h.ctx.prisma.projectGeneration.count()).toBe(1);
+    expect((await readdir(output)).filter((name) => !name.startsWith("."))).toEqual(["twin"]);
+  });
+
+  it("retry adopts an intact output this generation already published, but never a changed one", async () => {
+    const generated = (await agent.post("/api/generations", scratch("ADOPT"))).body.generation;
+    // Simulate a crash after publishing but before the success was recorded.
+    const markFailed = () =>
+      h.ctx.prisma.projectGeneration.update({
+        where: { id: generated.id },
+        data: { status: "FAILED", outputDigest: null, completedAt: null, version: { increment: 1 } },
+      });
+    const failed = await markFailed();
+    const adopted = await agent.post(`/api/generations/${generated.id}/retry`, { expectedVersion: failed.version });
+    expect(adopted.body.generation).toMatchObject({
+      status: "SUCCEEDED",
+      attempts: 2,
+      outputDigest: generated.outputDigest,
+    });
+
+    await writeFile(path.join(output, "adopt", "README.txt"), "edited by hand");
+    const failedAgain = await markFailed();
+    const refused = await agent.post(`/api/generations/${generated.id}/retry`, {
+      expectedVersion: failedAgain.version,
+    });
+    expect(refused.body.generation).toMatchObject({ status: "FAILED", attempts: 3 });
+    expect(refused.body.generation.error).toMatch(/already exists/);
+    expect(await readFile(path.join(output, "adopt", "README.txt"), "utf8")).toBe("edited by hand");
+  });
+
   it("blocks anonymous and cross-site generation attempts", async () => {
     const anonymous = h.agent();
     expect((await anonymous.post("/api/generations", scratch("ANON"))).status).toBe(401);

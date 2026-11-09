@@ -442,6 +442,8 @@ export function unsafePathReason(candidate: string): string | null {
     if (!SAFE_SEGMENT.test(segment)) return `"${segment}" contains characters that are not allowed in file names.`;
     if (segment.endsWith(".")) return `"${segment}" must not end with a dot.`;
     if (WINDOWS_RESERVED.test(segment)) return `"${segment}" is a reserved device name.`;
+    // Version-control metadata (hooks, config) must never come from template content.
+    if (segment.toLowerCase() === ".git") return "`.git` folders are reserved for version control.";
   }
   return null;
 }
