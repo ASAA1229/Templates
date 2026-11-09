@@ -1,50 +1,55 @@
 # Project Status
 
 **As of:** 2026-11-09  
-**Status:** Requirements and planning baseline updated; application implementation not started.
+**Overall state:** Planning baseline updated; application implementation has not started.
 
-## Repository status
+## Repository and branch
 - Repository: private `ASAA1229/Templates`.
-- Branch baseline initially contained only `main`; `dev`, `new`, `fix` and `test` have now been created from the initial baseline.
-- POC, user stories, branching strategy and supporting product documents are committed on `new` (commit `4e2ec4d`); PR #1 is open from `new` to `dev`.
-- No application code, production runtime, template engine, project generator, catalog UI or CI/CD pipeline has been implemented by this documentation update.
-- No build, automated test, integration test, security test or deployment has been run as part of this update.
+- Current documentation target: `new`.
+- Branch roles remain: `main` production, `dev` integration, `new` feature/specification work, `fix` defect correction and `test` testing/audit.
+- Documentation changes in this update are committed directly to the requested existing `new` branch. They have not been merged into `dev` or `main`.
 
-## Evidence-based status
+## Approved technology baseline
 
-| Area | Current status |
-|---|---|
-| Product vision and operating model | Planning baseline documented |
-| POC | Planning baseline documented |
-| User stories and acceptance criteria | Initial backlog documented; detailed task/test breakdown pending |
-| Technical architecture | Target direction documented; ADRs and contracts pending |
-| UI/UX | Requirements direction documented; screen inventory, wireframes and final design pending |
-| DevOps and deployment | Target requirements documented; tool selection and pipeline implementation pending |
-| Testing and quality engineering | Strategy documented; detailed test cases and automation pending |
-| Security and governance | Requirements documented; implementation and verification pending |
-| Branching strategy | Documented; branches created |
-| Application implementation | Not started |
-| Template catalog/engine | Not implemented |
-| Project generation | Not implemented |
-| AI/JARVIS integration | Not implemented |
-| Production deployment | Not deployed |
+| Layer | Approved choice | Status |
+|---|---|---|
+| Frontend | React + Vite | Approved; not scaffolded |
+| Languages | TypeScript + JavaScript | Approved; not configured |
+| Backend | Node.js + Express | Approved; not scaffolded |
+| Database | PostgreSQL + Prisma | Approved; not configured |
+| UI | Tailwind CSS + shadcn/ui | Approved; not installed/configured |
 
-## Current planning decisions
-- Private, owner-controlled internal platform first; owner-only initial usage.
-- Future internal teams and isolated external organizations.
-- Strict ₹0 operating cost until explicit owner approval.
-- Local-first, free/open-source preference.
-- Modular monolith first; service extraction only when justified.
-- Separate JARVIS product with a limited, permissioned integration boundary.
-- UI/UX, DevOps, testing, security, traceability and recovery are platform-wide requirements.
+The architecture remains a modular monolith. The strict ₹0 operating-cost constraint remains in force. Test libraries, CI provider, deployment platform, containers, queues, storage and monitoring tools have not been approved yet.
 
-## Next actions
-1. Finalize MVP modules and feature boundaries.
-2. Select actual stack, versions and free/local-first tools through ADRs.
-3. Produce data schemas, API contracts, architecture diagrams and screen inventory.
-4. Complete detailed DevOps pipeline, deployment and test-case specifications.
-5. Break the MVP into sequenced implementation tasks with dependencies and acceptance evidence.
-6. Begin implementation only after the owner approves the implementation blueprint.
+## Evidence-based progress
+
+| Area | Status | Progress evidence |
+|---|---|---|
+| Product vision and POC | Documented | POC baseline and approved-stack addendum |
+| User stories | Documented | Epics A–L and implementation mapping; stories remain Not Started |
+| Technology selection | Decision recorded | React/Vite, TypeScript/JavaScript, Node/Express, PostgreSQL/Prisma, Tailwind/shadcn |
+| Architecture and API contracts | Pending | Detailed design/ADRs not complete |
+| UI/UX | Pending | Screen inventory, wireframes and final interaction specs not implemented |
+| Frontend application | Not started | No application scaffold/components |
+| Backend application | Not started | No API/runtime implementation |
+| Database | Not started | No Prisma schema or migrations |
+| Template catalog/engine | Not started | No catalog UI or engine |
+| Project generation | Not started | No generator implementation |
+| Testing | Not started | No test suite or test execution evidence |
+| DevOps/CI/CD | Not started | No pipeline or deployment configuration |
+| AI/JARVIS integration | Not started | No integration implementation; remains optional and cost/privacy gated |
+| Production deployment | Not deployed | No deployment evidence |
+
+**Implementation: 0% · Testing: 0% · Integration: 0% · DevOps: 0% · Deployment: 0%.** These percentages refer to product implementation, not documentation completion.
+
+## Next implementation sequence
+1. Finalize ADR-001 and repository conventions, including supported runtime/package versions.
+2. Define the modular-monolith folder structure, API error/validation conventions and initial data model.
+3. Scaffold React/Vite and Node/Express on the approved branch workflow.
+4. Configure PostgreSQL/Prisma for local development with safe environment handling.
+5. Build the shared UI foundation and application shell.
+6. Implement owner authentication and project management as the first vertical slice.
+7. Select free/local-first test and CI tools in separate decisions, then add automated quality gates.
 
 ## Status integrity
-Do not infer implementation progress from documentation completion or branch creation. Update percentages only from repository/code inspection, executed builds/tests, integration evidence and deployment verification.
+A technology decision or documentation commit is not implementation. Update progress only after inspecting code and recording build, test, integration and deployment evidence. Do not mark stories Done without satisfying their acceptance criteria and Definition of Done.
