@@ -230,3 +230,38 @@ The first implemented MVP is acceptable only when its owner can create a project
 ## 16. Current status
 
 This document records a planning baseline only. Repository documentation and branch setup do not mean the application has been developed, built, tested, integrated or deployed. See [Project Status](PROJECT_STATUS.md) for the current evidence-based status and [User Stories](USER_STORIES.md) for the requirements backlog.
+
+
+## 17. Approved technology baseline — decision update (2026-11-09)
+
+The platform owner has approved the following initial implementation stack. This decision supersedes the pending-stack statement in Section 7.5 for the technologies listed here.
+
+| Layer | Approved technology | Implementation direction |
+|---|---|---|
+| Frontend | React + Vite | Single-page application; modular feature structure |
+| Languages | TypeScript + JavaScript | TypeScript by default; JavaScript supported where appropriate |
+| Backend | Node.js + Express | Modular-monolith API; domain-oriented modules |
+| Database | PostgreSQL + Prisma | Relational data model, schema migrations and typed data access |
+| UI styling/components | Tailwind CSS + shadcn/ui | Reusable accessible components and shared design tokens |
+
+### Decision boundaries
+- The approved stack is the starting baseline, not permission to add paid services or infrastructure.
+- Runtime, package and framework versions must be pinned in the implementation ADR/package manifests after compatibility validation.
+- Authentication/session implementation, API contracts, database schema, folder boundaries and UI architecture require detailed design before their respective implementation tasks.
+- Testing libraries, CI provider, deployment platform, container strategy, queues, object storage and monitoring products are **not yet approved**. Evaluate free/local-first options and record decisions separately.
+- Prefer local development and reproducible setup. Do not introduce a paid hosted database, hosted runner, registry, API or subscription without explicit owner approval.
+- TypeScript is the default for new application code; JavaScript interoperability is allowed where justified.
+
+### Initial implementation sequence
+1. Record the approved stack in ADR-001 and define repository conventions.
+2. Scaffold the frontend and backend as clearly separated modules within a modular monolith.
+3. Establish PostgreSQL/Prisma configuration, schema/migration conventions and safe local environment handling.
+4. Build the shared UI foundation and application shell.
+5. Implement the first vertical slice: secure owner sign-in, owner dashboard and project creation/management.
+6. Add automated validation and test infrastructure only after selecting and documenting free/local-first tools.
+
+No item in this sequence is considered implemented merely because it is documented.
+
+## 18. Development readiness and status rules
+
+The technology baseline is now selected sufficiently to begin architecture and scaffolding work. Detailed API/data contracts, screen specifications, security design, test-tool selection and delivery-tool selection remain implementation prerequisites or staged design tasks. User stories remain Not Started until code is implemented and their acceptance criteria are verified. See [Project Status](PROJECT_STATUS.md), [User Stories](USER_STORIES.md) and [ADR-001](ADR-001-APPROVED-STACK.md).
