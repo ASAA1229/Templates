@@ -1,40 +1,58 @@
-# ASAA Templates Studio
+# ASAA Templates Platform
 
-A standalone, private-first product within the ASAA1229 ecosystem for organizing, designing, customizing, versioning, and generating reusable digital-product templates.
+A private-first, owner-controlled internal software-development and future business-operations platform for ASAA. It helps create, develop, test, integrate, deploy, monitor and maintain products using reusable templates, components, workflows, automation and optional AI assistance.
 
-> **Initialization status:** Repository structure and product taxonomy only. No production application, template engine, marketplace, or generation pipeline is implemented by this initialization.
+> **Current status:** Planning and repository foundation only. No production application, template engine, project generator, CI/CD pipeline or runtime has been implemented or tested.
 
-## Product purpose
-Templates Studio is the reusable asset and product-foundation layer for ASAA. It is independent of the Portfolio and JARVIS repositories. It may integrate with JARVIS through explicit, permissioned interfaces in a later phase.
+## Product direction
 
-## Product areas
-- Websites and web experiences
-- Applications and SaaS starter kits
-- E-commerce and commerce operations
-- UI kits, design systems, and component libraries
-- Resumes, CVs, portfolios, and professional documents
-- Business operations, automation, and workflow blueprints
-- Industry/sector-specific solution packs
-- Other reusable digital products
+The initial product is an internal company workspace, not a public template marketplace. The owner is the only assumed initial user. Future capabilities include employees, teams, isolated organizations and offering the platform to other companies.
 
-## Repository guide
-- `docs/`: product definition, architecture, taxonomy, roadmap, governance, and status
-- `catalog/`: future template catalog and metadata schemas
-- `sectors/`: industry/sector taxonomy and future sector packs
-- `divisions/`: product divisions and ownership boundaries
-- `templates/`: future reusable template source assets
-- `standards/`: quality, security, accessibility, and contribution standards
-- `integrations/`: future integration contracts (including optional JARVIS integration)
-- `operations/`: release, maintenance, and support procedures
+**Non-negotiable constraint:** ₹0 operating spend until the owner explicitly authorizes spending. Prefer local-first and free/open-source tooling.
 
-## Current state
-See [Project Status](docs/PROJECT_STATUS.md), [Product Vision](docs/PRODUCT_VISION.md), and [Roadmap](docs/ROADMAP.md).
+## Core documents
 
-## Guiding principles
-Private-first; free/open tooling where practical; modular architecture; independent client outputs; versioned templates; secure defaults; accessible and responsive experiences; no secrets in source control; human approval for external actions.
+- [Proof of Concept](docs/POC.md)
+- [User Stories and Acceptance Criteria](docs/USER_STORIES.md)
+- [Product Vision](docs/PRODUCT_VISION.md)
+- [Product Architecture](docs/PRODUCT_ARCHITECTURE.md)
+- [Project Status](docs/PROJECT_STATUS.md)
+- [Roadmap](docs/ROADMAP.md)
+- [Governance and Safety](docs/GOVERNANCE.md)
+- [Git Branching Strategy](docs/BRANCHING_STRATEGY.md)
+
+## Planned capability areas
+
+- Owner workspace, identity, projects and requirements.
+- Reusable template/catalog and asset management.
+- Project initialization from templates, imports, compositions or scratch.
+- Universal technology adapters and source-control integration.
+- Development, testing, quality engineering and documentation.
+- DevOps, CI/CD, deployment, observability and recovery.
+- Optional JARVIS chatbot, agents, monitoring bot and model orchestration through a separate permissioned integration.
+- Future CRM, sales, finance, HR, support, procurement, analytics and other business modules.
+
+## Architecture principles
+
+Start with a modular monolith, explicit domain boundaries, API-first contracts and selective event-driven workflows. Extract services only when justified. Keep providers replaceable, projects isolated, secrets out of Git and generated outputs independent of source templates.
+
+## Repository layout
+
+- `docs/`: product definition, POC, user stories, architecture, governance, roadmap and status
+- `catalog/`: future catalog metadata
+- `sectors/`, `divisions/`: taxonomy
+- `templates/`: future reusable template assets
+- `standards/`: quality, security and contribution standards
+- `integrations/`: future integration contracts
+- `operations/`: release and support procedures
+
+## Branches
+
+See [Branching Strategy](docs/BRANCHING_STRATEGY.md). `main` is the production baseline; `dev` is integration; `new`, `fix` and `test` serve feature/specification, defect and testing work.
 
 ## Important boundaries
-- Portfolio showcases selected work; it is not the template repository or template-management application.
-- JARVIS may assist with authoring or customization but is not required for Templates Studio to function.
-- Generated client projects must be independent of the source template and must not receive upstream changes without an explicit update operation.
-- Do not publish, license, sell, or expose private assets without explicit authorization.
+
+- JARVIS and Templates remain separate products. Only approved JARVIS capabilities are exposed through an adapter; personal memory and personal capabilities are excluded.
+- Portfolio may showcase approved work but is not the platform itself.
+- No public marketplace, paid services, paid AI, client deployment or external publication without explicit approval.
+- A successful build is not proof of testing completion or production readiness.
