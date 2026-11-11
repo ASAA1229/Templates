@@ -231,7 +231,9 @@ export function AppShell() {
       )}
 
       <div className="flex min-w-0 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-background/90 px-4 backdrop-blur sm:px-6">
+        <header
+          className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-background/90 px-4 backdrop-blur sm:px-6"
+        >
           <Button
             variant="ghost"
             size="icon"
@@ -253,7 +255,11 @@ export function AppShell() {
             </Button>
           </div>
         </header>
-        <main id="main" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 lg:py-8">
+        <main
+          id="main"
+          tabIndex={-1}
+          className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 lg:py-8"
+        >
           <Outlet />
         </main>
       </div>
