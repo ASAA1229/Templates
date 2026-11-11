@@ -540,6 +540,7 @@ As a user, I want AI to summarize and prioritize relevant notifications.
 ### Epic O — Universal search and command center
 
 #### US-O01 — Permission-aware global search (P1)
+**Implementation status:** API and UI slice committed; automated verification pending.
 As an authorized user, I want to search across enabled modules.
 - Search indexes approved entity types and metadata across modules.
 - Results are filtered by current organization, workspace and resource permissions.
@@ -547,6 +548,7 @@ As an authorized user, I want to search across enabled modules.
 - Indexing failures, stale results and unavailable sources are visible.
 
 #### US-O02 — Advanced search and saved queries (P1)
+**Implementation status:** Partially implemented; keyword search exists, filters/facets and saved queries remain open.
 As a user, I want filters, facets and reusable searches.
 - Search supports module-specific filters, facets, sorting and pagination.
 - Users can save, rename, update and delete personal searches.
@@ -895,3 +897,13 @@ As a designer or developer, I want visual changes validated.
 The current repository contains an implemented platform foundation and an initial template demo batch; this does not automatically complete the new experience stories or all earlier stories. Maintain per-story status using the project status register and evidence links. Do not bulk-mark stories complete based on documentation, UI appearance, a successful build or an unverified claim.
 
 The requirements discovery questionnaire is closed at Q31. Any future change should be recorded as a versioned requirement/change request with impact on architecture, scope, priorities, cost, security, testing and delivery.
+
+
+### Search implementation evidence — 2026-11-11
+
+- API module: apps/api/src/modules/search/search.ts.
+- API composition: apps/api/src/app.ts mounts /search.
+- UI: apps/web/src/components/AppShell.tsx adds debounced global search and result navigation.
+- API tests: apps/api/test/search.test.ts cover cross-domain results, query validation and authentication.
+- Implementation commits: ae22a81, 69ac914, 90684b0, 90551f0, 0c65ae0, 3ee0501, 34f174b and 1c08aee.
+- Current status: committed; automated validation is pending. US-O01 is not complete until acceptance criteria and test evidence are verified. US-O02 remains partial.
