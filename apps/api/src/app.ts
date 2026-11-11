@@ -12,6 +12,7 @@ import { dashboardRouter } from "./modules/dashboard/dashboard.js";
 import { createGenerationService, generationsRouter, templatesRouter } from "./modules/generation/generation.js";
 import { projectsRouter } from "./modules/projects/projects.js";
 import { requirementsRouter } from "./modules/requirements/requirements.js";
+import { searchRouter } from "./modules/search/search.js";
 import { workspaceRouter } from "./modules/workspace/workspace.js";
 
 /**
@@ -67,6 +68,7 @@ export function createApp(ctx: AppContext): Express {
   api.use("/projects/:projectId/workspace", workspaceRouter(ctx));
   api.use("/projects", projectsRouter(ctx));
   api.use("/catalog", catalogRouter(ctx));
+  api.use("/search", searchRouter(ctx));
   const generation = createGenerationService(ctx);
   api.use("/templates", templatesRouter(ctx, generation));
   api.use("/generations", generationsRouter(ctx, generation));
