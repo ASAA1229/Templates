@@ -90,7 +90,7 @@ describe("bundled template library", () => {
       "starter-api-service@1.0.0",
       "starter-blank@1.0.0",
       "starter-web-app@1.0.0",
-    ]);
+    ].sort());
     for (const template of all) expect(template.problems, template.id).toEqual([]);
     const again = await new TemplateLibrary(LIBRARY).list();
     expect(again.map((t) => t.digest)).toEqual(all.map((t) => t.digest));
