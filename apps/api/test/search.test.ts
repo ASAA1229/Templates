@@ -45,8 +45,16 @@ describe("global search (US-O01, US-O02)", () => {
     expect(response.body.query).toBe("search");
     expect(response.body.results).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ type: "PROJECT", title: "Searchable Portal", href: "/projects/" + projectId }),
-        expect.objectContaining({ type: "REQUIREMENT", title: "Global search requirement", href: "/projects/" + projectId }),
+        expect.objectContaining({
+          type: "PROJECT",
+          title: "Searchable Portal",
+          href: "/projects/" + projectId,
+        }),
+        expect.objectContaining({
+          type: "REQUIREMENT",
+          title: "Global search requirement",
+          href: "/projects/" + projectId,
+        }),
         expect.objectContaining({ type: "CATALOG", title: "Search UI Kit", href: "/catalog" }),
       ]),
     );
