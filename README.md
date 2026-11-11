@@ -1,14 +1,14 @@
 # ASAA Templates Platform
 
-A private-first, owner-controlled internal software-development and future business-operations platform for ASAA. It helps create, develop, test, integrate, deploy, monitor and maintain products using reusable templates, components, workflows, automation and optional AI assistance.
+A private, organization-internal platform for ASAA employees and management to discover, review, customize and generate reusable digital-product templates and delivery assets.
 
-> **Current status:** Planning and repository foundation only. No production application, template engine, project generator, CI/CD pipeline or runtime has been implemented or tested.
+> **Current status (2026-11-11):** The basic platform foundation is implemented on the `new` branch. The first template-library batch adds 25 industry-specific website demo packages across five business types. CI validation is running; these templates are not yet certified or production-ready.
 
 ## Product direction
 
-The initial product is an internal company workspace, not a public template marketplace. The owner is the only assumed initial user. Future capabilities include employees, teams, isolated organizations and offering the platform to other companies.
+Templates Studio is an internal organizational workspace, not a public marketplace. Access is restricted to authorized employees and management through the platform's identity and permission model.
 
-**Non-negotiable constraint:** ₹0 operating spend until the owner explicitly authorizes spending. Prefer local-first and free/open-source tooling.
+**Non-negotiable constraint:** ₹0 operating spend until management explicitly authorizes spending. Prefer local-first and free/open-source tooling.
 
 ## Core documents
 
@@ -20,17 +20,33 @@ The initial product is an internal company workspace, not a public template mark
 - [Roadmap](docs/ROADMAP.md)
 - [Governance and Safety](docs/GOVERNANCE.md)
 - [Git Branching Strategy](docs/BRANCHING_STRATEGY.md)
+- [Template Library — Batch 001](docs/TEMPLATE_LIBRARY_BATCH_001.md)
+- [Template coverage registry](catalog/template-coverage.json)
 
-## Planned capability areas
+## Platform capabilities
 
-- Owner workspace, identity, projects and requirements.
-- Reusable template/catalog and asset management.
-- Project initialization from templates, imports, compositions or scratch.
-- Universal technology adapters and source-control integration.
-- Development, testing, quality engineering and documentation.
-- DevOps, CI/CD, deployment, observability and recovery.
-- Optional JARVIS chatbot, agents, monitoring bot and model orchestration through a separate permissioned integration.
-- Future CRM, sales, finance, HR, support, procurement, analytics and other business modules.
+- Organization-internal workspace and owner-controlled administration.
+- Projects, requirements and audit foundations.
+- Private catalog with search, filters, lifecycle and trust review.
+- Local versioned template library with manifest validation.
+- Project initialization from an approved template or a starter.
+- Generated project outputs are independent from their source templates.
+- React/Vite frontend, Node.js/Express API, PostgreSQL/Prisma data foundation and shared TypeScript contracts.
+
+## Template library
+
+The first demo batch contains **25 templates**: five variants each for restaurants/cafes, clinics/healthcare providers, schools/education institutes, retail/ecommerce stores and professional services firms.
+
+Each business type has:
+1. Essential
+2. Editorial
+3. Catalog
+4. Booking
+5. Multi-location
+
+Five is the initial demo target, not a fixed limit. The taxonomy and coverage registry are expandable across sectors, business types, technical divisions and organizational functions. The current batch is a starting set, not a claim that every industry has already been populated.
+
+Templates appear in the Catalog page's **Local template library** panel. Each version must be reviewed and approved by an authorized owner before it becomes eligible for project generation. See [Batch 001 details](docs/TEMPLATE_LIBRARY_BATCH_001.md).
 
 ## Architecture principles
 
@@ -38,21 +54,22 @@ Start with a modular monolith, explicit domain boundaries, API-first contracts a
 
 ## Repository layout
 
-- `docs/`: product definition, POC, user stories, architecture, governance, roadmap and status
-- `catalog/`: future catalog metadata
-- `sectors/`, `divisions/`: taxonomy
-- `templates/`: future reusable template assets
-- `standards/`: quality, security and contribution standards
-- `integrations/`: future integration contracts
-- `operations/`: release and support procedures
+- `apps/web/`: React + Vite internal platform UI
+- `apps/api/`: Express API, Prisma schema and local template packages
+- `packages/contracts/`: shared TypeScript/Zod API and template contracts
+- `catalog/`: machine-readable sector and template coverage registry
+- `docs/`: product definition, architecture, governance, roadmap, status and template batch notes
+- `sectors/`, `divisions/`: taxonomy documentation
+- `standards/`, `integrations/`, `operations/`: quality, integration and operational guidance
 
 ## Branches
 
-See [Branching Strategy](docs/BRANCHING_STRATEGY.md). `main` is the production baseline; `dev` is integration; `new`, `fix` and `test` serve feature/specification, defect and testing work.
+See [Branching Strategy](docs/BRANCHING_STRATEGY.md). `main` is the production baseline; `dev` is integration; `new`, `fix` and `test` serve feature, defect and testing work. The current work remains on `new` and has not been merged into `dev` or `main`.
 
 ## Important boundaries
 
-- JARVIS and Templates remain separate products. Only approved JARVIS capabilities are exposed through an adapter; personal memory and personal capabilities are excluded.
+- JARVIS and Templates remain separate products. Only explicitly approved JARVIS capabilities may be exposed through a permissioned adapter; personal memory and personal capabilities are excluded.
 - Portfolio may showcase approved work but is not the platform itself.
-- No public marketplace, paid services, paid AI, client deployment or external publication without explicit approval.
+- No public marketplace, external publishing, paid services, paid AI, client deployment or external data sharing without explicit authorization.
+- Demo forms do not submit or store data; sample retail interactions do not process payments.
 - A successful build is not proof of testing completion or production readiness.
