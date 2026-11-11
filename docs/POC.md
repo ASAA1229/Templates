@@ -380,3 +380,20 @@ The precise MVP boundary and story priorities remain subject to dependency analy
 - Q22–Q31: collaboration, notifications, search/command center, dashboards, BI, forms/workflows, documents/assets, activity/audit, navigation and onboarding/assistance.
 
 The questionnaire was stopped after Q31 at the owner's direction. No additional discovery questions are implied by this update. Unspecified implementation details remain open decisions and must not be guessed. This document is a requirements baseline; it is not implementation, test or production evidence.
+
+
+## 25. Initial implementation slice — universal search
+
+The first implementation slice derived from Q24 is committed to the new branch:
+
+- Authenticated API endpoint: GET /api/search?q=term.
+- Searches project names, keys and purposes; requirement titles, codes and descriptions; and catalog titles, slugs and descriptions.
+- Requires the existing project, requirement and catalog read permissions.
+- Restricts project and requirement matches to the authenticated owner's active projects.
+- Uses bounded result counts (up to five results per domain) and validates query length (2–80 characters).
+- Returns only navigation-safe result fields, not full records or secrets.
+- React application shell includes a debounced global search control, Escape/Enter keyboard behavior and result navigation.
+
+This is a keyword-search foundation, not the complete Q24 target. Semantic/natural-language search, filters/facets, saved queries, search analytics, indexing, mobile command palette and AI task orchestration remain unimplemented. Search uses direct database queries at this stage; a dedicated search index is deferred until scale and query measurements justify it.
+
+Verification: implementation and API tests are committed. The latest GitHub Actions run is being used for format, lint, typecheck, database-backed tests and build verification. Do not treat the story as complete until the run passes.
