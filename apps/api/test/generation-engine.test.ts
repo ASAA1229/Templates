@@ -71,6 +71,7 @@ describe("bundled template library", () => {
       "education-editorial@1.0.0",
       "education-essential@1.0.0",
       "education-multisite@1.0.0",
+      "landing-page@1.0.0",
       "professional-booking@1.0.0",
       "professional-catalog@1.0.0",
       "professional-editorial@1.0.0",
@@ -86,11 +87,10 @@ describe("bundled template library", () => {
       "retail-editorial@1.0.0",
       "retail-essential@1.0.0",
       "retail-multisite@1.0.0",
-      "landing-page@1.0.0",
       "starter-api-service@1.0.0",
       "starter-blank@1.0.0",
       "starter-web-app@1.0.0",
-    ].sort());
+    ]);
     for (const template of all) expect(template.problems, template.id).toEqual([]);
     const again = await new TemplateLibrary(LIBRARY).list();
     expect(again.map((t) => t.digest)).toEqual(all.map((t) => t.digest));
