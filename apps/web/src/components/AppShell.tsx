@@ -77,7 +77,7 @@ function GlobalSearch() {
   }
 
   return (
-    <div className="relative hidden w-full max-w-md md:block">
+    <div className="relative min-w-0 w-full max-w-md">
       <label htmlFor={id} className="sr-only">Search projects, requirements and templates</label>
       <div className="relative">
         <Search
