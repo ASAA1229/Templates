@@ -1,0 +1,111 @@
+{
+  "manifestVersion": 1,
+  "id": "clinic-essential",
+  "version": "1.0.0",
+  "kind": "template",
+  "title": "Clinic & Care Provider — Essential",
+  "description": "A focused, polished one-page presence with clear services and a direct contact path. Business type: Clinic / Healthcare Provider. Sector: Healthcare. Includes synthetic sample content and responsive accessible interactions; all forms are preview-only and no payments or personal data are processed.",
+  "category": "Healthcare",
+  "technologies": [
+    {
+      "name": "HTML",
+      "version": "5"
+    },
+    {
+      "name": "CSS",
+      "version": "3"
+    },
+    {
+      "name": "JavaScript",
+      "version": "ES2022"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "headline",
+      "label": "Main headline",
+      "type": "string",
+      "required": true,
+      "default": "Care that starts with listening.",
+      "maxLength": 120,
+      "description": "Main message shown in the hero section."
+    },
+    {
+      "id": "tagline",
+      "label": "Supporting tagline",
+      "type": "text",
+      "required": true,
+      "default": "Clear information, approachable teams and a simpler way to connect with your care provider.",
+      "maxLength": 300,
+      "description": "Short description below the headline."
+    },
+    {
+      "id": "accentColor",
+      "label": "Brand accent colour",
+      "type": "string",
+      "format": "color",
+      "default": "#2563eb",
+      "maxLength": 7,
+      "description": "Six-digit hex colour used for buttons and highlights."
+    },
+    {
+      "id": "contactEmail",
+      "label": "Contact email",
+      "type": "string",
+      "format": "email",
+      "default": "hello@example.com",
+      "maxLength": 200,
+      "description": "Business contact address used by email links."
+    },
+    {
+      "id": "location",
+      "label": "Location",
+      "type": "string",
+      "default": "Your city",
+      "maxLength": 100,
+      "description": "Location shown in the hero and footer."
+    },
+    {
+      "id": "phone",
+      "label": "Contact phone",
+      "type": "string",
+      "default": "+91 00000 00000",
+      "maxLength": 40,
+      "description": "Display-only sample phone number; replace before launch."
+    }
+  ],
+  "files": [
+    {
+      "source": "index.html",
+      "target": "index.html",
+      "substitute": "html"
+    },
+    {
+      "source": "README.md",
+      "target": "README.md",
+      "substitute": "none"
+    }
+  ],
+  "directories": [],
+  "dependencies": [],
+  "compatibility": {
+    "generator": 1
+  },
+  "license": {
+    "spdx": "Proprietary",
+    "notice": "Internal ASAA demonstration template. Use only within the authorized organization workspace."
+  },
+  "provenance": {
+    "origin": "local",
+    "maintainer": "ASAA Templates Studio",
+    "repository": "ASAA1229/Templates"
+  },
+  "validation": {
+    "requiredOutputs": [
+      "index.html",
+      "README.md"
+    ],
+    "maxFiles": 5,
+    "maxTotalBytes": 131072
+  }
+}
