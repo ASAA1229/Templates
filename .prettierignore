@@ -8,3 +8,4 @@ playwright-report
 test-results
 *.md
 apps/api/template-library
+catalog/template-coverage.json
