@@ -1,6 +1,6 @@
 import { FolderKanban, LayoutDashboard, Library, LogOut, Menu, Search, ScrollText, ShieldCheck, X } from "lucide-react";
 import { useEffect, useId, useState } from "react";
-import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { Button, Input } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
