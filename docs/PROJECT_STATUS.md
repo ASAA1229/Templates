@@ -83,3 +83,25 @@ No test or deployment result is claimed as passed in this status update.
 ## Status integrity
 
 A committed template package is not automatically approved, tested or production-ready. Keep development, build verification, testing, review, integration and deployment as separate evidence-backed states. Generated projects must remain independent of source templates.
+
+
+## Development update — 2026-11-11
+
+### First vertical slice: global keyword search
+
+- Branch: new.
+- API: authenticated GET /api/search?q=... searches active owner projects, their requirements and the private catalog.
+- Authorization: route requires project, requirement and catalog read permissions; project/requirement queries are owner-scoped. Results return a limited navigation projection rather than full records.
+- Validation: query length is constrained to 2–80 characters; results are capped at five per domain.
+- UI: debounced search field in the application header, Escape/Enter keyboard support, loading/empty states and result navigation.
+- Tests added: apps/api/test/search.test.ts covers cross-module results, query validation and unauthenticated access.
+- Not included yet: semantic search, filters/facets, saved queries, ranking analytics, dedicated indexing, AI commands, mobile search and broader cross-organization search.
+- CI: validation runs are in progress; no passing result is claimed until a run completes.
+- Local execution: not performed in this environment; GitHub Actions is the validation path.
+
+### Next engineering sequence
+
+1. Resolve any format, lint, typecheck, unit/integration or browser-test failures from CI.
+2. Add search UI tests and improve keyboard navigation/combobox semantics.
+3. Implement saved searches and filter facets with explicit owner-scoped persistence.
+4. Add the next P1 platform foundation only after search validation is green.
