@@ -105,6 +105,7 @@ export const createProjectSchema = z.object({
   name: required(120, "Name"),
   purpose: trimmed(2000).default(""),
   status: z.enum(PROJECT_STATUSES).default("PLANNING"),
+  blueprint: projectBlueprintSchema.optional(),
 });
 export type CreateProjectInput = z.input<typeof createProjectSchema>;
 
@@ -126,6 +127,7 @@ export const projectListQuerySchema = z.object({
 export interface ProjectView {
   id: string;
   key: string;
+  blueprint: ProjectBlueprint | null;
   name: string;
   purpose: string;
   status: ProjectStatus;
@@ -554,6 +556,20 @@ const DEFAULT_VALIDATION = { requiredOutputs: [] as string[], maxFiles: 200, max
  * template for discovery; the manifest plus its files/ folder is the template
  * content that generation actually uses.
  */
+export const projectBlueprintSchema = z.object({
+  family: z.enum(PROJECT_FAMILIES),
+  architecture: z.enum(ARCHITECTURE_PROFILES),
+  runtimes: z.array(versionedNameSchema).max(10).default([]),
+  languages: z.array(versionedNameSchema).max(10).default([]),
+  frameworks: z.array(versionedNameSchema).max(20).default([]),
+  packageManager: z.enum(PACKAGE_MANAGERS).optional(),
+  databases: z.array(versionedNameSchema).max(10).default([]),
+  apis: z.array(versionedNameSchema).max(20).default([]),
+  infrastructure: z.array(versionedNameSchema).max(20).default([]),
+  operatingSystems: z.array(z.enum(OPERATING_SYSTEMS)).max(6).default([]),
+});
+export type ProjectBlueprint = z.infer<typeof projectBlueprintSchema>;
+
 export const templateManifestSchema = z
   .object({
     manifestVersion: z.number().int(),
@@ -566,21 +582,8 @@ export const templateManifestSchema = z
     /** For starters: the from-scratch project type this starter implements. */
     projectType: z.enum(PROJECT_TYPES).optional(),
     technologies: z.array(versionedNameSchema).min(1).max(20),
-    /** Optional, structured project blueprint. Omitted by legacy manifests and populated by newer starters. */
-    blueprint: z
-      .object({
-        family: z.enum(PROJECT_FAMILIES),
-        architecture: z.enum(ARCHITECTURE_PROFILES),
-        runtimes: z.array(versionedNameSchema).max(10).default([]),
-        languages: z.array(versionedNameSchema).max(10).default([]),
-        frameworks: z.array(versionedNameSchema).max(20).default([]),
-        packageManager: z.enum(PACKAGE_MANAGERS).optional(),
-        databases: z.array(versionedNameSchema).max(10).default([]),
-        apis: z.array(versionedNameSchema).max(20).default([]),
-        infrastructure: z.array(versionedNameSchema).max(20).default([]),
-        operatingSystems: z.array(z.enum(OPERATING_SYSTEMS)).max(6).default([]),
-      })
-      .optional(),
+    /** Optional for backward compatibility with existing library packages. */
+    blueprint: projectBlueprintSchema.optional(),
     inputs: z.array(templateInputSchema).max(30).default([]),
     files: z.array(templateFileSchema).min(1).max(200),
     directories: z.array(z.string().max(240)).max(50).default([]),
@@ -737,6 +740,7 @@ export const createGenerationSchema = z.discriminatedUnion("mode", [
   z.object({
     mode: z.literal("SCRATCH"),
     projectType: z.enum(PROJECT_TYPES, { message: "Choose a project type." }),
+    blueprint: projectBlueprintSchema.optional(),
     project: generationProjectSchema,
     inputs: inputValuesRecord,
     /** Initial requirements captured by the wizard; created as draft user stories. */
@@ -745,6 +749,7 @@ export const createGenerationSchema = z.discriminatedUnion("mode", [
   z.object({
     mode: z.literal("TEMPLATE"),
     catalogItemId: z.string().uuid("Choose a template."),
+    blueprint: projectBlueprintSchema.optional(),
     project: generationProjectSchema,
     inputs: inputValuesRecord,
     requirements: initialRequirements,
@@ -794,6 +799,7 @@ export interface StarterOptionView {
 }
 
 export interface GenerationPreviewView {
+  blueprint: ProjectBlueprint | null;
   outputDir: string;
   files: { path: string; bytes: number }[];
   directories: string[];
@@ -806,6 +812,7 @@ export interface GenerationPreviewView {
 
 export interface GenerationView {
   id: string;
+  blueprint: ProjectBlueprint | null;
   projectId: string;
   projectKey: string;
   projectName: string;
