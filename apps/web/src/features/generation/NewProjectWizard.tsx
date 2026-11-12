@@ -465,7 +465,9 @@ export function NewProjectWizard() {
                         })
                       }
                       title={item.manifest.title}
-                      description={`${item.manifest.description || PROJECT_TYPE_LABELS[item.projectType]} · v${item.version}`}
+                      description={
+                        `${item.manifest.description || PROJECT_TYPE_LABELS[item.projectType]} · v${item.version}`
+                      }
                     >
                       <span className="flex flex-wrap gap-1 pt-1">
                         {item.manifest.technologies.map((tech) => (
