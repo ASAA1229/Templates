@@ -1,8 +1,8 @@
 # Proof of Concept (POC) — ASAA Templates Platform
 
-**Document status:** Planning baseline — implementation not started  
-**Version:** 1.0  
-**Date:** 2026-11-09  
+**Document status:** Requirements discovery consolidated — planning baseline; implementation status is tracked separately  
+**Version:** 1.1  
+**Date:** 2026-11-11  
 **Owner:** ASAA platform owner  
 **Repository:** https://github.com/ASAA1229/Templates
 
@@ -265,3 +265,135 @@ No item in this sequence is considered implemented merely because it is document
 ## 18. Development readiness and status rules
 
 The technology baseline is now selected sufficiently to begin architecture and scaffolding work. Detailed API/data contracts, screen specifications, security design, test-tool selection and delivery-tool selection remain implementation prerequisites or staged design tasks. User stories remain Not Started until code is implemented and their acceptance criteria are verified. See [Project Status](PROJECT_STATUS.md), [User Stories](USER_STORIES.md) and [ADR-001](ADR-001-APPROVED-STACK.md).
+
+
+## 19. Requirements discovery consolidation — 2026-11-11
+
+The platform owner completed the first 31-question requirements discovery sequence. The answers in this section are the current product-direction baseline. They expand the earlier template-and-engineering foundation into a broader internal Business Technology Ecosystem. They do **not** mean every capability belongs in the first MVP or that any capability is already implemented.
+
+### 19.1 Product vision and scope decisions (Q1–Q11)
+
+1. **Product identity:** a complete Business Technology Ecosystem integrating template management, software development, digital-product engineering and internal developer-platform capabilities in a modular architecture.
+2. **Stakeholders and actors:** organization administrators and management; project/product managers; developers and engineers; UI/UX designers; domain specialists; QA, security and DevOps; employees and requesters; and governed AI agents/automation.
+3. **Workspace model:** a hybrid central workspace with independent modules, department workspaces, project workspaces and personal configurable dashboards.
+4. **Extensibility:** modular core, optional modules/plugins, internal catalog, APIs/SDKs, event integrations, versioning, dependency management and governance.
+5. **Scope progression:** technology/templates first, then projects and delivery, business operations, organization management and eventually multi-organization capability.
+6. **Organization model:** adaptive hierarchy supporting parent organizations and subsidiaries, business units, divisions, departments, teams and projects; tenant isolation, shared services, cross-organization collaboration and independent governance.
+7. **Operating actors:** people, automation and AI coexist. Low-risk work may be automated; sensitive/high-impact operations require human approval. AI agents are never unrestricted administrators.
+8. **Lifecycle orchestration:** configurable workflows, events, approvals and tracking span templates, projects, business processes, software delivery and organizational operations.
+9. **Information architecture:** module-owned data, shared platform services, federated access, central discovery, documentation/knowledge, analytics, governed AI context/memory, retention and audit.
+10. **Access channels:** desktop web, responsive mobile web, PWA, native Android/iOS, tablet, APIs/machine-to-machine, desktop application, offline-first/synchronization and additional channels such as chat, CLI and internal portals.
+11. **Experience model:** adaptive unified experience with role-aware navigation, configurable workspaces, command center, application launcher, global search and optional AI conversation.
+
+### 19.2 UI/UX and design-system decisions (Q12–Q31)
+
+The selected direction is a unified but adaptive design language: modules may use interaction patterns suited to their work while sharing centrally governed brand identity, tokens, accessibility and component contracts.
+
+- **Design and themes (Q12–Q14):** shared design system with module-appropriate patterns; organization branding; light, dark and system themes; predefined and module themes; personal customization; accessibility presets; centrally governed tokens; role defaults; drag-and-drop widgets; saved profiles; configurable layouts, navigation, panels and shortcuts; AI recommendations; shared team dashboards and administrator policies.
+- **Data interaction (Q15):** advanced tables, cards/grids, Kanban, Gantt/timelines, charts/analytics, trees/hierarchies, maps, relationship graphs, real-time monitoring and command-driven exploration.
+- **Interaction behavior (Q16):** motion and micro-interactions; drag-and-drop and contextual actions; keyboard/command actions; live updates and collaboration; device-aware behavior; reduced-motion/accessibility modes; and adaptation to network/performance conditions.
+- **Component engineering (Q17):** centralized tokens; modular, versioned component packages; configurable variants/slots/page schemas; design-to-code support; registry and dependency management; automated accessibility and visual-regression checks; documentation/previews; controlled releases and backward compatibility.
+- **Accessibility and localization (Q18):** WCAG 2.2 AA baseline and AAA where practical; keyboard and screen-reader support; visual/sensory accessibility; reduced motion; multilingual UI/content; locale-aware dates, currency, numbers and calendars; RTL; localization-ready templates/components; automated accessibility tests.
+- **Device experience (Q19):** responsive and device-specific layouts; capability-aware components; mobile-first or desktop-first according to workflow; touch, mouse, keyboard and stylus; orientation handling; offline/synchronization; consistent cross-device workflows.
+- **Template discovery (Q20):** advanced catalog, search/filter, interactive and device-viewport previews, comparison, documentation, version history, ratings/evaluation, isolated demos, personalized recommendations, AI discovery and guided wizard.
+- **Template customization (Q21):** visual drag-and-drop, no-code, low-code and full-code modes; live and multi-device preview; theme/design editor; component/section library; version comparison/rollback; AI customization; collaborative editing and reusable profiles.
+- **Collaboration (Q22):** real-time co-editing, comments/annotations, review/approval, task assignments, activity/audit history, presence, notifications, team chat, documents/files, AI collaboration assistance, cross-module collaboration and controlled external collaboration.
+- **Notifications (Q23):** central notification center; real-time, email, mobile push and in-app delivery; priority/severity; user-configurable rules; smart grouping/deduplication; AI prioritization; escalation/reminders; delivery/audit tracking; organization-wide policies.
+- **Global search and command center (Q24):** universal cross-module search; advanced filters/facets; natural-language and semantic search; command palette; contextual actions; saved searches/shortcuts; recent/frequent items; relationship search; permission-aware results; search analytics/relevance tuning; approved AI multi-step action orchestration.
+- **Dashboards (Q25):** role-based, personal, department/team, project/workspace, executive and operational dashboards; analytics; AI-generated dashboards; configurable widgets/layouts; sharing/permissions; scheduled snapshots/reports; live data and refresh controls.
+- **Business intelligence (Q26):** standard and custom reports; interactive visualizations; drill-down; cross-module analytics; real-time and historical/trend analysis; predictive analytics; AI insights/anomaly explanations; scheduled subscriptions; export/interoperability; governance and data lineage.
+- **Forms and workflows (Q27):** dynamic builder; conditional logic; multi-step forms; reusable templates; validation/data quality; autosave/draft recovery; bulk entry/import; workflow-driven forms; signatures/acknowledgments; AI-assisted entry; versioning/audit; accessibility/localization.
+- **Files and assets (Q28):** centralized repository; folders/hierarchy; metadata/tags/search; preview/edit integrations; version history and comparison; collaborative editing; granular secure sharing; media/asset library; lifecycle/retention; AI OCR/classification/summarization/extraction; storage integrations/sync; integrity and security scanning.
+- **Activity and audit history (Q29):** unified feeds; entity timelines; user/team activity; system/technical events; security/admin trails; before/after comparisons; filtering/correlation; real-time streams; exportable tamper-resistant evidence; AI summaries; retention/archival; cross-module event correlation.
+- **Navigation and workspaces (Q30):** global navigation; organization hierarchy; workspace switcher; application launcher; context preservation; breadcrumbs; multiple tabs/saved workspaces; favorites/shortcuts; permission-aware navigation; adaptive layouts; deep links; AI-assisted navigation.
+- **Onboarding and assistance (Q31):** personalized onboarding; product tours; contextual help; guided tasks; searchable knowledge center; video tutorials; role-based learning paths; AI support assistant; in-app support/issue reporting; feature/release guidance; training progress/certifications; feedback and continuous improvement.
+
+All options offered in Q12–Q31 were selected. This records desired capability coverage, not a commitment to implement every item in one release.
+
+## 20. Product capability domains
+
+The requirements above are grouped into governed capability domains. Modules may be delivered independently while using shared platform services.
+
+| Domain | Responsibility | Key shared dependencies |
+|---|---|---|
+| Identity, organization and governance | Users, roles, organization hierarchy, policies, tenant boundaries and approvals | Identity, authorization, audit |
+| Workspace and experience shell | Navigation, dashboards, personalization, themes and accessibility | Design system, preferences, permissions |
+| Template and asset ecosystem | Catalog, templates, components, profiles, previews, versions and generation | Registry, storage, metadata, provenance |
+| Project and product delivery | Requirements, stories, tasks, milestones, repositories and releases | Workflow, source control, traceability |
+| Engineering and DevOps | Build, test, quality gates, artifacts, deployment and operations | Runners, integrations, observability |
+| Workflow and forms | Form schemas, business rules, approvals, automation and signatures | Workflow engine, policy, audit |
+| Documents and knowledge | Files, media, collaboration, search, retention and knowledge | Storage, indexing, permissions |
+| Collaboration and communication | Comments, presence, assignments, chat and controlled sharing | Notifications, identity, activity |
+| Search and command center | Universal discovery, commands and approved task orchestration | Search index, permissions, action registry |
+| Notifications and attention | Delivery, preferences, prioritization, escalation and delivery evidence | Event processing, channels, policy |
+| Analytics and intelligence | Dashboards, reports, trends, forecasts and data lineage | Governed data access, metrics, scheduling |
+| Activity and observability | Audit timelines, operational events, incidents and correlation | Event schema, logs, metrics, retention |
+| Learning and assistance | Onboarding, tutorials, help, support and certifications | Knowledge, role model, analytics |
+| Future business operations | CRM, sales, contracts, finance, HR, procurement, support and other business capabilities | Shared identity, workflow, data governance |
+
+## 21. Cross-cutting architecture requirements
+
+1. **Modular ownership:** each domain owns its business rules and authoritative data; shared services expose explicit contracts rather than creating uncontrolled shared-table coupling.
+2. **Organization-aware authorization:** enforce permissions server-side at organization, workspace, module, resource and action levels. Search, dashboards, exports, AI context and notifications must apply the same access rules.
+3. **Tenant-ready, not prematurely distributed:** model organization and workspace boundaries from the beginning, but retain the modular-monolith deployment until evidence justifies service extraction.
+4. **Event foundation:** define versioned event envelopes, actor, tenant/workspace context, correlation/causation IDs, timestamps, classification, retention and idempotency. Use asynchronous processing for notifications, indexing, analytics, scheduled work and long-running jobs where justified.
+5. **Workflow governance:** model workflow definitions and versions, states, transitions, conditions, approvals, assignments, timeouts, escalation and audit. High-risk transitions require policy checks and human authorization.
+6. **Search and indexing:** use an index as a discovery projection, not as the authorization source of truth. Re-check access when returning results or executing commands. Support re-indexing and deletion/retention propagation.
+7. **Analytics governance:** define metric ownership, semantic definitions, source lineage, freshness, aggregation limits and privacy controls. Do not silently expose sensitive cross-department or cross-tenant data.
+8. **Files and collaboration:** use storage adapters, immutable/versioned metadata, malware scanning, checksums, retention and access-controlled previews. External collaboration is disabled unless explicitly approved and bounded.
+9. **AI controls:** separate agent identity, memory, tools and permissions; ground answers in authorized sources; record provenance and actions; classify risk; require approval for sensitive operations; keep paid AI disabled absent authorization.
+10. **Channel consistency:** web, PWA, native, desktop, CLI and API clients must use shared identity, contracts, authorization and audit. Offline changes require conflict handling, encryption and explicit synchronization rules.
+11. **Design-system governance:** tokens, components, themes and schemas require versioning, compatibility policy, accessibility checks, documentation and controlled release.
+12. **Operational resilience:** background work needs retries, timeouts, cancellation, idempotency, dead-letter visibility and bounded resource use. Notification delivery, scheduled jobs and integrations need observable failure states.
+
+## 22. Experience and interaction acceptance baseline
+
+Every user-facing capability must define, as applicable:
+
+- Route/deep link, navigation placement, user journey, role/permission rules and responsive behavior.
+- Loading, empty, populated, validation, success, error, disabled, focus, hover, offline, stale-data and permission-denied states.
+- Keyboard-only operation, screen-reader semantics, visible focus, contrast, reduced motion and accessible validation.
+- Localization-ready labels, date/time/currency/number formatting, time zones, calendars and RTL layout.
+- Search/filter/sort/pagination behavior, URL state and context restoration where relevant.
+- Data freshness, source/provenance, last-updated indicators and safe handling of partial failures.
+- Audit events for sensitive changes, exports, approvals, configuration changes and administrative actions.
+- Usability and performance validation on representative desktop, tablet and mobile viewports and network conditions.
+
+The default accessibility target is WCAG 2.2 AA; AAA criteria should be adopted where practical and appropriate. Automated checks do not replace manual keyboard and assistive-technology testing.
+
+## 23. Phased delivery interpretation
+
+The selected capabilities are a target ecosystem, not a single-release backlog. Delivery must be dependency- and risk-based:
+
+- **Foundation:** identity/authorization, organization/workspace model, application shell, design tokens/components, audit, project/requirements foundation, catalog foundation, API contracts and local development.
+- **Core internal platform:** role-aware workspace, project delivery, template lifecycle/customization, search, notifications, document/file foundation, forms/workflows and operational visibility.
+- **Advanced productivity:** collaboration, configurable dashboards, BI/reporting, onboarding/knowledge, AI-assisted discovery and governed automation.
+- **Enterprise expansion:** multi-organization administration, advanced tenant isolation, native/desktop/offline clients, broad business operations and controlled external collaboration.
+- **Productization:** independent security, privacy, compliance, support, billing/business model and operational-readiness assessment before any external offering.
+
+The precise MVP boundary and story priorities remain subject to dependency analysis. The initial operating-cost limit remains ₹0 until explicit owner authorization. Existing approved React/Vite, TypeScript/JavaScript, Node.js/Express, PostgreSQL/Prisma and Tailwind/shadcn foundations remain unchanged.
+
+## 24. Discovery traceability and status
+
+- Q1–Q11: product vision, actors, workspace, extensibility, scope progression, organization model, human/AI governance, lifecycle, information architecture, channels and unified experience.
+- Q12–Q21: design system, themes, personalization, data interaction, interaction behavior, component engineering, accessibility/localization, device experience, catalog discovery and customization.
+- Q22–Q31: collaboration, notifications, search/command center, dashboards, BI, forms/workflows, documents/assets, activity/audit, navigation and onboarding/assistance.
+
+The questionnaire was stopped after Q31 at the owner's direction. No additional discovery questions are implied by this update. Unspecified implementation details remain open decisions and must not be guessed. This document is a requirements baseline; it is not implementation, test or production evidence.
+
+
+## 25. Initial implementation slice — universal search
+
+The first implementation slice derived from Q24 is committed to the new branch:
+
+- Authenticated API endpoint: GET /api/search?q=term.
+- Searches project names, keys and purposes; requirement titles, codes and descriptions; and catalog titles, slugs and descriptions.
+- Requires the existing project, requirement and catalog read permissions.
+- Restricts project and requirement matches to the authenticated owner's active projects.
+- Uses bounded result counts (up to five results per domain) and validates query length (2–80 characters).
+- Returns only navigation-safe result fields, not full records or secrets.
+- React application shell includes a debounced global search control, Escape/Enter keyboard behavior and result navigation.
+
+This is a keyword-search foundation, not the complete Q24 target. Semantic/natural-language search, filters/facets, saved queries, search analytics, indexing, mobile command palette and AI task orchestration remain unimplemented. Search uses direct database queries at this stage; a dedicated search index is deferred until scale and query measurements justify it.
+
+Verification: implementation and API tests are committed. The latest GitHub Actions run is being used for format, lint, typecheck, database-backed tests and build verification. Do not treat the story as complete until the run passes.

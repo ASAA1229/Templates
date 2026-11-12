@@ -1,9 +1,9 @@
 # Product User Stories and Acceptance Criteria
 
 **Product:** ASAA Templates Platform  
-**Status:** Planning backlog — implementation not started  
-**Version:** 1.0  
-**Date:** 2026-11-09
+**Status:** Consolidated requirements backlog — individual story status remains evidence-based  
+**Version:** 1.1  
+**Date:** 2026-11-11
 
 ## 1. Backlog conventions
 
@@ -454,3 +454,456 @@ The exact test libraries and CI/deployment products remain undecided. Select onl
 - Development Complete requires all acceptance criteria implemented and reviewed.
 - Build Verified, Testing Complete and Production Ready are separate evidence-backed states.
 - Never infer testing completion from a successful build or a merged commit.
+
+
+## 17. Expanded experience, collaboration and enterprise capability backlog (Q12–Q31)
+
+The following stories translate the completed requirements discovery into implementable backlog items. They are additive to Epics A–L. Unless implementation evidence is linked in the project status register, each new story is **Not Started**. Priority is provisional and indicates sequencing, not a promise that all stories belong in the MVP.
+
+### Epic M — Collaboration and shared workspaces
+
+#### US-M01 — Real-time collaborative editing (P1)
+As an authorized team member, I want to collaborate on supported templates, documents and project artifacts.
+- Concurrent edits are synchronized with conflict detection/resolution appropriate to the artifact.
+- Presence and active collaborators are visible where permitted.
+- Offline edits are queued safely and conflicts are surfaced before overwrite.
+- Collaboration access is checked against resource and workspace permissions.
+
+#### US-M02 — Comments, annotations and review (P1)
+As a contributor or reviewer, I want contextual comments and annotations.
+- Comments can be attached to supported resources or specific versions/locations.
+- Threads support replies, resolution, mentions and moderation according to policy.
+- Review decisions and requested changes are recorded with actor and timestamp.
+- Notifications link to the authorized resource and relevant context.
+
+#### US-M03 — Assignments and team coordination (P1)
+As a project or team member, I want to assign work and track ownership.
+- Tasks and review actions support assignee, due date, priority and status.
+- Team and cross-module assignments preserve a single traceable work item.
+- Reassignment, completion and overdue transitions are auditable.
+
+#### US-M04 — Presence and team communication (P2)
+As an authorized collaborator, I want presence and contextual communication.
+- Presence can be enabled or disabled by policy and user preference.
+- Team chat and resource-linked discussions enforce membership and retention policies.
+- Communication is not exposed across tenants or unauthorized workspaces.
+
+#### US-M05 — Controlled external collaboration (P2)
+As an administrator, I want external collaboration only when explicitly enabled.
+- External identities receive scoped, expiring access to selected resources.
+- Download, copy, export and re-sharing controls are policy-driven.
+- External access, changes and revocation are audited.
+- External collaboration is disabled by default until separately approved.
+
+### Epic N — Notification and attention management
+
+#### US-N01 — Central notification center (P1)
+As a user, I want one place to review relevant notifications.
+- Notifications are searchable/filterable by source, time, category, priority and read state.
+- Each notification links to an authorized destination.
+- Read, unread, archived and acknowledged states are supported.
+
+#### US-N02 — Multi-channel notification delivery (P1)
+As a user, I want policy-approved notifications across supported channels.
+- In-app delivery is supported first; email, mobile push and other channels are adapter-based.
+- User preferences and organization policies are both evaluated.
+- Delivery attempts, outcomes and provider errors are recorded without exposing secrets.
+- Channel availability and consent are explicit; unsupported channels fail visibly.
+
+#### US-N03 — Notification rules and preferences (P1)
+As a user or administrator, I want configurable notification behavior.
+- Users can configure allowed categories, channels, frequency and quiet periods.
+- Organization policies can mandate critical security/operational notifications.
+- User preferences cannot suppress mandatory policy alerts.
+- Rule changes are versioned and auditable.
+
+#### US-N04 — Priority, grouping and deduplication (P1)
+As a user, I want related notifications grouped and ranked.
+- Severity and priority have documented definitions.
+- Duplicate or correlated events can be grouped without losing source-event evidence.
+- Grouping and ranking are explainable and reversible to the underlying events.
+- Critical alerts are not hidden by low-priority aggregation.
+
+#### US-N05 — Escalation, reminders and acknowledgment (P1)
+As an owner or responsible operator, I want unacknowledged alerts escalated.
+- Policies define escalation targets, timing, reminders and terminal conditions.
+- Acknowledgment records actor and timestamp but does not falsely mark an incident resolved.
+- Escalation loops are bounded, idempotent and observable.
+
+#### US-N06 — AI-assisted notification prioritization (P2)
+As a user, I want AI to summarize and prioritize relevant notifications.
+- AI prioritization is advisory and exposes the signals/reasons used.
+- Mandatory alert policies take precedence over AI ranking.
+- AI cannot dismiss, suppress or resolve critical alerts autonomously.
+- Inputs are permission-filtered and AI actions are audited.
+
+### Epic O — Universal search and command center
+
+#### US-O01 — Permission-aware global search (P1)
+**Implementation status:** API and UI slice committed; automated verification pending.
+As an authorized user, I want to search across enabled modules.
+- Search indexes approved entity types and metadata across modules.
+- Results are filtered by current organization, workspace and resource permissions.
+- Access is revalidated when opening a result; index contents are not an authorization authority.
+- Indexing failures, stale results and unavailable sources are visible.
+
+#### US-O02 — Advanced search and saved queries (P1)
+**Implementation status:** Partially implemented; keyword search exists, filters/facets and saved queries remain open.
+As a user, I want filters, facets and reusable searches.
+- Search supports module-specific filters, facets, sorting and pagination.
+- Users can save, rename, update and delete personal searches.
+- Shared searches require explicit sharing permissions and retain access checks.
+
+#### US-O03 — Natural-language and semantic search (P2)
+As a user, I want to describe what I am looking for in ordinary language.
+- Search can interpret intent and semantic similarity while preserving source references.
+- Results identify the source module and relevant matching context.
+- AI-derived summaries are distinguished from authoritative source data.
+- Search remains usable through keyword/filter paths without AI.
+
+#### US-O04 — Command palette and contextual actions (P1)
+As a user, I want to navigate and invoke permitted actions quickly.
+- Keyboard-accessible command palette supports navigation and registered actions.
+- Actions are filtered by role, resource state and policy.
+- Destructive or high-impact commands require confirmation and/or approval.
+- Commands record actor, target, parameters safe for audit and outcome.
+
+#### US-O05 — Approved AI task orchestration (P2)
+As an authorized user, I want to request multi-step tasks in natural language.
+- AI proposes a plan, identifies tools and previews material changes before execution.
+- Every step re-checks authorization and policy at execution time.
+- Sensitive actions require human approval; failed steps and partial completion are reported.
+- Idempotency, cancellation, rollback/compensation and action audit are defined.
+
+#### US-O06 — Search analytics and relevance governance (P2)
+As a platform administrator, I want to improve search quality safely.
+- Search latency, no-result rates, relevance feedback and index freshness are measured.
+- Analytics are aggregated and access-controlled.
+- Personal/sensitive query content is minimized and retained according to policy.
+
+### Epic P — Dashboards and workspace personalization
+
+#### US-P01 — Role and organization dashboards (P1)
+As a user, I want a dashboard appropriate to my role and workspace.
+- Dashboard defaults can vary by role, department, team, project and organization.
+- All widgets enforce the viewer's data permissions.
+- Missing or unavailable data is clearly distinguished from zero values.
+
+#### US-P02 — Personal dashboard builder (P1)
+As a user, I want to customize my dashboard.
+- Users can add, remove, resize, rearrange and configure approved widgets.
+- Layouts can be saved as personal profiles and restored.
+- Organization policies can restrict unsupported widgets or sharing.
+
+#### US-P03 — Shared team and project dashboards (P1)
+As a team or project lead, I want to share governed dashboards.
+- Dashboard ownership, audience and permissions are explicit.
+- Shared dashboards do not grant access to underlying data.
+- Changes, publication and access are auditable.
+
+#### US-P04 — Executive and operational dashboards (P1)
+As an authorized leader or operator, I want strategic and live operational views.
+- Executive metrics and operational health use governed metric definitions.
+- Operational widgets show freshness and source status.
+- Sensitive cross-department metrics require explicit authorization.
+
+#### US-P05 — Live widgets, refresh and scheduled snapshots (P2)
+As a user, I want current data and scheduled dashboard snapshots.
+- Refresh intervals are bounded and configurable by policy.
+- Stale, delayed and failed data sources are identified.
+- Scheduled snapshots record generation time, data window and recipients.
+
+#### US-P06 — AI-assisted dashboard creation (P2)
+As an authorized user, I want dashboards generated from a natural-language request.
+- AI proposes widgets, data sources, filters and metric definitions before saving.
+- All data-source permissions are enforced.
+- Users can edit, save, compare and discard generated layouts.
+- AI-generated interpretations are labeled and traceable.
+
+### Epic Q — Reporting and business intelligence
+
+#### US-Q01 — Standard and custom report builder (P1)
+As an authorized analyst, I want standard reports and configurable reports.
+- Reports support governed fields, filters, grouping, sorting and calculations.
+- Report definitions are versioned and reusable.
+- Query scope and export permissions are checked server-side.
+
+#### US-Q02 — Interactive visualization and drill-down (P1)
+As a user, I want to explore metrics visually.
+- Supported visualizations include charts, tables, timelines and other suitable views.
+- Drill-down preserves filter context and permission checks.
+- Accessible alternatives are provided for visual-only information.
+
+#### US-Q03 — Cross-module analytics and metric definitions (P2)
+As an authorized analyst, I want governed analysis across modules.
+- Metric definitions have an owner, formula, scope and version.
+- Cross-module joins respect data ownership and access boundaries.
+- Data lineage identifies source modules and transformations.
+
+#### US-Q04 — Historical, trend and predictive analysis (P2)
+As a decision-maker, I want to compare historical performance and examine forecasts.
+- Historical periods and comparison windows are explicit.
+- Forecasts show assumptions, confidence/uncertainty and source freshness.
+- Predictions are not presented as confirmed facts or automatic decisions.
+
+#### US-Q05 — AI insights and anomaly explanations (P2)
+As a decision-maker, I want concise explanations of significant patterns.
+- AI insights cite underlying metrics and source records available to the viewer.
+- Anomalies include reason, confidence limitations and investigation links.
+- AI does not silently alter source data or business records.
+
+#### US-Q06 — Scheduled reports and export (P1)
+As an authorized user, I want reports delivered or exported in approved formats.
+- Scheduling supports timezone, recurrence, recipient authorization and cancellation.
+- Export formats are selected based on supported and secure implementation.
+- Export events are audited; sensitive exports can require approval.
+
+### Epic R — Dynamic forms and workflow interaction
+
+#### US-R01 — Visual form builder and reusable schemas (P1)
+As an administrator or authorized designer, I want to create reusable forms.
+- Form schemas define fields, types, labels, help text, validation and version.
+- Published schema versions are immutable; edits create a new version.
+- Forms can be reused across permitted modules without bypassing domain validation.
+
+#### US-R02 — Conditional and multi-step forms (P1)
+As a user, I want forms to adapt to my answers and workflow.
+- Conditional visibility and branching rules are deterministic and testable.
+- Multi-step forms preserve progress and clearly show validation errors.
+- Users can review entered data before final submission.
+
+#### US-R03 — Drafts, autosave and recovery (P1)
+As a user, I want unfinished forms preserved.
+- Drafts are saved safely with clear save status and conflict handling.
+- Recovery is scoped to the user/resource permissions.
+- Sensitive draft data follows encryption, retention and deletion policies.
+
+#### US-R04 — Validation, bulk entry and imports (P1)
+As an operator, I want accurate individual and bulk data entry.
+- Client-side convenience validation is repeated server-side.
+- Imports provide preview, row-level errors and explicit commit confirmation.
+- Partial import behavior is defined; duplicate handling is deterministic.
+
+#### US-R05 — Workflow approvals and signatures (P1)
+As an authorized approver, I want form submissions connected to controlled workflows.
+- Workflow states, approvers, delegation, rejection and resubmission are explicit.
+- Acknowledgments/signatures record identity, intent, time and artifact version.
+- Legally binding signature requirements receive separate legal and provider review before adoption.
+
+#### US-R06 — AI-assisted form completion (P2)
+As a user, I want help extracting or suggesting form values.
+- Suggestions identify source documents and confidence/uncertainty.
+- Users review and confirm extracted values before submission.
+- AI cannot approve a submission or invent missing authoritative data.
+
+### Epic S — Documents, files and digital assets
+
+#### US-S01 — Central file and asset repository (P1)
+As an authorized user, I want a unified repository for documents and media.
+- Files are organized by workspace/project and configurable folders/tags.
+- Metadata records owner, type, version, source, classification and timestamps.
+- Storage adapters preserve portability and access control.
+
+#### US-S02 — Preview and supported editing integrations (P1)
+As a user, I want to preview supported content and edit through approved tools.
+- Supported formats and preview limitations are documented.
+- Previews do not bypass source-file permissions.
+- External editing integrations are explicit, revocable and audited.
+
+#### US-S03 — Version history and comparison (P1)
+As a user, I want revisions and change history.
+- New versions retain immutable provenance and checksums where appropriate.
+- Users can compare and restore eligible versions with permission checks.
+- Restore operations create auditable events rather than erasing history.
+
+#### US-S04 — Secure sharing and access policies (P1)
+As an owner or administrator, I want controlled file sharing.
+- Access supports least privilege, expiry and revocation.
+- Public links are disabled unless explicitly authorized.
+- Download, export, preview and re-sharing can be governed separately.
+
+#### US-S05 — Retention, archival and secure disposal (P2)
+As an administrator, I want files managed through their lifecycle.
+- Retention classes and legal holds are policy-driven.
+- Archival and deletion produce auditable evidence.
+- Deletion propagates to indexes, previews and replicas according to documented policy.
+
+#### US-S06 — AI document intelligence and security scanning (P2)
+As an authorized user, I want documents classified and searchable.
+- OCR, extraction and summaries retain source references.
+- Uploaded files are treated as untrusted and scanned before processing.
+- AI processing respects data classification and approved processing boundaries.
+- Malware/integrity failures quarantine files and prevent unsafe use.
+
+### Epic T — Activity, audit and operational history
+
+#### US-T01 — Unified and entity-specific activity feeds (P1)
+As a user, I want to inspect activity across the platform and on individual resources.
+- Events have a consistent schema with actor, action, target, time and outcome.
+- Feed visibility is permission-filtered.
+- Entity timelines correlate relevant project, template, document and workflow events.
+
+#### US-T02 — Change comparison and event correlation (P1)
+As a reviewer, I want to understand what changed and how events relate.
+- Supported changes show before/after values with sensitive fields redacted.
+- Correlation IDs link related events across modules and background jobs.
+- Missing correlation or partial history is clearly indicated.
+
+#### US-T03 — Security and administrative audit protection (P0 foundation)
+As the platform owner, I want privileged actions recorded and protected.
+- Authentication, authorization, policy, role, export, approval and administrative events are recorded.
+- Ordinary application users cannot alter audit history.
+- Audit access, export, retention and integrity verification are controlled and tested.
+
+#### US-T04 — Real-time activity and AI summaries (P2)
+As an authorized operator, I want live activity and concise summaries.
+- Live streams enforce access and support reconnect/replay behavior.
+- AI summaries link back to source events and label uncertainty.
+- AI cannot modify or suppress authoritative audit records.
+
+#### US-T05 — Audit export, retention and archival (P1)
+As an auditor or owner, I want controlled evidence retrieval.
+- Exports preserve event identity, timestamps, provenance and integrity metadata.
+- Retention and archival policies are configurable within governance limits.
+- Legal hold and deletion exceptions are auditable.
+
+### Epic U — Organization navigation and workspace management
+
+#### US-U01 — Organization hierarchy and workspace switcher (P1)
+As an authorized user, I want to navigate the organization structure and workspaces.
+- Hierarchy supports parent organization, subsidiary, business unit, division, department, team and project.
+- Workspace switching updates context and revalidates permissions.
+- Shared-service access is explicit and does not imply unrestricted cross-workspace access.
+
+#### US-U02 — Unified navigation, breadcrumbs and context preservation (P1)
+As a user, I want predictable navigation without losing work.
+- Routes, breadcrumbs, deep links and parent navigation are consistent.
+- Filters, drafts and permitted view state are preserved when navigating.
+- Unauthorized or deleted destinations fail safely.
+
+#### US-U03 — Application launcher, tabs and shortcuts (P1)
+As a user, I want quick access to enabled modules and work areas.
+- Launcher lists only enabled and authorized applications.
+- Favorites, recent items, multiple tabs and saved workspace layouts are supported.
+- Keyboard operation and responsive layouts are available.
+
+#### US-U04 — Adaptive and AI-assisted navigation (P2)
+As a user, I want navigation suited to device and task.
+- Layout adapts to screen size and interaction mode.
+- AI navigation suggestions are advisory and permission-aware.
+- Command execution follows the same authorization and approval controls as direct navigation.
+
+### Epic V — Onboarding, learning and in-app assistance
+
+#### US-V01 — Personalized onboarding and product tours (P1)
+As a new user, I want onboarding suited to my role and workspace.
+- Onboarding journeys are role-aware and can be resumed or skipped where policy permits.
+- Tours explain navigation and relevant workflows without changing production data.
+- Completion and dismissal preferences are stored appropriately.
+
+#### US-V02 — Contextual guidance and guided tasks (P1)
+As a user, I want help at the point of need.
+- Tooltips, contextual help and guided walkthroughs are maintained with the relevant feature version.
+- Guided tasks use safe sample data or explicit confirmation before real changes.
+- Users can exit and resume supported walkthroughs.
+
+#### US-V03 — Searchable knowledge and learning center (P1)
+As a user, I want documentation and training in one discoverable location.
+- Guides, FAQs, videos and troubleshooting content are searchable and versioned.
+- Content has an owner, review date and applicable product version.
+- Access follows content classification and role permissions.
+
+#### US-V04 — AI support assistant and issue reporting (P2)
+As a user, I want help understanding platform behavior and reporting problems.
+- AI answers are grounded in authorized, maintained knowledge sources and link to references.
+- The assistant distinguishes known documentation from inference and escalates unresolved questions.
+- Support requests include consented diagnostics with secrets and sensitive data redacted.
+
+#### US-V05 — Feature discovery, training progress and feedback (P2)
+As a user or administrator, I want to learn new capabilities and improve the platform.
+- Release guidance is targeted by role and enabled modules.
+- Learning paths, assessments and completion records are supported where enabled.
+- Feedback is categorized, traceable and reviewed; it is not treated as an automatic approval to change policy.
+
+### Epic W — Design-system, device and accessibility maturity
+
+#### US-W01 — Governed theme and token system (P1)
+As an administrator or designer, I want consistent organization branding and themes.
+- Tokens cover color, typography, spacing, elevation, borders, motion and responsive behavior.
+- Light/dark/system and approved theme variants are supported.
+- Organization governance can constrain user-level customization.
+
+#### US-W02 — Versioned component and page-schema registry (P1)
+As a developer, I want reusable components with compatibility guarantees.
+- Components expose documented variants, slots, states and accessibility contracts.
+- Packages and page schemas are versioned with dependency/compatibility metadata.
+- Breaking changes require migration guidance and controlled release.
+
+#### US-W03 — Advanced data interaction components (P1)
+As a user, I want suitable views for different work types.
+- Tables, cards, boards, timelines, charts, trees, maps and relationship views are selected by use case.
+- Keyboard, screen-reader and responsive alternatives are provided.
+- Large datasets use pagination/virtualization or other measured performance techniques.
+
+#### US-W04 — Device-aware and offline-capable experience (P2)
+As a user, I want consistent workflows across supported devices.
+- Touch, mouse, keyboard and stylus interactions are supported where relevant.
+- Offline-capable functions identify local versus server state and synchronization status.
+- Conflict resolution and sensitive local-data protection are documented and tested.
+
+#### US-W05 — Accessibility, localization and RTL validation (P1)
+As a user, I want an accessible and localized interface.
+- WCAG 2.2 AA is the baseline; AAA is adopted where practical.
+- Automated and manual keyboard, screen-reader, contrast and reduced-motion tests are performed.
+- UI and content support localization, locale-aware formats and RTL layouts where enabled.
+
+#### US-W06 — Visual regression and design quality gates (P1)
+As a designer or developer, I want visual changes validated.
+- Critical components and screens have stable visual regression coverage.
+- Baselines are reviewed and updated intentionally.
+- Responsive viewports, themes and accessibility states are included in the validation matrix.
+
+## 18. Requirements-to-story traceability
+
+| Discovery questions | Backlog coverage |
+|---|---|
+| Q1–Q5: product ecosystem, actors, workspaces, extensibility and progressive scope | Epics A–L; M–V; POC Sections 19–23 |
+| Q6–Q9: organization hierarchy, human/AI governance, lifecycle and information architecture | A, C, I, J, K, M, N, O, T, U |
+| Q10–Q11: channels and unified experience | B, U, W; platform channel architecture |
+| Q12–Q19: design language, themes, personalization, interactions, components, accessibility and devices | B, P, U, W |
+| Q20–Q21: catalog discovery and customization | D, E, W; existing template-library requirements |
+| Q22: collaboration | M |
+| Q23: notifications | N |
+| Q24: search and command center | O |
+| Q25: dashboards | P |
+| Q26: reporting and BI | Q |
+| Q27: forms and workflows | R |
+| Q28: files and assets | S |
+| Q29: activity and audit history | T |
+| Q30: navigation and workspaces | U |
+| Q31: onboarding and assistance | V |
+
+## 19. Priority and implementation sequencing notes
+
+- Existing P0 stories remain candidates for the first usable internal vertical slice and must be dependency-reviewed.
+- New P0 foundation: US-T03 audit protection is a prerequisite for privileged and cross-module operations.
+- New P1 stories establish the first governed versions of collaboration, notifications, search, dashboards, reports, forms, files, navigation, onboarding and design-system maturity. They should be sequenced by MVP value and dependencies rather than implemented all at once.
+- P2 stories include advanced AI, prediction, broad external collaboration, offline/native expansion and advanced learning/analytics capabilities.
+- The owner must approve any change to the ₹0 operating-cost constraint. A capability that requires paid hosting, messaging, storage, AI or identity services remains blocked until an approved free/local-first alternative or explicit spending authorization exists.
+- All stories require explicit implementation links and test evidence before status changes. The expanded backlog does not imply that these capabilities currently exist.
+
+## 20. Story status and change control
+
+The current repository contains an implemented platform foundation and an initial template demo batch; this does not automatically complete the new experience stories or all earlier stories. Maintain per-story status using the project status register and evidence links. Do not bulk-mark stories complete based on documentation, UI appearance, a successful build or an unverified claim.
+
+The requirements discovery questionnaire is closed at Q31. Any future change should be recorded as a versioned requirement/change request with impact on architecture, scope, priorities, cost, security, testing and delivery.
+
+
+### Search implementation evidence — 2026-11-11
+
+- API module: apps/api/src/modules/search/search.ts.
+- API composition: apps/api/src/app.ts mounts /search.
+- UI: apps/web/src/components/AppShell.tsx adds debounced global search and result navigation.
+- API tests: apps/api/test/search.test.ts cover cross-domain results, query validation and authentication.
+- Implementation commits: ae22a81, 69ac914, 90684b0, 90551f0, 0c65ae0, 3ee0501, 34f174b and 1c08aee.
+- Current status: committed; automated validation is pending. US-O01 is not complete until acceptance criteria and test evidence are verified. US-O02 remains partial.

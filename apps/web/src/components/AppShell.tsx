@@ -1,4 +1,5 @@
 import { FolderKanban, LayoutDashboard, Library, LogOut, Menu, ScrollText, ShieldCheck, X } from "lucide-react";
+import { GlobalSearch } from "./GlobalSearch";
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router";
 import { Button } from "@/components/ui";
@@ -111,6 +112,7 @@ export function AppShell() {
           >
             <Menu aria-hidden="true" />
           </Button>
+          <GlobalSearch />
           <div className="ml-auto flex items-center gap-3">
             <span className="hidden text-sm text-muted-foreground sm:inline" data-testid="owner-name">
               {owner?.displayName}
