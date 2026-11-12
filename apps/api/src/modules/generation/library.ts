@@ -203,6 +203,7 @@ export class TemplateLibrary {
     if (!rootStats?.isDirectory()) return [];
     const templates: LibraryTemplate[] = [];
     for (const idEntry of await readdir(this.root, { withFileTypes: true })) {
+      if (idEntry.name.startsWith(".")) continue;
       if (!idEntry.isDirectory() && !idEntry.isSymbolicLink()) continue;
       const idDir = path.join(this.root, idEntry.name);
       if (!ID_PATTERN.test(idEntry.name) || (await lstat(idDir)).isSymbolicLink()) {
