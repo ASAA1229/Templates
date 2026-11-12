@@ -18,7 +18,7 @@ import { resolveOutputDir } from "../generation/writer.js";
 import { catalogView } from "../catalog/catalog.js";
 import type { GenerationService } from "../generation/generation.service.js";
 
-const MAX_FILES = 300;
+const MAX_FILES = 200;
 const MAX_FILE_BYTES = 512 * 1024;
 const MAX_TOTAL_BYTES = 4 * 1024 * 1024;
 const EXCLUDED_DIRS = new Set([".git", ".asaa", "node_modules", "dist", "build", "coverage", ".next", ".venv", "venv"]);
