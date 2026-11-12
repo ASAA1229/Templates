@@ -9,7 +9,7 @@ const API_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "staging", "production"]).default("development"),
   PORT: z.coerce.number().int().min(1).max(65535).default(4000),
-  WEB_ORIGIN: z.string().url().default("http://localhost:5173"),
+  WEB_ORIGIN: z.string().url().default("http://localhost:5000"),
   DATABASE_URL: z.string().regex(/^postgres(?:ql)?:\/\//, "DATABASE_URL must be a PostgreSQL connection string."),
   SESSION_ABSOLUTE_MINUTES: z.coerce
     .number()

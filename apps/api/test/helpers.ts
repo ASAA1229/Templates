@@ -55,7 +55,7 @@ export function createHarness(overrides: Record<string, string> = {}): TestHarne
   const config = loadConfig({
     NODE_ENV: "test",
     DATABASE_URL: url,
-    WEB_ORIGIN: "http://localhost:5173",
+    WEB_ORIGIN: "http://localhost:5000",
     LOG_LEVEL: "silent",
     ...overrides,
   });
