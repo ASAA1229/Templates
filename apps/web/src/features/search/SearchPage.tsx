@@ -79,8 +79,8 @@ export function SearchPage() {
   const [type, setType] = useState<"ALL" | SearchType>(
     initialFilters.types.length === 1 ? initialFilters.types[0]! : "ALL",
   );
-  const [projectStatus, setProjectStatus] = useState(initialFilters.projectStatus ?? "");
-  const [requirementStatus, setRequirementStatus] = useState(initialFilters.requirementStatus ?? "");
+  const [projectStatus, setProjectStatus] = useState<string>(initialFilters.projectStatus ?? "");
+  const [requirementStatus, setRequirementStatus] = useState<string>(initialFilters.requirementStatus ?? "");
   const [catalogCategory, setCatalogCategory] = useState(initialFilters.catalogCategory ?? "");
   const [sortBy, setSortBy] = useState<SearchFilters["sortBy"]>(initialFilters.sortBy);
   const [sortOrder, setSortOrder] = useState<SearchFilters["sortOrder"]>(initialFilters.sortOrder);
