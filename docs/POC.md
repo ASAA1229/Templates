@@ -407,7 +407,7 @@ A comparison of the agreed product objective with the current new branch impleme
 ### 26.1 Current implementation boundary
 
 The current source tree contains:
-- Owner-only authentication/session handling and permission checks.
+- Multi-user authentication with OWNER, ADMIN, DEVELOPER, TESTER and EMPLOYEE roles; server-side role permissions and owner/admin member provisioning are implemented on the current branch.
 - Project and requirement management, audit events, dashboard and keyword/advanced search.
 - A private catalog metadata API and a local manifest-driven template library.
 - A generation flow with template approval, preview, output generation, provenance and integrity verification.
@@ -415,7 +415,7 @@ The current source tree contains:
 - 25 initial website demo packages across five business types.
 - Repository CI and automated API/UI/browser test foundations.
 
-These are meaningful foundations, but they do not establish the complete product objective. In particular, the current generator schema primarily describes files, inputs, dependencies and compatibility; the current demo batch is website-oriented. The current identity model is a single owner. The current workspace is not a full online IDE. The repository CI workflow is not, by itself, a product-level build/test orchestration service for arbitrary generated projects.
+These are meaningful foundations, but they do not establish the complete product objective. In particular, the current generator schema primarily describes files, inputs, dependencies and compatibility; the current demo batch is website-oriented. The identity foundation now supports multiple role-scoped accounts, but invitations, password-reset workflows and resource-level project sharing are not complete. The current workspace is not a full online IDE. The repository CI workflow is not, by itself, a product-level build/test orchestration service for arbitrary generated projects.
 
 ### 26.2 Material gaps
 
@@ -425,7 +425,7 @@ These are meaningful foundations, but they do not establish the complete product
 4. **Configuration and preview:** guided, low-code and advanced configuration, visual customization and responsive previews are not yet a complete workflow.
 5. **Safe execution:** project builds and tests need isolated runners, resource limits, cancellation, logs and evidence; arbitrary code must not execute in the trusted API process.
 6. **Project delivery:** complete ZIP export and approved remote repository provisioning/push are required for independent project hand-off.
-7. **Internal identity:** the current single-owner data/auth model must evolve to invitation-only management and employee accounts with server-enforced least-privilege roles before internal rollout. The owner remains the ultimate authority.
+7. **Internal identity:** complete invitations, activation and password recovery; resource-level project sharing; specialized roles; and access-isolation tests before employee rollout. The owner remains the ultimate authority.
 8. **Reusable composition:** a governed component, design-system, asset and integration registry plus dependency-aware composition is needed.
 9. **Development workspace:** source browsing/editing and safe hand-off to local/online development tools need to extend beyond the current Git/environment panel.
 10. **End-to-end operations:** product-level CI/CD, release approvals, environment promotion, deployment verification, observability, incidents and tested backup/restore remain incomplete.
