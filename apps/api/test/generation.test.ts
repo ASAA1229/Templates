@@ -74,6 +74,11 @@ describe("start from scratch (US-E02)", () => {
       attempts: 1,
       error: null,
     });
+    expect(generation.blueprint).toMatchObject({
+      family: "web-app",
+      architecture: "single-page-app",
+      packageManager: "npm",
+    });
     expect(generation.outputDigest).toMatch(/^[0-9a-f]{64}$/);
     expect(generation.files).toContain("src/App.test.ts");
 
@@ -88,6 +93,12 @@ describe("start from scratch (US-E02)", () => {
       outputDigest: generation.outputDigest,
     });
 
+    const projectDetail = await agent.get(`/api/projects/${generation.projectId}`);
+    expect(projectDetail.body.project.blueprint).toMatchObject({
+      family: "web-app",
+      architecture: "single-page-app",
+      frameworks: [{ name: "React", version: "19" }, { name: "Vite", version: "7" }],
+    });
     const requirements = await agent.get(`/api/projects/${generation.projectId}/requirements`);
     expect(requirements.body.requirements.map((r: { code: string; title: string }) => `${r.code} ${r.title}`)).toEqual([
       "REQ-1 Sign in",
@@ -137,10 +148,33 @@ describe("start from scratch (US-E02)", () => {
     expect(await h.ctx.prisma.project.count()).toBe(1);
   });
 
+  it("rejects a blueprint that does not match the selected starter", async () => {
+    const incompatible = {
+      family: "backend-service",
+      architecture: "layered-service",
+      runtimes: [{ name: "Node.js", version: "24" }],
+      languages: [{ name: "TypeScript", version: "5.9" }],
+      frameworks: [{ name: "Express", version: "5" }],
+      packageManager: "npm",
+      databases: [],
+      apis: [{ name: "REST HTTP", version: "1" }],
+      infrastructure: [{ name: "Node.js server", version: "1" }],
+      operatingSystems: ["linux", "windows", "macos"],
+    };
+    const response = await agent.post("/api/generations", scratch("MISMATCH", { blueprint: incompatible }));
+    expect(response.status).toBe(400);
+    expect(response.body.error.fields).toHaveProperty("blueprint");
+    expect(await h.ctx.prisma.project.count()).toBe(0);
+  });
+
   it("previews without writing anything", async () => {
     const preview = await agent.post("/api/generations/preview", scratch("DRY"));
     expect(preview.status).toBe(200);
-    expect(preview.body.preview).toMatchObject({ outputDir: "dry", conflicts: [] });
+    expect(preview.body.preview).toMatchObject({
+      outputDir: "dry",
+      conflicts: [],
+      blueprint: { family: "web-app", architecture: "single-page-app" },
+    });
     expect(preview.body.preview.files.map((f: { path: string }) => f.path)).toContain("package.json");
     expect(await h.ctx.prisma.project.count()).toBe(0);
     expect(await readdir(output).catch(() => [])).toEqual([]);
