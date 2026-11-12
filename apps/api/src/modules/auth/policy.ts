@@ -33,7 +33,7 @@ export type Permission = (typeof PERMISSIONS)[number];
 
 const ROLE_PERMISSIONS: Record<AuthenticatedOwner["role"], ReadonlySet<Permission>> = {
   OWNER: new Set(PERMISSIONS),
-  ADMIN: new Set(PERMISSIONS.filter((permission) => permission !== "session:manage")),
+  ADMIN: new Set(PERMISSIONS),
   DEVELOPER: new Set([
     "dashboard:read",
     "project:read",
