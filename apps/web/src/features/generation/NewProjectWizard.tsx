@@ -3,6 +3,7 @@ import {
   fieldErrors,
   generationProjectSchema,
   PROJECT_TYPES,
+  type ProjectBlueprint,
   templateInputValuesSchema,
   templateManifestSchema,
   type GenerationPreviewView,
@@ -139,6 +140,8 @@ export function NewProjectWizard() {
   const [step, setStep] = useState<Step>(preselected ? "source" : "start");
   const [mode, setMode] = useState<Mode | null>(preselected ? "TEMPLATE" : null);
   const [projectType, setProjectType] = useState<ProjectType | null>(null);
+  const [blueprintFamily, setBlueprintFamily] = useState("web-app");
+  const [blueprintArchitecture, setBlueprintArchitecture] = useState("single-page-app");
   const [catalogItemId, setCatalogItemId] = useState<string | null>(preselected);
   const [project, setProject] = useState({ key: "", name: "", purpose: "" });
   const [inputs, setInputs] = useState<TemplateInputValues>({});
@@ -163,7 +166,28 @@ export function NewProjectWizard() {
   const starters = options.data?.starters ?? [];
   const templates = options.data?.templates ?? [];
   const selectedTemplate = templates.find((option) => option.catalogItem.id === catalogItemId) ?? null;
+  const starterBlueprints = starters.flatMap((starter) => {
+    const parsed = parseManifest(starter.manifest).manifest;
+    return parsed?.blueprint ? [{ projectType: starter.projectType, blueprint: parsed.blueprint }] : [];
+  });
+  const availableFamilies = [...new Set(starterBlueprints.map((item) => item.blueprint.family))];
+  const activeFamily = availableFamilies.includes(blueprintFamily as ProjectBlueprint["family"])
+    ? blueprintFamily
+    : (availableFamilies[0] ?? "general");
+  const availableArchitectures = [
+    ...new Set(
+      starterBlueprints
+        .filter((item) => item.blueprint.family === activeFamily)
+        .map((item) => item.blueprint.architecture),
+    ),
+  ];
+  const activeArchitecture = availableArchitectures.includes(
+    blueprintArchitecture as ProjectBlueprint["architecture"],
+  )
+    ? blueprintArchitecture
+    : (availableArchitectures[0] ?? "minimal");
   const selectedStarter = starters.find((starter) => starter.projectType === projectType) ?? null;
+  const selectedBlueprint = manifest?.blueprint ?? null;
   const source = useMemo(() => {
     if (mode === "TEMPLATE" && selectedTemplate) return parseManifest(selectedTemplate.manifest);
     if (mode === "SCRATCH" && selectedStarter) return parseManifest(selectedStarter.manifest);
@@ -180,6 +204,7 @@ export function NewProjectWizard() {
       ? {
           mode,
           catalogItemId: catalogItemId ?? "",
+          blueprint: manifest?.blueprint,
           project,
           inputs: manifest ? cleanInputValues(manifest.inputs, inputs) : {},
           requirements,
@@ -187,6 +212,7 @@ export function NewProjectWizard() {
       : {
           mode: "SCRATCH" as const,
           projectType: projectType ?? "blank",
+          blueprint: manifest?.blueprint,
           project,
           inputs: manifest ? cleanInputValues(manifest.inputs, inputs) : {},
           requirements,
@@ -348,35 +374,83 @@ export function NewProjectWizard() {
           {starters.length === 0 ? (
             <EmptyState title="No starters available" description="The starter library could not be loaded." />
           ) : (
-            <fieldset className="grid gap-3 md:grid-cols-3">
-              <legend className="sr-only">Project type</legend>
-              {PROJECT_TYPES.map((type) => {
-                const starter = starters.find((item) => item.projectType === type);
-                const parsed = starter ? parseManifest(starter.manifest).manifest : null;
-                return (
-                  <ChoiceCard
-                    key={type}
-                    name="projectType"
-                    value={type}
-                    disabled={!parsed}
-                    selected={projectType === type}
-                    onSelect={() => chooseSource({ type })}
-                    title={PROJECT_TYPE_LABELS[type]}
-                    description={parsed?.description ?? "Not available."}
+            <div className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Project family">
+                  <select
+                    aria-label="Project family"
+                    className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                    value={activeFamily}
+                    onChange={(event) => {
+                      setBlueprintFamily(event.target.value);
+                      const nextArchitecture = starterBlueprints.find(
+                        (item) => item.blueprint.family === event.target.value,
+                      )?.blueprint.architecture;
+                      setBlueprintArchitecture(nextArchitecture ?? "minimal");
+                      setProjectType(null);
+                    }}
                   >
-                    {parsed && (
-                      <span className="flex flex-wrap gap-1 pt-1">
-                        {parsed.technologies.map((tech) => (
-                          <Badge key={tech.name} tone="info">
-                            {tech.name} {tech.version}
-                          </Badge>
-                        ))}
-                      </span>
-                    )}
-                  </ChoiceCard>
-                );
-              })}
-            </fieldset>
+                    {availableFamilies.map((family) => (
+                      <option key={family} value={family}>{humanize(family)}</option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Architecture">
+                  <select
+                    aria-label="Architecture"
+                    className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                    value={activeArchitecture}
+                    onChange={(event) => {
+                      setBlueprintArchitecture(event.target.value);
+                      setProjectType(null);
+                    }}
+                  >
+                    {availableArchitectures.map((architecture) => (
+                      <option key={architecture} value={architecture}>{humanize(architecture)}</option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Only starters compatible with this family and architecture are shown.
+              </p>
+              <fieldset className="grid gap-3 md:grid-cols-3">
+                <legend className="sr-only">Compatible project starter</legend>
+                {PROJECT_TYPES.map((type) => {
+                  const starter = starters.find((item) => item.projectType === type);
+                  const parsed = starter ? parseManifest(starter.manifest).manifest : null;
+                  const compatible =
+                    parsed?.blueprint?.family === activeFamily &&
+                    parsed.blueprint.architecture === activeArchitecture;
+                  if (!compatible) return null;
+                  return (
+                    <ChoiceCard
+                      key={type}
+                      name="projectType"
+                      value={type}
+                      disabled={!parsed}
+                      selected={projectType === type}
+                      onSelect={() => chooseSource({ type })}
+                      title={PROJECT_TYPE_LABELS[type]}
+                      description={parsed?.description ?? "Not available."}
+                    >
+                      {parsed && (
+                        <span className="flex flex-wrap gap-1 pt-1">
+                          {parsed.technologies.map((tech) => (
+                            <Badge key={tech.name} tone="info">
+                              {tech.name} {tech.version}
+                            </Badge>
+                          ))}
+                        </span>
+                      )}
+                    </ChoiceCard>
+                  );
+                })}
+              </fieldset>
+              {availableArchitectures.length === 0 && (
+                <EmptyState title="No compatible architecture" description="Choose another project family." />
+              )}
+            </div>
           )}
           <StepNav onBack={() => setStep("start")} onNext={goConfigure} nextDisabled={!manifest} />
         </section>
@@ -521,6 +595,24 @@ export function NewProjectWizard() {
                   <dd>
                     {manifest.title} · {preview.template.id}@{preview.template.version}
                   </dd>
+                  <dt className="text-muted-foreground">Project blueprint</dt>
+                  <dd>
+                    {selectedBlueprint
+                      ? `${humanize(selectedBlueprint.family)} · ${humanize(selectedBlueprint.architecture)}`
+                      : "Legacy source — no structured blueprint"}
+                  </dd>
+                  {selectedBlueprint && (
+                    <>
+                      <dt className="text-muted-foreground">Runtime / language</dt>
+                      <dd>
+                        {[...selectedBlueprint.runtimes, ...selectedBlueprint.languages]
+                          .map((item) => `${item.name} ${item.version}`)
+                          .join(", ") || "Not specified"}
+                      </dd>
+                      <dt className="text-muted-foreground">Package manager</dt>
+                      <dd>{selectedBlueprint.packageManager ?? "Not specified"}</dd>
+                    </>
+                  )}
                   <dt className="text-muted-foreground">Output folder</dt>
                   <dd className="font-mono text-xs">{preview.outputDir}</dd>
                   <dt className="text-muted-foreground">Size</dt>
