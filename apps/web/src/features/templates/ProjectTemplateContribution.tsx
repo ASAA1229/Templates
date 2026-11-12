@@ -88,7 +88,7 @@ export function ProjectTemplateContribution({ projectId, onSubmitted }: Props) {
             </div>
             <label className="block space-y-1 text-sm">Description<textarea name="description" maxLength={2000} rows={3} className="w-full rounded-md border bg-background px-3 py-2" /></label>
             <label className="block space-y-1 text-sm">Reusable configuration inputs (JSON)
-              <textarea name="inputs" defaultValue="[]" rows={6} spellCheck={false} className="w-full rounded-md border bg-background px-3 py-2 font-mono text-xs" />
+              <textarea name="inputs" defaultValue={JSON.stringify([{ id: "projectName", label: "Project name", type: "string", required: true, maxLength: 80 }], null, 2)} rows={6} spellCheck={false} className="w-full rounded-md border bg-background px-3 py-2 font-mono text-xs" />
               <span className="text-xs text-muted-foreground">Define inputs with id, label, type (string, text, boolean or select), and optional defaults. Use matching placeholders such as {"{{projectName}}"} in text files and paths.</span>
             </label>
             <fieldset className="space-y-2 rounded-md border p-3 text-sm">
