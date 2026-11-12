@@ -957,7 +957,8 @@ As an authorized template maintainer, I want to create and maintain templates in
 - Capture excludes repository metadata, generated provenance, dependency/build/cache folders, environment files and private-key files; unsafe paths, symlinks, oversized content and detected high-confidence credentials block submission.
 - Approval promotes the exact submitted package into the immutable versioned library and records the reviewer and source submission in the audit trail; later edits require a new version.
 - Provide a project-detail contribution form and a reviewer queue with an explicit approve-and-publish action; enforce server-side permissions regardless of UI visibility.
-- Current implementation is owner-only. Employee/developer/tester identities, invitations, role assignment and least-privilege review permissions remain blocked on the US-X07 identity foundation.
+- Implemented on the current branch: multi-user accounts with OWNER, ADMIN, DEVELOPER, TESTER and EMPLOYEE roles; server-side least-privilege permissions; owner/admin member management; account deactivation with session revocation; audit attribution for member actions; and role-aware navigation.
+- Remaining before employee rollout: secure invitation/activation and password-reset flow, resource-level project sharing beyond project ownership, design/DevOps-specific roles, and end-to-end isolation/security validation. Do not treat the feature as production-ready until CI and those gates pass.
 - Only authorized maintainers can publish or approve versions; every consequential action is audited.
 
 Related stories: US-D02, US-D04, US-D05, US-T03.
