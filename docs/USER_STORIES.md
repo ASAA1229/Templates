@@ -548,11 +548,18 @@ As an authorized user, I want to search across enabled modules.
 - Indexing failures, stale results and unavailable sources are visible.
 
 #### US-O02 — Advanced search and saved queries (P1)
-**Implementation status:** Partially implemented; keyword search exists, filters/facets and saved queries remain open.
+**Implementation status:** Implemented on `new`; automated validation and review pending.
 As a user, I want filters, facets and reusable searches.
 - Search supports module-specific filters, facets, sorting and pagination.
 - Users can save, rename, update and delete personal searches.
-- Shared searches require explicit sharing permissions and retain access checks.
+- Shared searches require explicit sharing permissions and retain access checks; sharing is not implemented and remains deferred.
+
+Implementation evidence:
+- API: `apps/api/src/modules/search/search.ts` supports module filters, facets, sorting, pagination and owner-scoped saved-search CRUD.
+- Persistence: `SavedSearch` Prisma model and migration `20261112100000_saved_searches`.
+- UI: `apps/web/src/features/search/SearchPage.tsx`, registered at `/search` and linked from global search.
+- Tests: `apps/api/test/search.test.ts` and `apps/web/src/test/search-page.test.tsx`.
+- Current state: implementation is committed to `new`; CI, runtime behavior, pagination edge cases and accessibility review must pass before this story is marked Done.
 
 #### US-O03 — Natural-language and semantic search (P2)
 As a user, I want to describe what I am looking for in ordinary language.
