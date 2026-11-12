@@ -158,7 +158,7 @@ export function authRouter(ctx: AppContext): Router {
       }
       const { password, ...account } = input;
       const member = await ctx.prisma.owner.create({
-        data: { ...account, passwordHash: await hashPassword(password) },
+        data: { ...account, passwordHash: await hashPassword(password), passwordChangedAt: ctx.now() },
         select: { id: true, email: true, displayName: true, role: true, isActive: true, createdAt: true },
       });
       await audit(ctx, req, {
