@@ -41,12 +41,12 @@ const ROLE_PERMISSIONS: Record<AuthenticatedOwner["role"], ReadonlySet<Permissio
   ]),
   TESTER: new Set([
     "dashboard:read", "project:read", "requirement:read", "requirement:write", "catalog:read",
-    "template:read", "template:submit", "generation:read", "workspace:read", "workspace:write",
+    "template:read", "template:submit", "generation:read", "workspace:read", "workspace:write", "session:manage",
   ]),
   EMPLOYEE: new Set([
     "dashboard:read", "project:read", "project:write", "requirement:read", "requirement:write",
     "catalog:read", "template:read", "template:submit", "generation:read", "generation:write",
-    "workspace:read", "workspace:write",
+    "workspace:read", "workspace:write", "session:manage",
   ]),
 };
 
