@@ -418,7 +418,7 @@ function baseManifest() {
     files: [{ source: "a.txt", target: "a.txt", substitute: "text" }],
     directories: [],
     dependencies: [],
-    compatibility: { generator: 1 },
+    compatibility: { generator: 1, adapter: "file-tree" },
     license: { spdx: "MIT" },
     provenance: { origin: "local", maintainer: "Test" },
     validation: { requiredOutputs: [], maxFiles: 10, maxTotalBytes: 1000 },
