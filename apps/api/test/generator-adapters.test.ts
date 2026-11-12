@@ -38,9 +38,7 @@ describe("generator adapter registry (US-X02)", () => {
     const adapter = getGeneratorAdapter("blank");
     const plan = await renderStarter("starter-blank");
     expect(adapter.id).toBe("blank");
-    expect(plan.files.map((file) => file.path)).toEqual(
-      expect.arrayContaining(["README.txt", "project.json"]),
-    );
+    expect(plan.files.map((file) => file.path)).toEqual(expect.arrayContaining(["README.txt", "project.json"]));
   });
 
   it("rejects an adapter/project-family mismatch", async () => {

@@ -742,7 +742,10 @@ export const createGenerationSchema = z.discriminatedUnion("mode", [
     projectType: z.enum(PROJECT_TYPES, { message: "Choose a project type." }),
     /** Exact starter identity; optional for older clients that only send projectType. */
     starterId: templateIdSchema.optional(),
-    starterVersion: z.string().regex(/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/).optional(),
+    starterVersion: z
+      .string()
+      .regex(/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/)
+      .optional(),
     blueprint: projectBlueprintSchema.optional(),
     project: generationProjectSchema,
     inputs: inputValuesRecord,

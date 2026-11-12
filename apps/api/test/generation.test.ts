@@ -104,7 +104,10 @@ describe("start from scratch (US-E02)", () => {
     expect(projectDetail.body.project.blueprint).toMatchObject({
       family: "web-app",
       architecture: "single-page-app",
-      frameworks: [{ name: "React", version: "19" }, { name: "Vite", version: "7" }],
+      frameworks: [
+        { name: "React", version: "19" },
+        { name: "Vite", version: "7" },
+      ],
     });
     const requirements = await agent.get(`/api/projects/${generation.projectId}/requirements`);
     expect(requirements.body.requirements.map((r: { code: string; title: string }) => `${r.code} ${r.title}`)).toEqual([

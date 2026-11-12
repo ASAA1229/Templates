@@ -184,7 +184,7 @@ export function NewProjectWizard() {
   const availableFamilies = [...new Set(starterBlueprints.map((item) => item.blueprint.family))];
   const activeFamily = availableFamilies.includes(blueprintFamily as ProjectBlueprint["family"])
     ? blueprintFamily
-    : availableFamilies[0] ?? "general";
+    : (availableFamilies[0] ?? "general");
   const availableArchitectures = [
     ...new Set(
       starterBlueprints
@@ -192,11 +192,9 @@ export function NewProjectWizard() {
         .map((item) => item.blueprint.architecture),
     ),
   ];
-  const activeArchitecture = availableArchitectures.includes(
-    blueprintArchitecture as ProjectBlueprint["architecture"],
-  )
+  const activeArchitecture = availableArchitectures.includes(blueprintArchitecture as ProjectBlueprint["architecture"])
     ? blueprintArchitecture
-    : availableArchitectures[0] ?? "minimal";
+    : (availableArchitectures[0] ?? "minimal");
   const selectedStarter =
     starters.find((starter) => starter.id === starterId && starter.version === starterVersion) ?? null;
   const source = useMemo(() => {
@@ -414,7 +412,9 @@ export function NewProjectWizard() {
                     }}
                   >
                     {availableFamilies.map((family) => (
-                      <option key={family} value={family}>{humanize(family)}</option>
+                      <option key={family} value={family}>
+                        {humanize(family)}
+                      </option>
                     ))}
                   </select>
                 </Field>
@@ -431,7 +431,9 @@ export function NewProjectWizard() {
                     }}
                   >
                     {availableArchitectures.map((architecture) => (
-                      <option key={architecture} value={architecture}>{humanize(architecture)}</option>
+                      <option key={architecture} value={architecture}>
+                        {humanize(architecture)}
+                      </option>
                     ))}
                   </select>
                 </Field>
@@ -444,8 +446,7 @@ export function NewProjectWizard() {
                 {starterBlueprints
                   .filter(
                     (item) =>
-                      item.blueprint.family === activeFamily &&
-                      item.blueprint.architecture === activeArchitecture,
+                      item.blueprint.family === activeFamily && item.blueprint.architecture === activeArchitecture,
                   )
                   .map((item) => (
                     <ChoiceCard
