@@ -2,8 +2,8 @@
 
 **Product:** ASAA Templates Platform  
 **Status:** Consolidated requirements backlog — individual story status remains evidence-based  
-**Version:** 1.1  
-**Date:** 2026-11-11
+**Version:** 1.2  
+**Date:** 2026-11-12
 
 ## 1. Backlog conventions
 
