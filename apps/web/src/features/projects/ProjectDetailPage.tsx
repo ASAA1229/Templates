@@ -147,15 +147,15 @@ export function ProjectDetailPage() {
                       ]
                         .filter(([, values]) => (values as { name: string; version: string }[]).length > 0)
                         .map(([label, values]) => (
-                        <div key={label as string} className="contents">
-                          <dt className="text-muted-foreground">{label as string}</dt>
-                          <dd>
-                            {(values as { name: string; version: string }[])
-                              .map((item) => `${item.name} ${item.version}`)
-                              .join(", ")}
-                          </dd>
-                        </div>
-                      ))}
+                          <div key={label as string} className="contents">
+                            <dt className="text-muted-foreground">{label as string}</dt>
+                            <dd>
+                              {(values as { name: string; version: string }[])
+                                .map((item) => `${item.name} ${item.version}`)
+                                .join(", ")}
+                            </dd>
+                          </div>
+                        ))}
                     </dl>
                   </div>
                 )}
