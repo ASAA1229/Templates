@@ -45,7 +45,10 @@ const webStarter = {
     architecture: "single-page-app",
     runtimes: [{ name: "Node.js", version: "24" }],
     languages: [{ name: "TypeScript", version: "5.9" }],
-    frameworks: [{ name: "React", version: "19" }, { name: "Vite", version: "7" }],
+    frameworks: [
+      { name: "React", version: "19" },
+      { name: "Vite", version: "7" },
+    ],
     packageManager: "npm",
     databases: [],
     apis: [],
