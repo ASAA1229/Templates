@@ -100,6 +100,69 @@ export const projectKeySchema = z
   .toUpperCase()
   .regex(/^[A-Z][A-Z0-9-]{1,19}$/, "Use 2–20 letters, digits or hyphens, starting with a letter.");
 
+export const PROJECT_FAMILIES = [
+  "general",
+  "website",
+  "web-app",
+  "e-commerce",
+  "backend-service",
+  "full-stack",
+  "mobile-app",
+  "desktop-app",
+  "enterprise",
+  "data-ai",
+  "devops",
+  "library",
+] as const;
+export const ARCHITECTURE_PROFILES = [
+  "minimal",
+  "static-site",
+  "single-page-app",
+  "layered-service",
+  "modular-monolith",
+  "microservices",
+  "monorepo",
+  "clean-architecture",
+  "serverless",
+  "data-pipeline",
+  "native-client",
+] as const;
+export const PACKAGE_MANAGERS = [
+  "npm",
+  "pnpm",
+  "yarn",
+  "bun",
+  "pip",
+  "uv",
+  "poetry",
+  "cargo",
+  "maven",
+  "gradle",
+  "dotnet",
+  "none",
+] as const;
+export const OPERATING_SYSTEMS = ["windows", "linux", "macos", "android", "ios", "cross-platform"] as const;
+const versionedNameSchema = z.object({ name: required(80, "Name"), version: required(40, "Version") });
+
+export const projectBlueprintSchema = z.object({
+  family: z.enum(PROJECT_FAMILIES),
+  architecture: z.enum(ARCHITECTURE_PROFILES),
+  runtimes: z.array(versionedNameSchema).max(10).default([]),
+  languages: z.array(versionedNameSchema).max(10).default([]),
+  frameworks: z.array(versionedNameSchema).max(20).default([]),
+  packageManager: z.enum(PACKAGE_MANAGERS).optional(),
+  databases: z.array(versionedNameSchema).max(10).default([]),
+  apis: z.array(versionedNameSchema).max(20).default([]),
+  infrastructure: z.array(versionedNameSchema).max(20).default([]),
+  operatingSystems: z.array(z.enum(OPERATING_SYSTEMS)).max(6).default([]),
+});
+export type ProjectBlueprint = z.infer<typeof projectBlueprintSchema>;
+
+/**
+ * Versioned template manifest (template definition). Catalog records describe a
+ * template for discovery; the manifest plus its files/ folder is the template
+ * content that generation actually uses.
+ */
 export const createProjectSchema = z.object({
   key: projectKeySchema,
   name: required(120, "Name"),
@@ -397,47 +460,6 @@ export const PROJECT_TYPES = ["web-app", "api-service", "blank"] as const;
 /** Generator adapters are versioned platform capabilities, not executable template code. */
 export const GENERATOR_ADAPTERS = ["file-tree", "react-vite", "node-api", "blank"] as const;
 export type GeneratorAdapterId = (typeof GENERATOR_ADAPTERS)[number];
-export const PROJECT_FAMILIES = [
-  "general",
-  "website",
-  "web-app",
-  "e-commerce",
-  "backend-service",
-  "full-stack",
-  "mobile-app",
-  "desktop-app",
-  "enterprise",
-  "data-ai",
-  "devops",
-  "library",
-] as const;
-export const ARCHITECTURE_PROFILES = [
-  "minimal",
-  "static-site",
-  "single-page-app",
-  "layered-service",
-  "modular-monolith",
-  "microservices",
-  "monorepo",
-  "clean-architecture",
-  "serverless",
-  "data-pipeline",
-  "native-client",
-] as const;
-export const PACKAGE_MANAGERS = [
-  "npm",
-  "pnpm",
-  "yarn",
-  "bun",
-  "pip",
-  "uv",
-  "poetry",
-  "cargo",
-  "maven",
-  "gradle",
-  "dotnet",
-] as const;
-export const OPERATING_SYSTEMS = ["windows", "linux", "macos", "android", "ios", "cross-platform"] as const;
 export type ProjectType = (typeof PROJECT_TYPES)[number];
 export const TEMPLATE_KINDS = ["template", "starter"] as const;
 export const SUBSTITUTION_MODES = ["none", "text", "json", "html"] as const;
@@ -502,7 +524,6 @@ const inputIdSchema = z
   .string()
   .regex(/^[a-z][A-Za-z0-9]{0,39}$/, "Input ids start with a lowercase letter and use letters and digits.");
 const optionValueSchema = z.string().regex(/^[A-Za-z0-9._-]{1,60}$/, "Option values use letters, digits, . _ or -.");
-const versionedNameSchema = z.object({ name: required(80, "Name"), version: required(40, "Version") });
 
 const inputBase = {
   id: inputIdSchema,
@@ -551,25 +572,6 @@ const templateFileSchema = z.object({
 
 const DEFAULT_VALIDATION = { requiredOutputs: [] as string[], maxFiles: 200, maxTotalBytes: 2 * 1024 * 1024 };
 
-export const projectBlueprintSchema = z.object({
-  family: z.enum(PROJECT_FAMILIES),
-  architecture: z.enum(ARCHITECTURE_PROFILES),
-  runtimes: z.array(versionedNameSchema).max(10).default([]),
-  languages: z.array(versionedNameSchema).max(10).default([]),
-  frameworks: z.array(versionedNameSchema).max(20).default([]),
-  packageManager: z.enum(PACKAGE_MANAGERS).optional(),
-  databases: z.array(versionedNameSchema).max(10).default([]),
-  apis: z.array(versionedNameSchema).max(20).default([]),
-  infrastructure: z.array(versionedNameSchema).max(20).default([]),
-  operatingSystems: z.array(z.enum(OPERATING_SYSTEMS)).max(6).default([]),
-});
-export type ProjectBlueprint = z.infer<typeof projectBlueprintSchema>;
-
-/**
- * Versioned template manifest (template definition). Catalog records describe a
- * template for discovery; the manifest plus its files/ folder is the template
- * content that generation actually uses.
- */
 export const templateManifestSchema = z
   .object({
     manifestVersion: z.number().int(),
@@ -1109,7 +1111,6 @@ export interface BranchCreateResultView {
 
 export const ENVIRONMENT_TOOLS = ["node", "npm", "pnpm", "yarn", "git", "postgresql", "docker"] as const;
 export type EnvironmentTool = (typeof ENVIRONMENT_TOOLS)[number];
-export const PACKAGE_MANAGERS = ["npm", "pnpm", "yarn", "none"] as const;
 export const DATABASE_ENGINES = ["none", "postgresql"] as const;
 
 /** "*", "24", "24.x", "24.1", "24.1.2" or ">=22[.1[.0]]". */
