@@ -392,6 +392,9 @@ export const PROVENANCE_DIR = ".asaa";
 /** Values supplied by the platform for every generation; manifests cannot redefine them. */
 export const RESERVED_VARIABLES = ["projectKey", "projectName", "projectSlug", "projectPurpose"] as const;
 export const PROJECT_TYPES = ["web-app", "api-service", "blank"] as const;
+/** Generator adapters are versioned platform capabilities, not executable template code. */
+export const GENERATOR_ADAPTERS = ["file-tree", "react-vite", "node-api", "blank"] as const;
+export type GeneratorAdapterId = (typeof GENERATOR_ADAPTERS)[number];
 export type ProjectType = (typeof PROJECT_TYPES)[number];
 export const TEMPLATE_KINDS = ["template", "starter"] as const;
 export const SUBSTITUTION_MODES = ["none", "text", "json", "html"] as const;
@@ -526,7 +529,11 @@ export const templateManifestSchema = z
     files: z.array(templateFileSchema).min(1).max(200),
     directories: z.array(z.string().max(240)).max(50).default([]),
     dependencies: z.array(versionedNameSchema).max(100).default([]),
-    compatibility: z.object({ generator: z.number().int().positive(), node: trimmed(40).optional() }),
+    compatibility: z.object({
+      generator: z.number().int().positive(),
+      adapter: z.enum(GENERATOR_ADAPTERS).default("file-tree"),
+      node: trimmed(40).optional(),
+    }),
     license: z.object({ spdx: required(80, "License"), notice: trimmed(1000).optional() }),
     provenance: z.object({
       origin: z.literal("local"),
