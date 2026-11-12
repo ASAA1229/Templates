@@ -265,22 +265,27 @@ export function authRouter(ctx: AppContext): Router {
     }
   });
 
-  router.post("/sessions/revoke-others", requireOwner(), authorize(ctx, "session:self-manage"), async (req, res, next) => {
-    try {
-      const result = await ctx.prisma.session.updateMany({
-        where: { ownerId: req.owner!.id, revokedAt: null, NOT: { id: req.sessionId! } },
-        data: { revokedAt: ctx.now() },
-      });
-      await audit(ctx, req, {
-        action: "auth.session.revoke_others",
-        outcome: "SUCCESS",
-        metadata: { revoked: result.count },
-      });
-      res.json({ revoked: result.count });
-    } catch (error) {
-      next(error);
-    }
-  });
+  router.post(
+    "/sessions/revoke-others",
+    requireOwner(),
+    authorize(ctx, "session:self-manage"),
+    async (req, res, next) => {
+      try {
+        const result = await ctx.prisma.session.updateMany({
+          where: { ownerId: req.owner!.id, revokedAt: null, NOT: { id: req.sessionId! } },
+          data: { revokedAt: ctx.now() },
+        });
+        await audit(ctx, req, {
+          action: "auth.session.revoke_others",
+          outcome: "SUCCESS",
+          metadata: { revoked: result.count },
+        });
+        res.json({ revoked: result.count });
+      } catch (error) {
+        next(error);
+      }
+    },
+  );
 
   router.post("/password", requireOwner(), authorize(ctx, "session:self-manage"), async (req, res, next) => {
     try {
