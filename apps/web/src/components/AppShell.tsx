@@ -1,4 +1,4 @@
-import { FolderKanban, LayoutDashboard, Library, LogOut, Menu, ScrollText, ShieldCheck, X } from "lucide-react";
+import { FolderKanban, LayoutDashboard, Library, LogOut, Menu, ScrollText, Search, ShieldCheck, X } from "lucide-react";
 import { GlobalSearch } from "./GlobalSearch";
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router";
@@ -10,6 +10,7 @@ export const NAV_ITEMS = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/projects", label: "Projects", icon: FolderKanban },
   { to: "/catalog", label: "Template catalog", icon: Library },
+  { to: "/search", label: "Advanced search", icon: Search },
   { to: "/audit", label: "Audit log", icon: ScrollText },
   { to: "/security", label: "Security", icon: ShieldCheck },
 ] as const;
