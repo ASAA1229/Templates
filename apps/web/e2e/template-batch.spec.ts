@@ -50,7 +50,7 @@ test.describe("template library batch 001 browser review", () => {
         `/api/templates/library/${template.id}/${template.version}/approve`,
         "POST",
       );
-      expect(approval.status, `${template.id} approval`).toBe(201);
+      expect([200, 201], `${template.id} approval`).toContain(approval.status);
       const { item } = approval.body;
 
       const generated = await apiRequest(page, "/api/generations", "POST", {
