@@ -4,7 +4,7 @@ import { useState } from "react";
 import { StatusBadge } from "@/components/common";
 import { Alert, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
-import { formatDateTime } from "@/lib/utils";
+import { formatDateTime, humanize } from "@/lib/utils";
 
 const short = (digest: string | null) => (digest ? `${digest.slice(0, 12)}…` : "—");
 
@@ -59,6 +59,14 @@ export function GenerationDetails({
         </dd>
         <dt className="text-muted-foreground">Started from</dt>
         <dd>{generation.mode === "TEMPLATE" ? "Template" : "Scratch (approved starter)"}</dd>
+        {generation.blueprint && (
+          <>
+            <dt className="text-muted-foreground">Blueprint</dt>
+            <dd>
+              {humanize(generation.blueprint.family)} · {humanize(generation.blueprint.architecture)}
+            </dd>
+          </>
+        )}
         <dt className="text-muted-foreground">Source</dt>
         <dd className="break-all">
           {generation.templateId}@{generation.templateVersion}
