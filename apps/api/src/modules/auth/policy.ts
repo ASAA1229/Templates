@@ -26,7 +26,7 @@ export const PERMISSIONS = [
   "workspace:read",
   "workspace:write",
   "audit:read",
-  "session:self-manage",
+  "session:manage",
   "session:self-manage",
   "identity:manage",
 ] as const;
