@@ -68,5 +68,18 @@
     ],
     "maxFiles": 20,
     "maxTotalBytes": 65536
+  },
+  "blueprint": {
+    "family": "general",
+    "architecture": "minimal",
+    "runtimes": [],
+    "languages": [],
+    "frameworks": [],
+    "databases": [],
+    "apis": [],
+    "infrastructure": [],
+    "operatingSystems": [
+      "cross-platform"
+    ]
   }
 }
