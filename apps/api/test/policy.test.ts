@@ -28,6 +28,13 @@ describe("workspace role permissions", () => {
     expect(isAllowed(actor("ADMIN"), "session:manage")).toBe(false);
   });
 
+  it("allows each role to manage its own sessions and password", () => {
+    for (const role of ["OWNER", "ADMIN", "DEVELOPER", "TESTER", "EMPLOYEE"] as const) {
+      expect(isAllowed(actor(role), "session:manage")).toBe(true);
+    }
+    expect(isAllowed(actor("EMPLOYEE"), "identity:manage")).toBe(false);
+  });
+
   it("keeps owner authority complete", () => {
     expect(isAllowed(actor("OWNER"), "identity:manage")).toBe(true);
     expect(isAllowed(actor("OWNER"), "session:manage")).toBe(true);
