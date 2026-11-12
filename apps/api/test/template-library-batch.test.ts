@@ -129,6 +129,5 @@ describe("template library batch 001", () => {
     expect(await h.ctx.prisma.project.count()).toBe(25);
     expect(await h.ctx.prisma.projectGeneration.count()).toBe(25);
     expect(await readdir(output)).toHaveLength(25);
-
   }, 120_000);
 });
