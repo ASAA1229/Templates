@@ -24,12 +24,16 @@ function requireStarter(
   outputs: string[],
 ) {
   if (context.manifest.kind !== "starter" || context.manifest.projectType !== projectType) {
-    throw new GenerationError(`The ${context.manifest.compatibility.adapter} adapter requires a ${projectType} starter.`);
+    throw new GenerationError(
+      `The ${context.manifest.compatibility.adapter} adapter requires a ${projectType} starter.`,
+    );
   }
   const declared = new Set(context.manifest.validation.requiredOutputs);
   for (const output of outputs) {
     if (!declared.has(output)) {
-      throw new GenerationError(`The ${context.manifest.compatibility.adapter} adapter requires "${output}" in validation.requiredOutputs.`);
+      throw new GenerationError(
+        `The ${context.manifest.compatibility.adapter} adapter requires "${output}" in validation.requiredOutputs.`,
+      );
     }
   }
 }
