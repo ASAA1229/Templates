@@ -282,7 +282,7 @@ export function authRouter(ctx: AppContext): Router {
     }
   });
 
-  router.post("/password", requireOwner(), authorize(ctx, "session:manage"), async (req, res, next) => {
+  router.post("/password", requireOwner(), authorize(ctx, "session:self-manage"), async (req, res, next) => {
     try {
       const input = changePasswordSchema.parse(req.body);
       const owner = await ctx.prisma.owner.findUniqueOrThrow({ where: { id: req.owner!.id } });
