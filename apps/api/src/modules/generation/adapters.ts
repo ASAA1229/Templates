@@ -21,11 +21,21 @@ export interface GeneratorAdapter {
 function requireStarter(
   context: GeneratorAdapterContext,
   projectType: "web-app" | "api-service" | "blank",
+  family: "web-app" | "backend-service" | "general",
+  architecture: "single-page-app" | "layered-service" | "minimal",
   outputs: string[],
 ) {
   if (context.manifest.kind !== "starter" || context.manifest.projectType !== projectType) {
     throw new GenerationError(
       `The ${context.manifest.compatibility.adapter} adapter requires a ${projectType} starter.`,
+    );
+  }
+  if (
+    context.manifest.blueprint?.family !== family ||
+    context.manifest.blueprint.architecture !== architecture
+  ) {
+    throw new GenerationError(
+      `The ${context.manifest.compatibility.adapter} adapter requires blueprint ${family}/${architecture}.`,
     );
   }
   const declared = new Set(context.manifest.validation.requiredOutputs);
@@ -46,7 +56,7 @@ const fileTreeAdapter: GeneratorAdapter = {
 const reactViteAdapter: GeneratorAdapter = {
   id: "react-vite",
   render: (context) => {
-    requireStarter(context, "web-app", ["package.json", "index.html", "src/main.tsx"]);
+    requireStarter(context, "web-app", "web-app", "single-page-app", ["package.json", "index.html", "src/main.tsx"]);
     return renderPlan(context.manifest, context.sources, context.values, context.project);
   },
 };
@@ -54,7 +64,7 @@ const reactViteAdapter: GeneratorAdapter = {
 const nodeApiAdapter: GeneratorAdapter = {
   id: "node-api",
   render: (context) => {
-    requireStarter(context, "api-service", ["package.json", "src/server.ts"]);
+    requireStarter(context, "api-service", "backend-service", "layered-service", ["package.json", "src/server.ts"]);
     return renderPlan(context.manifest, context.sources, context.values, context.project);
   },
 };
@@ -62,7 +72,7 @@ const nodeApiAdapter: GeneratorAdapter = {
 const blankAdapter: GeneratorAdapter = {
   id: "blank",
   render: (context) => {
-    requireStarter(context, "blank", ["README.txt", "project.json"]);
+    requireStarter(context, "blank", "general", "minimal", ["README.txt", "project.json"]);
     return renderPlan(context.manifest, context.sources, context.values, context.project);
   },
 };
