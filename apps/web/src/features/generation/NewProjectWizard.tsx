@@ -170,7 +170,15 @@ export function NewProjectWizard() {
   const starterBlueprints = starters.flatMap((starter) => {
     const parsed = parseManifest(starter.manifest).manifest;
     return parsed?.blueprint
-      ? [{ id: starter.id, version: starter.version, projectType: starter.projectType, blueprint: parsed.blueprint, manifest: parsed }]
+      ? [
+          {
+            id: starter.id,
+            version: starter.version,
+            projectType: starter.projectType,
+            blueprint: parsed.blueprint,
+            manifest: parsed,
+          },
+        ]
       : [];
   });
   const availableFamilies = [...new Set(starterBlueprints.map((item) => item.blueprint.family))];
@@ -406,7 +414,9 @@ export function NewProjectWizard() {
                     }}
                   >
                     {availableFamilies.map((family) => (
-                      <option key={family} value={family}>{humanize(family)}</option>
+                      <option key={family} value={family}>
+                        {humanize(family)}
+                      </option>
                     ))}
                   </select>
                 </Field>
@@ -423,7 +433,9 @@ export function NewProjectWizard() {
                     }}
                   >
                     {availableArchitectures.map((architecture) => (
-                      <option key={architecture} value={architecture}>{humanize(architecture)}</option>
+                      <option key={architecture} value={architecture}>
+                        {humanize(architecture)}
+                      </option>
                     ))}
                   </select>
                 </Field>
