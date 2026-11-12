@@ -1,75 +1,107 @@
 # ASAA Templates Platform
 
-A private, organization-internal platform for ASAA employees and management to discover, review, customize and generate reusable digital-product templates and delivery assets.
+ASAA Templates is a private internal platform for ASAA management and employees to discover, review, configure and generate reusable software-project templates and engineering assets. It is intended to reduce repeated engineering work and provide a governed path from requirements and project setup through development, verification, release and operations.
 
-> **Current status (2026-11-11):** The basic platform foundation is implemented on the `new` branch. The first template-library batch adds 25 industry-specific website demo packages across five business types. CI validation is running; these templates are not yet certified or production-ready.
+It is an internal engineering workspace—not a public marketplace. External organizations, public publishing, client deployment and paid services are outside the current authorization.
 
-## Product direction
+## Current platform foundation
 
-Templates Studio is an internal organizational workspace, not a public marketplace. Access is restricted to authorized employees and management through the platform's identity and permission model.
+The repository contains a modular-monolith application with:
 
-**Non-negotiable constraint:** ₹0 operating spend until management explicitly authorizes spending. Prefer local-first and free/open-source tooling.
+- React + Vite web application.
+- Node.js + Express API.
+- PostgreSQL persistence through Prisma.
+- Shared TypeScript/Zod contracts.
+- Authentication, account roles, session controls and audit foundations.
+- Project and requirements management, dashboard and permission-aware search.
+- Private catalog and local manifest-driven template library.
+- Project blueprints, preview and generation with provenance/integrity checks.
+- Local Git/environment workspace foundations.
+- Project-to-template submission and maintainer review workflow.
+- 25 initial website demo packages across five business types.
 
-## Core documents
+These are implementation foundations, not a claim that every product requirement is complete. Template certification, broader multi-stack generation, secure invitation/recovery, resource-level sharing, isolated build/test execution, complete export/repository provisioning and production operations remain subject to the requirements and verification gates.
 
-- [Proof of Concept](docs/POC.md)
-- [User Stories and Acceptance Criteria](docs/USER_STORIES.md)
-- [Product Vision](docs/PRODUCT_VISION.md)
-- [Product Architecture](docs/PRODUCT_ARCHITECTURE.md)
-- [Project Status](docs/PROJECT_STATUS.md)
-- [Roadmap](docs/ROADMAP.md)
-- [Governance and Safety](docs/GOVERNANCE.md)
-- [Git Branching Strategy](docs/BRANCHING_STRATEGY.md)
-- [Template Library — Batch 001](docs/TEMPLATE_LIBRARY_BATCH_001.md)
-- [Template coverage registry](catalog/template-coverage.json)
+## Quick start
 
-## Platform capabilities
+### Prerequisites
 
-- Organization-internal workspace and owner-controlled administration.
-- Projects, requirements and audit foundations.
-- Private catalog with search, filters, lifecycle and trust review.
-- Local versioned template library with manifest validation.
-- Project initialization from an approved template or a starter.
-- Generated project outputs are independent from their source templates.
-- React/Vite frontend, Node.js/Express API, PostgreSQL/Prisma data foundation and shared TypeScript contracts.
+- Node.js **24.16.0** (see `.nvmrc`; supported major range is Node 24).
+- npm 11 or newer.
+- PostgreSQL command-line/server tools available on `PATH`: `initdb`, `pg_ctl` and `psql`.
+- Git.
 
-## Template library
+### Install and initialize local development
 
-The first demo batch contains **25 templates**: five variants each for restaurants/cafes, clinics/healthcare providers, schools/education institutes, retail/ecommerce stores and professional services firms.
+From the repository root:
 
-Each business type has:
-1. Essential
-2. Editorial
-3. Catalog
-4. Booking
-5. Multi-location
+```bash
+npm ci
+npm run db:local -- init
+npm run dev
+```
 
-Five is the initial demo target, not a fixed limit. The taxonomy and coverage registry are expandable across sectors, business types, technical divisions and organizational functions. The current batch is a starting set, not a claim that every industry has already been populated.
+The local database helper creates a private PostgreSQL cluster under `.local/pgdata`, creates `templates_dev` and `templates_test`, and writes `apps/api/.env` with generated local credentials. The helper binds PostgreSQL to loopback only. Keep `.local/` and `apps/api/.env` private; they are Git-ignored.
 
-Templates appear in the Catalog page's **Local template library** panel. Each version must be reviewed and approved by an authorized owner before it becomes eligible for project generation. See [Batch 001 details](docs/TEMPLATE_LIBRARY_BATCH_001.md).
+The web application is served at **http://127.0.0.1:5000** and proxies `/api` to the API at **http://127.0.0.1:4000**.
 
-## Architecture principles
+If PostgreSQL is already managed separately, create `apps/api/.env` from `apps/api/.env.example` and set valid `DATABASE_URL` and `TEST_DATABASE_URL` values instead of running the local-cluster initializer.
 
-Start with a modular monolith, explicit domain boundaries, API-first contracts and selective event-driven workflows. Extract services only when justified. Keep providers replaceable, projects isolated, secrets out of Git and generated outputs independent of source templates.
+### First-time owner setup
 
-## Repository layout
+In a second terminal, after the API environment and database are ready:
 
-- `apps/web/`: React + Vite internal platform UI
-- `apps/api/`: Express API, Prisma schema and local template packages
-- `packages/contracts/`: shared TypeScript/Zod API and template contracts
-- `catalog/`: machine-readable sector and template coverage registry
-- `docs/`: product definition, architecture, governance, roadmap, status and template batch notes
-- `sectors/`, `divisions/`: taxonomy documentation
-- `standards/`, `integrations/`, `operations/`: quality, integration and operational guidance
+```bash
+npm run db:deploy
+npm run owner:init -w @asaa/api
+```
 
-## Branches
+Follow the CLI prompts to initialize the owner account. Do not put passwords or secrets in shell history, source files or commits. Use the owner recovery command only through the documented, authorized recovery process.
 
-See [Branching Strategy](docs/BRANCHING_STRATEGY.md). `main` is the production baseline; `dev` is integration; `new`, `fix` and `test` serve feature, defect and testing work. The current work remains on `new` and has not been merged into `dev` or `main`.
+### Verify the application
 
-## Important boundaries
+```bash
+npm run validate
+npm run smoke
+```
 
-- JARVIS and Templates remain separate products. Only explicitly approved JARVIS capabilities may be exposed through a permissioned adapter; personal memory and personal capabilities are excluded.
-- Portfolio may showcase approved work but is not the platform itself.
-- No public marketplace, external publishing, paid services, paid AI, client deployment or external data sharing without explicit authorization.
-- Demo forms do not submit or store data; sample retail interactions do not process payments.
-- A successful build is not proof of testing completion or production readiness.
+Run browser end-to-end tests when required:
+
+```bash
+cd apps/web
+npx playwright install chromium
+cd ../..
+npm run test:e2e
+```
+
+For individual commands, environment variables, database lifecycle, troubleshooting and branch workflow, see [Development](docs/DEVELOPMENT.md). For backup, recovery and operational checks, see [Operations](docs/OPERATIONS.md).
+
+## Documentation
+
+- [Architecture](docs/ARCHITECTURE.md) — system boundaries, approved technology baseline and core design decisions.
+- [Requirements](docs/REQUIREMENTS.md) — consolidated product scope, requirements, acceptance gates and remaining gaps.
+- [Development](docs/DEVELOPMENT.md) — setup, commands, contribution and branch workflow.
+- [Operations](docs/OPERATIONS.md) — runtime checks, release discipline, backup and recovery guidance.
+- [Security](docs/SECURITY.md) — access, data, application and operational security requirements.
+
+## Repository structure
+
+- `apps/web/` — React/Vite application and UI features.
+- `apps/api/` — Express API, Prisma schema/migrations and local template packages.
+- `packages/contracts/` — shared TypeScript and Zod contracts.
+- `catalog/` — machine-readable template/sector coverage registry.
+- `docs/` — the six canonical project documents (this README plus five focused documents).
+
+## Non-negotiable operating boundaries
+
+- Operating spend remains **₹0** until the platform owner explicitly authorizes a change.
+- Keep the repository and application private; first internal rollout is restricted to explicitly authorized ASAA management and employees after access/security gates pass.
+- The owner retains ultimate platform authority. Admin/member permissions do not imply ownership.
+- JARVIS is a separate product. Only explicitly approved company-safe capabilities may cross a dedicated adapter; personal memory, personal permissions and private device capabilities are excluded.
+- Generated projects are independent from source templates. Template updates never silently overwrite generated work.
+- Demo forms are non-submitting; sample commerce interactions do not process payments. Healthcare examples are fictional and are not clinical workflows or medical advice.
+- A commit, build or UI demo is not evidence of test completion, certification or production readiness.
+
+## Branches and delivery
+
+Standard branches are `main`, `dev`, `new`, `fix` and `test`. `main` is the production/release baseline, `dev` is integration, and the others support feature, defect and testing work. This documentation consolidation is limited to `new`; it does not merge or modify `dev` or `main`. See [Development](docs/DEVELOPMENT.md).
