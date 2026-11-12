@@ -12,7 +12,7 @@
 - **P2:** future/advanced capability.
 - **Status:** all stories below are **Not Started** unless explicitly changed with implementation evidence.
 - Each story includes observable acceptance criteria. Detailed test cases, API contracts and screen-level tasks will be expanded during implementation planning.
-- The owner is the only assumed initial user. Employee, team and organization roles are future roles.
+- The owner is the bootstrap administrator. The first internal rollout is intended for explicitly authorized ASAA management and employees; invitation and least-privilege role controls must be implemented and verified before enabling those accounts. External organizations remain future scope.
 - **Cost constraint:** all stories must be implementable with ₹0 operating spend until the owner explicitly authorizes otherwise.
 
 ## 2. Epic A — Identity, ownership and access
