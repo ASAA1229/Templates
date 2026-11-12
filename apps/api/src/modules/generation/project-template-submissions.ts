@@ -234,7 +234,7 @@ export function projectTemplateSubmissionsRouter(ctx: AppContext, generation: Ge
       const parsedManifest = templateManifestSchema.safeParse(rawManifest);
       if (!parsedManifest.success) throw validationFailed({ manifest: "The pending manifest failed schema validation." });
       const manifest = parsedManifest.data;
-      if (!/^[a-z0-9][a-z0-9-]{1,79}$/.test(manifest.id) || !/^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?$/.test(manifest.version)) {
+      if (!/^[a-z0-9][a-z0-9-]{1,79}$/.test(manifest.id) || !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(manifest.version)) {
         throw validationFailed({ manifest: "The pending template identity is invalid." });
       }
       const libraryRoot = path.resolve(ctx.config.TEMPLATE_LIBRARY_DIR);
