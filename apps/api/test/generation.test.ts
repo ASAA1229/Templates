@@ -155,6 +155,28 @@ describe("start from scratch (US-E02)", () => {
     expect(await h.ctx.prisma.project.count()).toBe(1);
   });
 
+  it("resolves the exact starter ID and version selected by the builder", async () => {
+    const options = await agent.get("/api/templates/options");
+    const starter = options.body.starters.find((item: { id: string }) => item.id === "starter-api-service");
+    expect(starter).toMatchObject({ id: "starter-api-service", version: "1.0.0", projectType: "api-service" });
+    const response = await agent.post(
+      "/api/generations",
+      scratch("EXACTAPI", {
+        projectType: "api-service",
+        starterId: starter.id,
+        starterVersion: starter.version,
+        blueprint: starter.manifest.blueprint,
+        inputs: { port: "8080" },
+      }),
+    );
+    expect(response.status).toBe(201);
+    expect(response.body.generation).toMatchObject({
+      templateId: "starter-api-service",
+      templateVersion: "1.0.0",
+      blueprint: { family: "backend-service", architecture: "layered-service" },
+    });
+  });
+
   it("rejects a blueprint that does not match the selected starter", async () => {
     const incompatible = {
       family: "backend-service",
