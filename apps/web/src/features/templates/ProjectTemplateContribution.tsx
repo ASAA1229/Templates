@@ -72,7 +72,7 @@ export function ProjectTemplateContribution({ projectId, onSubmitted }: Props) {
               <label className="space-y-1 text-sm">Template title<input required name="title" maxLength={160} className="w-full rounded-md border bg-background px-3 py-2" /></label>
               <label className="space-y-1 text-sm">Slug<input required name="slug" pattern="[a-z0-9][a-z0-9-]{1,79}" maxLength={80} className="w-full rounded-md border bg-background px-3 py-2" /></label>
               <label className="space-y-1 text-sm">Category<input required name="category" maxLength={80} placeholder="web-app" className="w-full rounded-md border bg-background px-3 py-2" /></label>
-              <label className="space-y-1 text-sm">Version<input required name="version" defaultValue="1.0.0" pattern="\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?" className="w-full rounded-md border bg-background px-3 py-2" /></label>
+              <label className="space-y-1 text-sm">Version<input required name="version" defaultValue="1.0.0" pattern="\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?" className="w-full rounded-md border bg-background px-3 py-2" /></label>
               <label className="space-y-1 text-sm sm:col-span-2">License / usage terms<input required name="license" maxLength={80} placeholder="MIT, Apache-2.0, UNLICENSED…" className="w-full rounded-md border bg-background px-3 py-2" /></label>
             </div>
             <label className="block space-y-1 text-sm">Description<textarea name="description" maxLength={2000} rows={3} className="w-full rounded-md border bg-background px-3 py-2" /></label>
