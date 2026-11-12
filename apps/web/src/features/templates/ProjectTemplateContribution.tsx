@@ -15,6 +15,7 @@ export function ProjectTemplateContribution({ projectId, onSubmitted }: Props) {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     setBusy(true);
     setError("");
     setSuccess("");
@@ -40,7 +41,7 @@ export function ProjectTemplateContribution({ projectId, onSubmitted }: Props) {
       setSuccess(`Submitted for review. Reference: ${result.submission.id}`);
       setOpen(false);
       onSubmitted();
-      event.currentTarget.reset();
+      form.reset();
       setCustomerPermission(false);
       setRightsConfirmed(false);
       setSecretsChecked(false);
