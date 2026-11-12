@@ -35,6 +35,7 @@ test.describe("template library batch 001 browser review", () => {
     const response = await apiRequest(page, "/api/templates/library", "GET");
     expect(response.status).toBe(200);
     const templates = response.body.templates as { id: string; version: string; valid: boolean }[];
+    const batchRun = Date.now().toString(36).toUpperCase().slice(-6);
     const expectedIds = BUSINESS_TYPES.flatMap((businessType) =>
       VARIANTS.map((variant) => `${businessType}-${variant}`),
     );
@@ -44,7 +45,8 @@ test.describe("template library batch 001 browser review", () => {
     expect(demos.every((template) => template.valid && template.version === "1.0.0")).toBe(true);
 
     for (const [index, template] of demos.entries()) {
-      const key = `VIS-${String(index + 1).padStart(2, "0")}`;
+      // Retries must use fresh project keys because earlier attempts may have created projects.
+      const key = `V${batchRun}${String(index + 1).padStart(2, "0")}`;
       const approval = await apiRequest(
         page,
         `/api/templates/library/${template.id}/${template.version}/approve`,
@@ -63,7 +65,7 @@ test.describe("template library batch 001 browser review", () => {
         },
         inputs: {},
       });
-      expect(generated.status, `${template.id} generation`).toBe(201);
+      expect(generated.status, `${template.id} generation: ${JSON.stringify(generated.body)}`).toBe(201);
       const { generation } = generated.body;
       expect(generation.status).toBe("SUCCEEDED");
       expect(generation.files).toContain("index.html");
