@@ -209,7 +209,18 @@ export function projectTemplateSubmissionsRouter(ctx: AppContext, generation: Ge
         outcome: "SUCCESS",
         targetType: "template_submission",
         targetId: id,
-        metadata: { projectId: project.id, projectKey: project.key, templateId: input.slug, version: input.version, fileCount: files.length, bytes: files.reduce((sum, f) => sum + f.bytes.length, 0), digest, reviewStatus: "PENDING" },
+        metadata: {
+          projectId: project.id,
+          projectKey: project.key,
+          templateId: input.slug,
+          title: input.title,
+          category: input.category,
+          version: input.version,
+          fileCount: files.length,
+          bytes: files.reduce((sum, file) => sum + file.bytes.length, 0),
+          digest,
+          reviewStatus: "PENDING",
+        },
       });
       res.status(201).json({ submission: { id, templateId: input.slug, version: input.version, title: input.title, status: "PENDING_REVIEW", fileCount: files.length } });
     } catch (error) {
@@ -225,7 +236,7 @@ export function projectTemplateSubmissionsRouter(ctx: AppContext, generation: Ge
           action: { in: ["template.submission_create", "template.submission_approve"] },
           outcome: "SUCCESS",
         },
-        orderBy: { at: "desc" },
+        orderBy: [{ at: "desc" }, { id: "desc" }],
         take: 200,
       });
       const created = new Map<string, (typeof events)[number]>();
