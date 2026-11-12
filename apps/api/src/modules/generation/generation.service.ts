@@ -46,7 +46,9 @@ export function generationView(generation: GenerationWithProject): GenerationVie
   return {
     id: generation.id,
     projectId: generation.projectId,
-    blueprint: generation.project.blueprint ? (generation.project.blueprint as ProjectBlueprint) : null,
+    blueprint: generation.project.blueprint
+      ? (generation.project.blueprint as ProjectBlueprint)
+      : null,
     projectKey: generation.project.key,
     projectName: generation.project.name,
     mode: generation.mode,
@@ -262,9 +264,10 @@ export class GenerationService {
           "The selected starter reference is incomplete.",
         );
       }
-      const template = input.starterId && input.starterVersion
-        ? await this.options.library.get(input.starterId, input.starterVersion)
-        : await this.options.library.starterFor(input.projectType);
+      const template =
+        input.starterId && input.starterVersion
+          ? await this.options.library.get(input.starterId, input.starterVersion)
+          : await this.options.library.starterFor(input.projectType);
       if (!template || !isUsable(template) || template.manifest.kind !== "starter") {
         throw notEligible(`No usable starter is available for "${input.projectType}" projects.`);
       }
