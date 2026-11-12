@@ -71,16 +71,20 @@ describe("GlobalSearch", () => {
     await user.type(input, "portal");
     const options = await screen.findAllByRole("option");
     expect(options).toHaveLength(2);
+    const [firstOption, secondOption] = options;
+    if (!firstOption || !secondOption) {
+      throw new Error("Expected two search options.");
+    }
 
     await user.keyboard("{ArrowDown}");
-    expect(options[0]).toHaveAttribute("aria-selected", "true");
-    expect(input).toHaveAttribute("aria-activedescendant", options[0].id);
+    expect(firstOption).toHaveAttribute("aria-selected", "true");
+    expect(input).toHaveAttribute("aria-activedescendant", firstOption.id);
 
     await user.keyboard("{ArrowDown}");
-    expect(options[1]).toHaveAttribute("aria-selected", "true");
+    expect(secondOption).toHaveAttribute("aria-selected", "true");
 
     await user.keyboard("{ArrowUp}");
-    expect(options[0]).toHaveAttribute("aria-selected", "true");
+    expect(firstOption).toHaveAttribute("aria-selected", "true");
 
     await user.keyboard("{ArrowDown}");
     await user.keyboard("{Enter}");
