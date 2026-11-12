@@ -29,7 +29,7 @@ const base = {
   version: "1.0.0",
   category: "Starter",
   technologies: [{ name: "React", version: "19" }],
-  compatibility: { generator: 1 },
+  compatibility: { generator: 1, adapter: "file-tree" },
   license: { spdx: "MIT" },
   provenance: { origin: "local", maintainer: "Owner" },
   files: [{ source: "a", target: "package.json" }],
@@ -39,6 +39,19 @@ const webStarter = {
   id: "starter-web-app",
   kind: "starter",
   projectType: "web-app",
+  compatibility: { generator: 1, adapter: "react-vite" },
+  blueprint: {
+    family: "web-app",
+    architecture: "single-page-app",
+    runtimes: [{ name: "Node.js", version: "24" }],
+    languages: [{ name: "TypeScript", version: "5.9" }],
+    frameworks: [{ name: "React", version: "19" }, { name: "Vite", version: "7" }],
+    packageManager: "npm",
+    databases: [],
+    apis: [],
+    infrastructure: [{ name: "Static web hosting", version: "1" }],
+    operatingSystems: ["cross-platform"],
+  },
   title: "Web application",
   description: "React single-page app",
   inputs: [
@@ -95,7 +108,15 @@ const catalogItem = (id: string, title: string, extra: Record<string, unknown> =
 const ELIGIBLE_ID = "11111111-1111-4111-8111-111111111111";
 const BLOCKED_ID = "22222222-2222-4222-8222-222222222222";
 const OPTIONS = {
-  starters: [{ projectType: "web-app", manifest: webStarter, digest: "b".repeat(64) }],
+  starters: [
+    {
+      id: "starter-web-app",
+      version: "1.0.0",
+      projectType: "web-app",
+      manifest: webStarter,
+      digest: "b".repeat(64),
+    },
+  ],
   templates: [
     {
       catalogItem: catalogItem(ELIGIBLE_ID, "Landing page"),
@@ -114,6 +135,7 @@ const OPTIONS = {
   ],
 };
 const PREVIEW = {
+  blueprint: webStarter.blueprint,
   outputDir: "portal",
   files: [{ path: "package.json", bytes: 120 }],
   directories: ["public"],
@@ -124,6 +146,7 @@ const PREVIEW = {
 };
 const GENERATION = {
   id: "33333333-3333-4333-8333-333333333333",
+  blueprint: webStarter.blueprint,
   projectId: "44444444-4444-4444-8444-444444444444",
   projectKey: "PORTAL",
   projectName: "Portal",
@@ -225,6 +248,9 @@ describe("new project wizard", () => {
     expect(bodyOf("/generations/preview")).toEqual({
       mode: "SCRATCH",
       projectType: "web-app",
+      starterId: "starter-web-app",
+      starterVersion: "1.0.0",
+      blueprint: webStarter.blueprint,
       project: { key: "PORTAL", name: "Portal", purpose: "" },
       inputs: { nodeVersion: "22", includeTests: true },
       requirements: ["Sign in", "View orders"],
