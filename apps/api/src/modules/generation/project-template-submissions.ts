@@ -26,6 +26,20 @@ const MAX_FILE_BYTES = 512 * 1024;
 const MAX_TOTAL_BYTES = 4 * 1024 * 1024;
 const EXCLUDED_DIRS = new Set([".git", ".asaa", "node_modules", "dist", "build", "coverage", ".next", ".venv", "venv"]);
 const EXCLUDED_FILES = /^(\.env($|\.)|.*\.(pem|key|p12|pfx)$|id_rsa|id_ed25519|credentials(\.json)?$)$/i;
+const TEXT_EXTENSIONS = new Set([
+  ".txt", ".md", ".mdx", ".html", ".htm", ".css", ".scss", ".less", ".js", ".jsx", ".mjs", ".cjs",
+  ".ts", ".tsx", ".json", ".jsonc", ".yaml", ".yml", ".toml", ".xml", ".svg", ".sh", ".bash", ".zsh",
+  ".ps1", ".py", ".java", ".kt", ".go", ".rs", ".c", ".h", ".cpp", ".cs", ".sql", ".prisma",
+  ".graphql", ".properties", ".gradle", ".tf", ".ini", ".conf", ".csv", ".log", ".vue", ".svelte",
+  ".astro", ".php", ".rb", ".swift", ".dart", ".ipynb", ".gitignore", ".gitattributes", ".editorconfig",
+]);
+const TEXT_BASENAMES = new Set(["dockerfile", "makefile", "license", "readme", "procfile", "justfile"]);
+
+function substitutionMode(filePath: string): "text" | "none" {
+  const base = path.basename(filePath).toLowerCase();
+  return TEXT_EXTENSIONS.has(path.extname(base)) || TEXT_BASENAMES.has(base) ? "text" : "none";
+}
+
 const SECRET_PATTERNS = [
   /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/,
   /\bAKIA[0-9A-Z]{16}\b/,
@@ -158,9 +172,7 @@ export function projectTemplateSubmissionsRouter(ctx: AppContext, generation: Ge
         files: files.map(({ path: filePath }) => ({
           source: filePath,
           target: filePath,
-          substitute: /\.(png|jpe?g|gif|webp|ico|pdf|zip|gz|woff2?|ttf|eot|mp[34]|wasm)$/i.test(filePath)
-            ? "none" as const
-            : "text" as const,
+          substitute: substitutionMode(filePath),
         })),
         directories: [],
         dependencies: [],
