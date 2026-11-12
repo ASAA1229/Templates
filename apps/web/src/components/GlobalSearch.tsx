@@ -1,6 +1,6 @@
 import { Search } from "lucide-react";
 import { useEffect, useId, useState, type KeyboardEvent } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { Input } from "@/components/ui";
 import { api } from "@/lib/api";
 
@@ -171,6 +171,17 @@ export function GlobalSearch() {
                   </span>
                 </div>
               ))}
+            </div>
+          )}
+          {searched && !loading && (
+            <div className="border-t px-3 py-2">
+              <Link
+                to={`/search?q=${encodeURIComponent(normalized)}`}
+                onClick={closeSearch}
+                className="text-sm font-medium text-primary hover:underline"
+              >
+                View all results and filters
+              </Link>
             </div>
           )}
         </div>
