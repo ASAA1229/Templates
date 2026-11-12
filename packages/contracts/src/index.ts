@@ -395,6 +395,47 @@ export const PROJECT_TYPES = ["web-app", "api-service", "blank"] as const;
 /** Generator adapters are versioned platform capabilities, not executable template code. */
 export const GENERATOR_ADAPTERS = ["file-tree", "react-vite", "node-api", "blank"] as const;
 export type GeneratorAdapterId = (typeof GENERATOR_ADAPTERS)[number];
+export const PROJECT_FAMILIES = [
+  "general",
+  "website",
+  "web-app",
+  "e-commerce",
+  "backend-service",
+  "full-stack",
+  "mobile-app",
+  "desktop-app",
+  "enterprise",
+  "data-ai",
+  "devops",
+  "library",
+] as const;
+export const ARCHITECTURE_PROFILES = [
+  "minimal",
+  "static-site",
+  "single-page-app",
+  "layered-service",
+  "modular-monolith",
+  "microservices",
+  "monorepo",
+  "clean-architecture",
+  "serverless",
+  "data-pipeline",
+  "native-client",
+] as const;
+export const PACKAGE_MANAGERS = [
+  "npm",
+  "pnpm",
+  "yarn",
+  "bun",
+  "pip",
+  "uv",
+  "poetry",
+  "cargo",
+  "maven",
+  "gradle",
+  "dotnet",
+] as const;
+export const OPERATING_SYSTEMS = ["windows", "linux", "macos", "android", "ios", "cross-platform"] as const;
 export type ProjectType = (typeof PROJECT_TYPES)[number];
 export const TEMPLATE_KINDS = ["template", "starter"] as const;
 export const SUBSTITUTION_MODES = ["none", "text", "json", "html"] as const;
@@ -525,6 +566,21 @@ export const templateManifestSchema = z
     /** For starters: the from-scratch project type this starter implements. */
     projectType: z.enum(PROJECT_TYPES).optional(),
     technologies: z.array(versionedNameSchema).min(1).max(20),
+    /** Optional, structured project blueprint. Omitted by legacy manifests and populated by newer starters. */
+    blueprint: z
+      .object({
+        family: z.enum(PROJECT_FAMILIES),
+        architecture: z.enum(ARCHITECTURE_PROFILES),
+        runtimes: z.array(versionedNameSchema).max(10).default([]),
+        languages: z.array(versionedNameSchema).max(10).default([]),
+        frameworks: z.array(versionedNameSchema).max(20).default([]),
+        packageManager: z.enum(PACKAGE_MANAGERS).optional(),
+        databases: z.array(versionedNameSchema).max(10).default([]),
+        apis: z.array(versionedNameSchema).max(20).default([]),
+        infrastructure: z.array(versionedNameSchema).max(20).default([]),
+        operatingSystems: z.array(z.enum(OPERATING_SYSTEMS)).max(6).default([]),
+      })
+      .optional(),
     inputs: z.array(templateInputSchema).max(30).default([]),
     files: z.array(templateFileSchema).min(1).max(200),
     directories: z.array(z.string().max(240)).max(50).default([]),
