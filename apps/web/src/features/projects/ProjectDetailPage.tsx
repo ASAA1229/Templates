@@ -144,7 +144,9 @@ export function ProjectDetailPage() {
                         ["Databases", project.blueprint.databases],
                         ["APIs", project.blueprint.apis],
                         ["Infrastructure", project.blueprint.infrastructure],
-                      ].filter(([, values]) => (values as { name: string; version: string }[]).length > 0).map(([label, values]) => (
+                      ]
+                        .filter(([, values]) => (values as { name: string; version: string }[]).length > 0)
+                        .map(([label, values]) => (
                         <div key={label as string} className="contents">
                           <dt className="text-muted-foreground">{label as string}</dt>
                           <dd>
