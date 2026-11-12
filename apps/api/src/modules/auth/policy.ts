@@ -20,6 +20,8 @@ export const PERMISSIONS = [
   "catalog:write",
   "template:read",
   "template:approve",
+  "template:submit",
+  "template:review",
   "generation:read",
   "generation:write",
   "workspace:read",
