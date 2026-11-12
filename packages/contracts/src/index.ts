@@ -74,10 +74,13 @@ export const changePasswordSchema = z
   });
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 
+export type WorkspaceRole = "OWNER" | "ADMIN" | "DEVELOPER" | "TESTER" | "EMPLOYEE";
+
 export interface OwnerView {
   id: string;
   email: string;
   displayName: string;
+  role: WorkspaceRole;
 }
 
 export interface SessionView {
