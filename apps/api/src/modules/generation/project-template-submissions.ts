@@ -187,11 +187,31 @@ export function projectTemplateSubmissionsRouter(ctx: AppContext, generation: Ge
   router.get("/template-submissions", authorize(ctx, "template:review"), async (_req, res, next) => {
     try {
       const events = await ctx.prisma.auditEvent.findMany({
-        where: { action: "template.submission_create", targetType: "template_submission", outcome: "SUCCESS" },
-        orderBy: { id: "desc" },
-        take: 100,
+        where: {
+          targetType: "template_submission",
+          action: { in: ["template.submission_create", "template.submission_approve"] },
+          outcome: "SUCCESS",
+        },
+        orderBy: { at: "desc" },
+        take: 200,
       });
-      res.json({ submissions: events.map((event) => ({ id: event.targetId, createdAt: event.at.toISOString(), actorId: event.actorId, ...(event.metadata as Record<string, unknown>) })) });
+      const created = new Map<string, (typeof events)[number]>();
+      const latest = new Map<string, (typeof events)[number]>();
+      for (const event of events) {
+        if (event.action === "template.submission_create" && !created.has(event.targetId)) {
+          created.set(event.targetId, event);
+        }
+        if (!latest.has(event.targetId)) latest.set(event.targetId, event);
+      }
+      res.json({
+        submissions: [...created.entries()].map(([id, event]) => ({
+          id,
+          createdAt: event.at.toISOString(),
+          actorId: event.actorId,
+          ...(event.metadata as Record<string, unknown>),
+          status: latest.get(id)?.action === "template.submission_approve" ? "APPROVED" : "PENDING_REVIEW",
+        })),
+      });
     } catch (error) {
       next(error);
     }
