@@ -48,7 +48,7 @@ export function TeamMembersPage() {
         },
       });
       form.reset();
-      setMessage("Member account created. Share the temporary password securely.");
+      setMessage("Member account created. Share the initial password securely; the member can change it after signing in.");
       await reload();
     } catch (cause) {
       setError(cause instanceof ApiError ? cause.message : "Unable to create member account.");
@@ -83,7 +83,7 @@ export function TeamMembersPage() {
             <label className="space-y-1 text-sm">Full name<input required name="displayName" maxLength={120} className="w-full rounded-md border bg-background px-3 py-2" /></label>
             <label className="space-y-1 text-sm">Work email<input required name="email" type="email" maxLength={254} className="w-full rounded-md border bg-background px-3 py-2" /></label>
             <label className="space-y-1 text-sm">Role<select name="role" defaultValue="EMPLOYEE" className="w-full rounded-md border bg-background px-3 py-2"><option value="EMPLOYEE">Employee</option><option value="DEVELOPER">Developer</option><option value="TESTER">Tester</option><option value="ADMIN">Administrator (owner only)</option></select></label>
-            <label className="space-y-1 text-sm">Temporary password<input required name="password" type="password" minLength={12} maxLength={256} autoComplete="new-password" className="w-full rounded-md border bg-background px-3 py-2" /></label>
+            <label className="space-y-1 text-sm">Initial password<input required name="password" type="password" minLength={12} maxLength={256} autoComplete="new-password" className="w-full rounded-md border bg-background px-3 py-2" /></label>
             <div className="sm:col-span-2"><Button type="submit" disabled={busy}>{busy ? "Creating…" : "Create account"}</Button></div>
           </form>
         </CardContent>
