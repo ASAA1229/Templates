@@ -66,6 +66,7 @@ test.describe("project initialization (US-E01, US-E02)", () => {
     await page.getByRole("link", { name: "Initialize project" }).click();
     await page.getByRole("radio", { name: /Start from scratch/ }).check();
     await page.getByRole("button", { name: "Continue" }).click();
+    await page.getByLabel("Project family").selectOption("backend-service");
     await page.getByRole("radio", { name: /API service/ }).check();
     await page.getByRole("button", { name: "Continue" }).click();
 
@@ -79,7 +80,10 @@ test.describe("project initialization (US-E01, US-E02)", () => {
     await expect(page.getByRole("list", { name: "Files to generate" }).getByText("src/server.ts")).toBeVisible();
     await page.getByRole("button", { name: "Generate project" }).click();
     await expect(page.getByRole("heading", { name: "Project generated" })).toBeVisible();
+    await expect(page.getByText("Backend service · Layered service")).toBeVisible();
     await page.getByRole("link", { name: "Open project" }).click();
+    await expect(page.getByText("Backend service")).toBeVisible();
+    await expect(page.getByText("Layered service")).toBeVisible();
     await expect(page.getByText("List orders")).toBeVisible();
     await expect(page.getByText("starter-api-service@1.0.0")).toBeVisible();
 
@@ -87,6 +91,7 @@ test.describe("project initialization (US-E01, US-E02)", () => {
     await page.goto("/projects/new");
     await page.getByRole("radio", { name: /Start from scratch/ }).check();
     await page.getByRole("button", { name: "Continue" }).click();
+    await page.getByLabel("Project family").selectOption("general");
     await page.getByRole("radio", { name: /Blank project/ }).check();
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByLabel("Project key").fill(key);
