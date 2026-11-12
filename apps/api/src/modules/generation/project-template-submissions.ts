@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { lstat, mkdir, readFile, readdir, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { Router } from "express";
@@ -15,6 +15,7 @@ import { audit } from "../audit/audit.service.js";
 import { authorize } from "../auth/policy.js";
 import { loadOwnedProject } from "../projects/projects.js";
 import { resolveOutputDir } from "../generation/writer.js";
+import { contentDigest } from "./library.js";
 import { catalogView } from "../catalog/catalog.js";
 import type { GenerationService } from "../generation/generation.service.js";
 
@@ -169,7 +170,7 @@ export function projectTemplateSubmissionsRouter(ctx: AppContext, generation: Ge
         await import("node:fs/promises").then(({ rm }) => rm(staging, { recursive: true, force: true }));
         throw error;
       }
-      const digest = createHash("sha256").update(JSON.stringify(parsed.data)).update(files.map((f) => f.path).join("\n")).digest("hex");
+      const digest = contentDigest(Buffer.from(JSON.stringify(parsed.data, null, 2)), new Map(files.map((file) => [file.path, file.bytes])));
       await audit(ctx, req, {
         action: "template.submission_create",
         outcome: "SUCCESS",
@@ -204,8 +205,21 @@ export function projectTemplateSubmissionsRouter(ctx: AppContext, generation: Ge
       const source = path.join(submissionsRoot, id);
       const sourceStats = await lstat(source).catch(() => null);
       if (!sourceStats?.isDirectory() || sourceStats.isSymbolicLink()) throw notFound("Template submission");
-      const manifest = JSON.parse(await readFile(path.join(source, "manifest.json"), "utf8")) as { id: string; version: string };
-      const target = path.join(ctx.config.TEMPLATE_LIBRARY_DIR, manifest.id, manifest.version);
+      const manifestPath = path.join(source, "manifest.json");
+      const manifestStats = await lstat(manifestPath).catch(() => null);
+      if (!manifestStats?.isFile() || manifestStats.isSymbolicLink() || manifestStats.size > 64 * 1024) {
+        throw validationFailed({ manifest: "The pending manifest is missing, unsafe or too large." });
+      }
+      const rawManifest: unknown = JSON.parse(await readFile(manifestPath, "utf8"));
+      const parsedManifest = templateManifestSchema.safeParse(rawManifest);
+      if (!parsedManifest.success) throw validationFailed({ manifest: "The pending manifest failed schema validation." });
+      const manifest = parsedManifest.data;
+      if (!/^[a-z0-9][a-z0-9-]{1,79}$/.test(manifest.id) || !/^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?$/.test(manifest.version)) {
+        throw validationFailed({ manifest: "The pending template identity is invalid." });
+      }
+      const libraryRoot = path.resolve(ctx.config.TEMPLATE_LIBRARY_DIR);
+      const target = path.resolve(libraryRoot, manifest.id, manifest.version);
+      if (!target.startsWith(libraryRoot + path.sep)) throw validationFailed({ manifest: "The target path is outside the template library." });
       if (await lstat(target).catch(() => null)) throw conflict("This template version already exists in the library.");
       await mkdir(path.dirname(target), { recursive: true });
       await rename(source, target);
