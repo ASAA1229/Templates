@@ -499,6 +499,7 @@ describe("project-to-template contribution (US-X03)", () => {
       customerPermission: true,
       rightsConfirmed: true,
       secretsChecked: true,
+      inputs: [{ id: "projectName", label: "Project name", type: "string", required: true, maxLength: 80 }],
     });
     expect(submitted.status).toBe(201);
     expect(submitted.body.submission).toMatchObject({
