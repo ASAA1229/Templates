@@ -9,6 +9,7 @@ const OUTPUT_ROOT = process.env.E2E_GENERATION_DIR;
 
 test.describe("template library batch 001 browser review", () => {
   test("renders all 25 generated demos at desktop and mobile widths", async ({ page }) => {
+    test.setTimeout(120_000);
     if (!OUTPUT_ROOT) throw new Error("E2E_GENERATION_DIR is not configured.");
 
     await signIn(page, "/catalog");
@@ -63,5 +64,5 @@ test.describe("template library batch 001 browser review", () => {
         await expectAccessible(page);
       }
     }
-  }, 120_000);
+  });
 });
