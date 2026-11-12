@@ -72,7 +72,9 @@ describe("global search (US-O01, US-O02)", () => {
     await agent.post("/api/projects", { key: "PORTAL-A", name: "Portal Alpha", purpose: "First search result" });
     await agent.post("/api/projects", { key: "PORTAL-B", name: "Portal Beta", purpose: "Second search result" });
 
-    const response = await agent.get("/api/search?q=portal&types=PROJECT&projectStatus=PLANNING&sortBy=title&sortOrder=asc&page=1&pageSize=1");
+    const response = await agent.get(
+      "/api/search?q=portal&types=PROJECT&projectStatus=PLANNING&sortBy=title&sortOrder=asc&page=1&pageSize=1",
+    );
     expect(response.status).toBe(200);
     expect(response.body.total).toBe(2);
     expect(response.body.results).toHaveLength(1);
@@ -118,5 +120,4 @@ describe("global search (US-O01, US-O02)", () => {
     expect((await agent.delete("/api/search/saved/" + id)).status).toBe(204);
     expect((await agent.get("/api/search/saved")).body.searches).toHaveLength(0);
   });
-
 });
