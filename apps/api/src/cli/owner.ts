@@ -46,7 +46,7 @@ async function main() {
       const email = loginSchema.shape.email.parse(process.env.OWNER_EMAIL ?? (await ask("Owner email: ")));
       const displayName = (process.env.OWNER_NAME ?? (await ask("Display name: "))).trim().slice(0, 120) || "Owner";
       const passwordHash = await hashPassword(await readPassword());
-      const owner = await prisma.owner.create({ data: { email, displayName, passwordHash } });
+      const owner = await prisma.owner.create({ data: { email, displayName, passwordHash, role: "OWNER" } });
       await prisma.auditEvent.create({
         data: {
           actorType: "SYSTEM",
