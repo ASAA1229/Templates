@@ -105,3 +105,25 @@ A committed template package is not automatically approved, tested or production
 2. Add search UI tests and improve keyboard navigation/combobox semantics.
 3. Implement saved searches and filter facets with explicit owner-scoped persistence.
 4. Add the next P1 platform foundation only after search validation is green.
+
+## Development update — 2026-11-12
+
+### Advanced search and saved queries — US-O02
+
+- Branch: `new`; integration remains PR #1 into `dev`.
+- API: module filters for projects, requirements and catalog items; facets; title/updated-time sorting; page-size and page controls.
+- Persistence: owner-scoped saved-search records with create, list, rename/update and delete endpoints. No sharing endpoint or cross-owner access is enabled.
+- UI: dedicated `/search` workspace with filters, facets, result navigation, pagination and saved-search management; global search links to the advanced view.
+- Tests: API coverage for filtering, facets, sorting, pagination and saved-search lifecycle; UI coverage for search and save behavior.
+- CI: current GitHub Actions run is pending. Do not mark US-O02 complete until formatting, lint, typecheck, tests, build, smoke and E2E checks pass.
+- Template batch 001: 25 manifest structures have had basic static checks; actual discovery, rendering, preview and generation remain to be verified.
+- Deployment: not deployed. No merge into `dev` or `main`.
+
+### Updated next steps
+
+1. Resolve the current CI run and any follow-on failures.
+2. Verify all 25 template packages through the real loader, preview and generation workflows.
+3. Review each demo's content and desktop/mobile rendering; approve only packages that pass.
+4. Reconcile US-O01/US-O02 and project status against passing automated and manual evidence.
+5. Continue the next P1 platform foundation after the current vertical slice is stable.
+
