@@ -28,6 +28,7 @@ const TITLES: [RegExp, string][] = [
   [/^\/projects\/[^/]+/, "Project"],
   [/^\/projects/, "Projects"],
   [/^\/catalog/, "Template catalog"],
+  [/^\/search/, "Advanced search"],
   [/^\/audit/, "Audit log"],
   [/^\/security/, "Security"],
   [/^\/login/, "Sign in"],
