@@ -2,7 +2,6 @@ import {
   createGenerationSchema,
   fieldErrors,
   generationProjectSchema,
-  PROJECT_TYPES,
   type ProjectBlueprint,
   templateInputValuesSchema,
   templateManifestSchema,
@@ -402,6 +401,8 @@ export function NewProjectWizard() {
                       )?.blueprint.architecture;
                       setBlueprintArchitecture(nextArchitecture ?? "minimal");
                       setProjectType(null);
+                      setStarterId(null);
+                      setStarterVersion(null);
                     }}
                   >
                     {availableFamilies.map((family) => (
@@ -417,6 +418,8 @@ export function NewProjectWizard() {
                     onChange={(event) => {
                       setBlueprintArchitecture(event.target.value);
                       setProjectType(null);
+                      setStarterId(null);
+                      setStarterVersion(null);
                     }}
                   >
                     {availableArchitectures.map((architecture) => (
