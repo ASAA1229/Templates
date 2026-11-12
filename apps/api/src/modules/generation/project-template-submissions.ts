@@ -27,13 +27,73 @@ const MAX_TOTAL_BYTES = 4 * 1024 * 1024;
 const EXCLUDED_DIRS = new Set([".git", ".asaa", "node_modules", "dist", "build", "coverage", ".next", ".venv", "venv"]);
 const EXCLUDED_FILES = /^(\.env($|\.)|.*\.(pem|key|p12|pfx)$|id_rsa|id_ed25519|credentials(\.json)?$)$/i;
 const TEXT_EXTENSIONS = new Set([
-  ".txt", ".md", ".mdx", ".html", ".htm", ".css", ".scss", ".less", ".js", ".jsx", ".mjs", ".cjs",
-  ".ts", ".tsx", ".json", ".jsonc", ".yaml", ".yml", ".toml", ".xml", ".svg", ".sh", ".bash", ".zsh",
-  ".ps1", ".py", ".java", ".kt", ".go", ".rs", ".c", ".h", ".cpp", ".cs", ".sql", ".prisma",
-  ".graphql", ".properties", ".gradle", ".tf", ".ini", ".conf", ".csv", ".log", ".vue", ".svelte",
-  ".astro", ".php", ".rb", ".swift", ".dart", ".ipynb", ".gitignore", ".gitattributes", ".editorconfig",
+  ".txt",
+  ".md",
+  ".mdx",
+  ".html",
+  ".htm",
+  ".css",
+  ".scss",
+  ".less",
+  ".js",
+  ".jsx",
+  ".mjs",
+  ".cjs",
+  ".ts",
+  ".tsx",
+  ".json",
+  ".jsonc",
+  ".yaml",
+  ".yml",
+  ".toml",
+  ".xml",
+  ".svg",
+  ".sh",
+  ".bash",
+  ".zsh",
+  ".ps1",
+  ".py",
+  ".java",
+  ".kt",
+  ".go",
+  ".rs",
+  ".c",
+  ".h",
+  ".cpp",
+  ".cs",
+  ".sql",
+  ".prisma",
+  ".graphql",
+  ".properties",
+  ".gradle",
+  ".tf",
+  ".ini",
+  ".conf",
+  ".csv",
+  ".log",
+  ".vue",
+  ".svelte",
+  ".astro",
+  ".php",
+  ".rb",
+  ".swift",
+  ".dart",
+  ".ipynb",
+  ".gitignore",
+  ".gitattributes",
+  ".editorconfig",
 ]);
-const TEXT_BASENAMES = new Set(["dockerfile", "makefile", "license", "readme", "procfile", "justfile", ".gitignore", ".gitattributes", ".editorconfig"]);
+const TEXT_BASENAMES = new Set([
+  "dockerfile",
+  "makefile",
+  "license",
+  "readme",
+  "procfile",
+  "justfile",
+  ".gitignore",
+  ".gitattributes",
+  ".editorconfig",
+]);
 
 function substitutionMode(filePath: string): "text" | "none" {
   const base = path.basename(filePath).toLowerCase();
@@ -93,8 +153,10 @@ function parseInput(raw: unknown): SubmissionInput {
     }
   }
   if (!/^[a-z0-9][a-z0-9-]{1,79}$/.test(result.slug)) issues.slug = "Use a lowercase template slug (2–80 characters).";
-  if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(result.version)) issues.version = "Use semantic versioning, e.g. 1.0.0.";
-  if (!result.customerPermission) issues.customerPermission = "Confirm customer permission or that no customer-owned material is included.";
+  if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(result.version))
+    issues.version = "Use semantic versioning, e.g. 1.0.0.";
+  if (!result.customerPermission)
+    issues.customerPermission = "Confirm customer permission or that no customer-owned material is included.";
   if (!result.rightsConfirmed) issues.rightsConfirmed = "Confirm you have the rights to contribute this work.";
   if (!result.secretsChecked) issues.secretsChecked = "Confirm the project was checked for secrets and private data.";
   if (Object.keys(issues).length) throw validationFailed(issues, "Template submission details need attention.");
@@ -120,9 +182,11 @@ async function collectFiles(root: string) {
       }
       if (!stats.isFile()) throw validationFailed({ files: `${rel}: only regular files are accepted.` });
       if (stats.size > MAX_FILE_BYTES) throw validationFailed({ files: `${rel}: exceeds the per-file limit.` });
-      if (files.length >= MAX_FILES) throw validationFailed({ files: `The project exceeds the ${MAX_FILES}-file limit.` });
+      if (files.length >= MAX_FILES)
+        throw validationFailed({ files: `The project exceeds the ${MAX_FILES}-file limit.` });
       total += stats.size;
-      if (total > MAX_TOTAL_BYTES) throw validationFailed({ files: "The project exceeds the 4 MB template contribution limit." });
+      if (total > MAX_TOTAL_BYTES)
+        throw validationFailed({ files: "The project exceeds the 4 MB template contribution limit." });
       const bytes = await readFile(full);
       const sample = bytes.toString("utf8");
       if (SECRET_PATTERNS.some((pattern) => pattern.test(sample))) {
@@ -141,7 +205,9 @@ function technologies(blueprint: ProjectBlueprint | null): { name: string; versi
     ? [...blueprint.runtimes, ...blueprint.languages, ...blueprint.frameworks, ...blueprint.databases]
     : [];
   const unique = new Map(entries.map((entry) => [`${entry.name.toLowerCase()}@${entry.version}`, entry]));
-  return [...unique.values()].slice(0, 20).length ? [...unique.values()].slice(0, 20) : [{ name: "Project source", version: "1" }];
+  return [...unique.values()].slice(0, 20).length
+    ? [...unique.values()].slice(0, 20)
+    : [{ name: "Project source", version: "1" }];
 }
 
 export function projectTemplateSubmissionsRouter(ctx: AppContext, generation: GenerationService): Router {
@@ -153,7 +219,8 @@ export function projectTemplateSubmissionsRouter(ctx: AppContext, generation: Ge
       const project = await loadOwnedProject(ctx, req.owner!.id, String(req.params.projectId));
       if (project.archivedAt) throw conflict("Restore the project before submitting it as a template.");
       const generated = await ctx.prisma.projectGeneration.findUnique({ where: { projectId: project.id } });
-      if (!generated || generated.status !== "SUCCEEDED") throw conflict("Only successfully generated projects can be contributed.");
+      if (!generated || generated.status !== "SUCCEEDED")
+        throw conflict("Only successfully generated projects can be contributed.");
       const output = await resolveOutputDir(ctx.config.GENERATION_OUTPUT_DIR, generated.outputDir);
       if (!output) throw conflict("The project's source folder is unavailable.");
       const files = await collectFiles(output);
@@ -178,12 +245,21 @@ export function projectTemplateSubmissionsRouter(ctx: AppContext, generation: Ge
         dependencies: [],
         compatibility: { generator: GENERATOR_MAJOR, adapter: "file-tree" as const },
         license: { spdx: input.license },
-        provenance: { origin: "local" as const, maintainer: req.owner!.displayName, repository: `project:${project.key}` },
+        provenance: {
+          origin: "local" as const,
+          maintainer: req.owner!.displayName,
+          repository: `project:${project.key}`,
+        },
         validation: { requiredOutputs: [], maxFiles: MAX_FILES, maxTotalBytes: MAX_TOTAL_BYTES },
       };
       const parsed = templateManifestSchema.safeParse(manifest);
       if (!parsed.success) {
-        throw validationFailed({ manifest: parsed.error.issues.map((issue) => issue.message).slice(0, 8).join(" ") });
+        throw validationFailed({
+          manifest: parsed.error.issues
+            .map((issue) => issue.message)
+            .slice(0, 8)
+            .join(" "),
+        });
       }
       const submissionsRoot = path.join(ctx.config.TEMPLATE_LIBRARY_DIR, ".submissions");
       await mkdir(submissionsRoot, { recursive: true });
@@ -203,7 +279,10 @@ export function projectTemplateSubmissionsRouter(ctx: AppContext, generation: Ge
         await import("node:fs/promises").then(({ rm }) => rm(staging, { recursive: true, force: true }));
         throw error;
       }
-      const digest = contentDigest(Buffer.from(JSON.stringify(parsed.data, null, 2)), new Map(files.map((file) => [file.path, file.bytes])));
+      const digest = contentDigest(
+        Buffer.from(JSON.stringify(parsed.data, null, 2)),
+        new Map(files.map((file) => [file.path, file.bytes])),
+      );
       await audit(ctx, req, {
         action: "template.submission_create",
         outcome: "SUCCESS",
@@ -222,7 +301,18 @@ export function projectTemplateSubmissionsRouter(ctx: AppContext, generation: Ge
           reviewStatus: "PENDING",
         },
       });
-      res.status(201).json({ submission: { id, templateId: input.slug, version: input.version, title: input.title, status: "PENDING_REVIEW", fileCount: files.length } });
+      res
+        .status(201)
+        .json({
+          submission: {
+            id,
+            templateId: input.slug,
+            version: input.version,
+            title: input.title,
+            status: "PENDING_REVIEW",
+            fileCount: files.length,
+          },
+        });
     } catch (error) {
       next(error);
     }
@@ -277,15 +367,24 @@ export function projectTemplateSubmissionsRouter(ctx: AppContext, generation: Ge
       const manifestBytes = await readFile(manifestPath);
       const rawManifest: unknown = JSON.parse(manifestBytes.toString("utf8"));
       const parsedManifest = templateManifestSchema.safeParse(rawManifest);
-      if (!parsedManifest.success) throw validationFailed({ manifest: "The pending manifest failed schema validation." });
+      if (!parsedManifest.success)
+        throw validationFailed({ manifest: "The pending manifest failed schema validation." });
       const manifest = parsedManifest.data;
-      if (!/^[a-z0-9][a-z0-9-]{1,79}$/.test(manifest.id) || !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(manifest.version)) {
+      if (
+        !/^[a-z0-9][a-z0-9-]{1,79}$/.test(manifest.id) ||
+        !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(manifest.version)
+      ) {
         throw validationFailed({ manifest: "The pending template identity is invalid." });
       }
       const pendingFiles = await collectFiles(path.join(source, "files"));
       const actualDigest = contentDigest(manifestBytes, new Map(pendingFiles.map((file) => [file.path, file.bytes])));
       const createdEvent = await ctx.prisma.auditEvent.findFirst({
-        where: { action: "template.submission_create", targetType: "template_submission", targetId: id, outcome: "SUCCESS" },
+        where: {
+          action: "template.submission_create",
+          targetType: "template_submission",
+          targetId: id,
+          outcome: "SUCCESS",
+        },
         orderBy: { at: "asc" },
       });
       const expectedDigest = (createdEvent?.metadata as Record<string, unknown> | undefined)?.digest;
@@ -294,13 +393,20 @@ export function projectTemplateSubmissionsRouter(ctx: AppContext, generation: Ge
       }
       const libraryRoot = path.resolve(ctx.config.TEMPLATE_LIBRARY_DIR);
       const target = path.resolve(libraryRoot, manifest.id, manifest.version);
-      if (!target.startsWith(libraryRoot + path.sep)) throw validationFailed({ manifest: "The target path is outside the template library." });
+      if (!target.startsWith(libraryRoot + path.sep))
+        throw validationFailed({ manifest: "The target path is outside the template library." });
       if (await lstat(target).catch(() => null)) throw conflict("This template version already exists in the library.");
       await mkdir(path.dirname(target), { recursive: true });
       await rename(source, target);
       try {
         const approved = await generation.approve(req, manifest.id, manifest.version);
-        await audit(ctx, req, { action: "template.submission_approve", outcome: "SUCCESS", targetType: "template_submission", targetId: id, metadata: { catalogItemId: approved.item.id, templateId: manifest.id, version: manifest.version } });
+        await audit(ctx, req, {
+          action: "template.submission_approve",
+          outcome: "SUCCESS",
+          targetType: "template_submission",
+          targetId: id,
+          metadata: { catalogItemId: approved.item.id, templateId: manifest.id, version: manifest.version },
+        });
         res.status(201).json({ submissionId: id, item: catalogView(approved.item), status: "APPROVED" });
       } catch (error) {
         await mkdir(submissionsRoot, { recursive: true });

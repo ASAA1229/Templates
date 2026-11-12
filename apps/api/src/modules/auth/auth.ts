@@ -145,12 +145,14 @@ export function authRouter(ctx: AppContext): Router {
 
   router.post("/members", requireOwner(), authorize(ctx, "identity:manage"), async (req, res, next) => {
     try {
-      const input = z.object({
-        email: z.string().trim().toLowerCase().email().max(254),
-        displayName: z.string().trim().min(1).max(120),
-        role: z.enum(["ADMIN", "DEVELOPER", "TESTER", "EMPLOYEE"]),
-        password: passwordSchema,
-      }).parse(req.body);
+      const input = z
+        .object({
+          email: z.string().trim().toLowerCase().email().max(254),
+          displayName: z.string().trim().min(1).max(120),
+          role: z.enum(["ADMIN", "DEVELOPER", "TESTER", "EMPLOYEE"]),
+          password: passwordSchema,
+        })
+        .parse(req.body);
       if (req.owner!.role !== "OWNER" && input.role === "ADMIN") {
         throw new AppError(403, "FORBIDDEN", "Only the owner can appoint an administrator.");
       }
@@ -180,13 +182,25 @@ export function authRouter(ctx: AppContext): Router {
     try {
       const input = z.object({ isActive: z.boolean() }).parse(req.body);
       const id = String(req.params.id);
-      if (id === req.owner!.id && !input.isActive) throw validationFailed({ isActive: "You cannot deactivate your own account." });
+      if (id === req.owner!.id && !input.isActive)
+        throw validationFailed({ isActive: "You cannot deactivate your own account." });
       const target = await ctx.prisma.owner.findUnique({ where: { id } });
       if (!target) throw new AppError(404, "NOT_FOUND", "Member not found.");
-      if (target.role === "OWNER") throw new AppError(403, "FORBIDDEN", "The owner account cannot be deactivated here.");
+      if (target.role === "OWNER")
+        throw new AppError(403, "FORBIDDEN", "The owner account cannot be deactivated here.");
       await ctx.prisma.owner.update({ where: { id }, data: { isActive: input.isActive } });
-      if (!input.isActive) await ctx.prisma.session.updateMany({ where: { ownerId: id, revokedAt: null }, data: { revokedAt: ctx.now() } });
-      await audit(ctx, req, { action: "identity.member.status", outcome: "SUCCESS", targetType: "member", targetId: id, metadata: input });
+      if (!input.isActive)
+        await ctx.prisma.session.updateMany({
+          where: { ownerId: id, revokedAt: null },
+          data: { revokedAt: ctx.now() },
+        });
+      await audit(ctx, req, {
+        action: "identity.member.status",
+        outcome: "SUCCESS",
+        targetType: "member",
+        targetId: id,
+        metadata: input,
+      });
       res.status(204).end();
     } catch (error) {
       next(error);

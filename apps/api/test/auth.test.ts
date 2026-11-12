@@ -156,7 +156,9 @@ describe("workspace member identity and access control", () => {
     expect(login.status).toBe(200);
     expect(login.body.owner.role).toBe("DEVELOPER");
 
-    const deactivated = await owner.patch("/api/auth/members/" + created.body.member.id + "/active", { isActive: false });
+    const deactivated = await owner.patch("/api/auth/members/" + created.body.member.id + "/active", {
+      isActive: false,
+    });
     expect(deactivated.status).toBe(204);
     expect((await member.get("/api/auth/session")).status).toBe(401);
   });
@@ -171,10 +173,14 @@ describe("workspace member identity and access control", () => {
     });
     expect(created.status).toBe(201);
     const admin = h.agent();
-    expect((await admin.post("/api/auth/login", {
-      email: "admin@asaa.test",
-      password: "another secure temporary password",
-    })).status).toBe(200);
+    expect(
+      (
+        await admin.post("/api/auth/login", {
+          email: "admin@asaa.test",
+          password: "another secure temporary password",
+        })
+      ).status,
+    ).toBe(200);
     const response = await admin.post("/api/auth/members", {
       email: "second-admin@asaa.test",
       displayName: "Second Admin",
@@ -241,7 +247,9 @@ describe("audit trail integrity (US-I02)", () => {
       data: { email: "developer@asaa.test", displayName: "Developer", role: "DEVELOPER", passwordHash: "x" },
     });
     await expect(
-      h.ctx.prisma.owner.create({ data: { email: "second@asaa.test", displayName: "Two", role: "OWNER", passwordHash: "x" } }),
+      h.ctx.prisma.owner.create({
+        data: { email: "second@asaa.test", displayName: "Two", role: "OWNER", passwordHash: "x" },
+      }),
     ).rejects.toThrow();
   });
 });

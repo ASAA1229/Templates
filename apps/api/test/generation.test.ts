@@ -554,7 +554,9 @@ describe("project-to-template contribution (US-X03)", () => {
     const manifest = JSON.parse(await readFile(manifestPath, "utf8")) as { title: string };
     manifest.title = "Changed after submission";
     await writeFile(manifestPath, JSON.stringify(manifest, null, 2));
-    const approval = await agent.post("/api/projects/template-submissions/" + submitted.body.submission.id + "/approve");
+    const approval = await agent.post(
+      "/api/projects/template-submissions/" + submitted.body.submission.id + "/approve",
+    );
     expect(approval.status).toBe(409);
     expect(approval.body.error.message).toMatch(/content changed/);
   });

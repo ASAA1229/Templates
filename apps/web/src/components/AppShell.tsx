@@ -1,4 +1,16 @@
-import { FolderKanban, LayoutDashboard, Library, LogOut, Menu, ScrollText, Search, ShieldCheck, Upload, UserRound, X } from "lucide-react";
+import {
+  FolderKanban,
+  LayoutDashboard,
+  Library,
+  LogOut,
+  Menu,
+  ScrollText,
+  Search,
+  ShieldCheck,
+  Upload,
+  UserRound,
+  X,
+} from "lucide-react";
 import { GlobalSearch } from "./GlobalSearch";
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router";
@@ -30,9 +42,10 @@ export function AppShell() {
     return () => window.removeEventListener("keydown", close);
   }, [open]);
 
-  const navItems = owner?.role === "OWNER" || owner?.role === "ADMIN"
-    ? [...NAV_ITEMS, { to: "/team", label: "Team members", icon: UserRound }]
-    : NAV_ITEMS.filter((item) => item.to !== "/template-submissions");
+  const navItems =
+    owner?.role === "OWNER" || owner?.role === "ADMIN"
+      ? [...NAV_ITEMS, { to: "/team", label: "Team members", icon: UserRound }]
+      : NAV_ITEMS.filter((item) => item.to !== "/template-submissions");
   const nav = (
     <nav aria-label="Main navigation" className="flex flex-1 flex-col gap-1 p-3">
       {navItems.map(({ to, label, icon: Icon, ...rest }) => (

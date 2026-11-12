@@ -36,7 +36,9 @@ export function TemplateSubmissionsPage() {
     }
   }, []);
 
-  useEffect(() => { void reload(); }, [reload]);
+  useEffect(() => {
+    void reload();
+  }, [reload]);
 
   async function approve(id: string) {
     setBusyId(id);
@@ -53,10 +55,22 @@ export function TemplateSubmissionsPage() {
 
   return (
     <>
-      <PageHeader title="Template submissions" description="Review project contributions before they become reusable library templates." />
-      {error && <Alert tone="danger" className="mb-4">{error}</Alert>}
-      {loading ? <LoadingState label="Loading template submissions" rows={3} /> : items.length === 0 ? (
-        <EmptyState title="No submissions yet" description="Eligible project contributions will appear here for review." />
+      <PageHeader
+        title="Template submissions"
+        description="Review project contributions before they become reusable library templates."
+      />
+      {error && (
+        <Alert tone="danger" className="mb-4">
+          {error}
+        </Alert>
+      )}
+      {loading ? (
+        <LoadingState label="Loading template submissions" rows={3} />
+      ) : items.length === 0 ? (
+        <EmptyState
+          title="No submissions yet"
+          description="Eligible project contributions will appear here for review."
+        />
       ) : (
         <div className="space-y-3">
           {items.map((item) => (
@@ -64,12 +78,18 @@ export function TemplateSubmissionsPage() {
               <CardHeader className="flex flex-row items-start justify-between gap-3">
                 <div>
                   <CardTitle>{item.title || item.templateId || "Template candidate"}</CardTitle>
-                  <p className="mt-1 text-sm text-muted-foreground">{item.templateId} · v{item.version} · project {item.projectKey}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {item.templateId} · v{item.version} · project {item.projectKey}
+                  </p>
                 </div>
-                <span className="rounded-full border px-2 py-1 text-xs">{item.status === "APPROVED" ? "Approved" : "Pending review"}</span>
+                <span className="rounded-full border px-2 py-1 text-xs">
+                  {item.status === "APPROVED" ? "Approved" : "Pending review"}
+                </span>
               </CardHeader>
               <CardContent className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-sm text-muted-foreground">{item.fileCount ?? "—"} files · submitted {formatDateTime(item.createdAt)}</p>
+                <p className="text-sm text-muted-foreground">
+                  {item.fileCount ?? "—"} files · submitted {formatDateTime(item.createdAt)}
+                </p>
                 {item.status === "PENDING_REVIEW" && (
                   <Button disabled={busyId === item.id} onClick={() => void approve(item.id)}>
                     {busyId === item.id ? "Approving…" : "Approve and publish to library"}
