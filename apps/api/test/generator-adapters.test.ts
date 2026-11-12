@@ -7,14 +7,23 @@ import { isUsable, TemplateLibrary } from "../src/modules/generation/library.js"
 import { projectVariables } from "../src/modules/generation/render.js";
 
 const LIBRARY = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../template-library");
-const project = projectVariables({ key: "ADAPTER", name: "Adapter test", purpose: "Validate generator dispatch" });
+const project = projectVariables({
+  key: "ADAPTER",
+  name: "Adapter test",
+  purpose: "Validate generator dispatch",
+});
 
 async function renderStarter(id: string) {
   const template = await new TemplateLibrary(LIBRARY).get(id, "1.0.0");
   expect(template?.problems, id).toEqual([]);
   if (!template || !isUsable(template)) throw new Error(`Starter ${id} is not usable.`);
   const values = templateInputValuesSchema(template.manifest.inputs).parse({}) as TemplateInputValues;
-  return renderWithAdapter({ manifest: template.manifest, sources: template.files, values, project });
+  return renderWithAdapter({
+    manifest: template.manifest,
+    sources: template.files,
+    values,
+    project,
+  });
 }
 
 describe("generator adapter registry (US-X02)", () => {
