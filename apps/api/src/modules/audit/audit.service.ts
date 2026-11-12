@@ -19,7 +19,7 @@ export async function audit(ctx: AppContext, req: Request | null, entry: AuditEn
   try {
     await ctx.prisma.auditEvent.create({
       data: {
-        actorType: req?.owner ? "OWNER" : req ? "ANONYMOUS" : "SYSTEM",
+        actorType: req?.owner ? (req.owner.role === "OWNER" ? "OWNER" : "MEMBER") : req ? "ANONYMOUS" : "SYSTEM",
         actorId: req?.owner?.id ?? null,
         action: entry.action,
         outcome: entry.outcome,
