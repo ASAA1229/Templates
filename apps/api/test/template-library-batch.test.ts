@@ -64,74 +64,71 @@ describe("template library batch 001", () => {
     }
   });
 
-  it(
-    "approves, previews, generates and verifies every demo package with clean rendered output",
-    async () => {
-      const response = await agent.get("/api/templates/library");
-      expect(response.status).toBe(200);
-      const templates = response.body.templates as { id: string; version: string; valid: boolean }[];
-      const expectedIds = BUSINESS_TYPES.flatMap((businessType) =>
-        VARIANTS.map((variant) => `${businessType}-${variant}`),
-      );
-      const demos = templates.filter((template) => expectedIds.includes(template.id));
+  it("approves, previews, generates and verifies every demo package with clean rendered output", async () => {
+    const response = await agent.get("/api/templates/library");
+    expect(response.status).toBe(200);
+    const templates = response.body.templates as { id: string; version: string; valid: boolean }[];
+    const expectedIds = BUSINESS_TYPES.flatMap((businessType) =>
+      VARIANTS.map((variant) => `${businessType}-${variant}`),
+    );
+    const demos = templates.filter((template) => expectedIds.includes(template.id));
 
-      expect(demos).toHaveLength(25);
-      expect(demos.every((template) => template.valid && template.version === "1.0.0")).toBe(true);
+    expect(demos).toHaveLength(25);
+    expect(demos.every((template) => template.valid && template.version === "1.0.0")).toBe(true);
 
-      for (const [index, template] of demos.entries()) {
-        const key = `B001-${String(index + 1).padStart(2, "0")}`;
-        const request = {
-          mode: "TEMPLATE",
-          project: {
-            key,
-            name: `Batch 001 ${template.id}`,
-            purpose: `Generated validation project for ${template.id}`,
-          },
-          catalogItemId: undefined as string | undefined,
-          inputs: {},
-        };
+    for (const [index, template] of demos.entries()) {
+      const key = `B001-${String(index + 1).padStart(2, "0")}`;
+      const request = {
+        mode: "TEMPLATE",
+        project: {
+          key,
+          name: `Batch 001 ${template.id}`,
+          purpose: `Generated validation project for ${template.id}`,
+        },
+        catalogItemId: undefined as string | undefined,
+        inputs: {},
+      };
 
-        const approval = await agent.post(`/api/templates/library/${template.id}/${template.version}/approve`);
-        expect(approval.status, `${template.id} approval`).toBe(201);
-        request.catalogItemId = approval.body.item.id;
+      const approval = await agent.post(`/api/templates/library/${template.id}/${template.version}/approve`);
+      expect(approval.status, `${template.id} approval`).toBe(201);
+      request.catalogItemId = approval.body.item.id;
 
-        const preview = await agent.post("/api/generations/preview", request);
-        expect(preview.status, `${template.id} preview`).toBe(200);
-        expect(preview.body.preview.conflicts, `${template.id} preview conflicts`).toEqual([]);
-        expect(preview.body.preview.files.length, `${template.id} preview files`).toBeGreaterThan(0);
+      const preview = await agent.post("/api/generations/preview", request);
+      expect(preview.status, `${template.id} preview`).toBe(200);
+      expect(preview.body.preview.conflicts, `${template.id} preview conflicts`).toEqual([]);
+      expect(preview.body.preview.files.length, `${template.id} preview files`).toBeGreaterThan(0);
 
-        const generated = await agent.post("/api/generations", request);
-        expect(generated.status, `${template.id} generation`).toBe(201);
-        const generation = generated.body.generation;
-        expect(generation).toMatchObject({
-          status: "SUCCEEDED",
-          mode: "TEMPLATE",
-          templateId: template.id,
-          templateVersion: template.version,
-          outputDigest: preview.body.preview.outputDigest,
-        });
+      const generated = await agent.post("/api/generations", request);
+      expect(generated.status, `${template.id} generation`).toBe(201);
+      const generation = generated.body.generation;
+      expect(generation).toMatchObject({
+        status: "SUCCEEDED",
+        mode: "TEMPLATE",
+        templateId: template.id,
+        templateVersion: template.version,
+        outputDigest: preview.body.preview.outputDigest,
+      });
 
-        const verification = await agent.post(`/api/generations/${generation.id}/verify`);
-        expect(verification.status, `${template.id} verification`).toBe(200);
-        expect(verification.body.verification).toMatchObject({
-          reproducible: true,
-          outputIntact: true,
-          problems: [],
-        });
+      const verification = await agent.post(`/api/generations/${generation.id}/verify`);
+      expect(verification.status, `${template.id} verification`).toBe(200);
+      expect(verification.body.verification).toMatchObject({
+        reproducible: true,
+        outputIntact: true,
+        problems: [],
+      });
 
-        for (const file of generation.files as string[]) {
-          if (!/\.(?:html?|css|m?js|json|md|txt|svg|xml)$/i.test(file)) continue;
-          const rendered = await readFile(path.join(output, generation.outputDir, file), "utf8");
-          expect(rendered, `${template.id} ${file} unresolved placeholders`).not.toMatch(
-            /{{\s*[A-Za-z][A-Za-z0-9_]*\s*}}/,
-          );
-        }
+      for (const file of generation.files as string[]) {
+        if (!/\.(?:html?|css|m?js|json|md|txt|svg|xml)$/i.test(file)) continue;
+        const rendered = await readFile(path.join(output, generation.outputDir, file), "utf8");
+        expect(rendered, `${template.id} ${file} unresolved placeholders`).not.toMatch(
+          /{{\s*[A-Za-z][A-Za-z0-9_]*\s*}}/,
+        );
       }
+    }
 
-      expect(await h.ctx.prisma.project.count()).toBe(25);
-      expect(await h.ctx.prisma.projectGeneration.count()).toBe(25);
-      expect(await readdir(output)).toHaveLength(25);
-    },
-    120_000,
-  );
+    expect(await h.ctx.prisma.project.count()).toBe(25);
+    expect(await h.ctx.prisma.projectGeneration.count()).toBe(25);
+    expect(await readdir(output)).toHaveLength(25);
+
+  }, 120_000);
 });
