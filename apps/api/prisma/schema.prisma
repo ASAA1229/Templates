@@ -21,6 +21,7 @@ model Owner {
   createdAt         DateTime  @default(now()) @db.Timestamptz(3)
   sessions          Session[]
   projects          Project[]
+  savedSearches     SavedSearch[]
 }
 
 /// Server-side session. Only a SHA-256 of the opaque cookie token is stored.
@@ -334,4 +335,20 @@ model ProjectEnvironment {
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
   version   Int      @default(1)
+}
+
+
+/// Private saved search definitions. Each record belongs to exactly one owner.
+model SavedSearch {
+  id        String   @id @default(uuid()) @db.Uuid
+  ownerId   String   @db.Uuid
+  owner     Owner    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name      String   @db.VarChar(100)
+  query     String   @db.VarChar(80)
+  filters   Json     @default("{}")
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@unique([ownerId, name])
+  @@index([ownerId, updatedAt])
 }
