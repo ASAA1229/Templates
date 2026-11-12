@@ -144,6 +144,16 @@ The branch was reviewed against the product objective, POC, current Prisma schem
 - The 25 packages have had static source review, but full loader/approval/preview/generation/verification and visual browser certification remain open.
 - No merge into dev or main, production deployment or external publication has been performed.
 
+### Project Builder blueprint integration — US-X02
+
+- The New Project wizard filters available starters by the selected project family and architecture, then binds the selected starter's full structured blueprint to the generation request.
+- The API validates that the submitted blueprint exactly matches the selected source, persists it on the generated project, includes it in provenance, and exposes it in project details.
+- The configuration step now displays the selected blueprint's family, architecture, runtimes, languages, frameworks, databases, APIs, infrastructure, package manager and supported operating systems before generation.
+- Browser E2E coverage now asserts the backend-service blueprint details in the configuration step; existing E2E assertions verify persistence in the generated project.
+- Latest branch commit at this documentation update: `8e9bc35c784761f142534ef544cc0d82be305877`.
+- CI for this commit is pending/in progress. Formatting, lint, typecheck, unit/integration tests, build and browser E2E must pass before this integration is marked validated.
+- US-X02 remains in progress: adapter capability/version contracts, broader family coverage, full-stack and additional technology-specific generators, and reproducible build/test execution still require implementation.
+
 ### First-priority backlog
 Epic X in [User Stories](USER_STORIES.md) now records US-X01–US-X12 with acceptance criteria and dependency order:
 1. Certify all 25 current template packages through the real platform flow.
