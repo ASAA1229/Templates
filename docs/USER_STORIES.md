@@ -953,6 +953,9 @@ As an authorized template maintainer, I want to create and maintain templates in
 - Support draft, review, approved/released, deprecated and archived lifecycle transitions with actor, timestamp and evidence.
 - Released versions are immutable; edits create a new version with changelog and compatibility information.
 - Imported content remains untrusted until provenance, licensing, security and functional review pass.
+- Developers and testers can submit a successfully developed project as a candidate reusable template, with source-project and contributor attribution, customer-permission/IP-rights attestations, and secret scanning; submissions remain isolated in a pending-review area and never become selectable templates until an authorized maintainer approves them.
+- Capture excludes repository metadata, generated provenance, dependency/build/cache folders, environment files and private-key files; unsafe paths, symlinks, oversized content and detected high-confidence credentials block submission.
+- Approval promotes the exact submitted package into the immutable versioned library and records the reviewer and source submission in the audit trail; later edits require a new version.
 - Only authorized maintainers can publish or approve versions; every consequential action is audited.
 
 Related stories: US-D02, US-D04, US-D05, US-T03.
