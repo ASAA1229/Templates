@@ -10,7 +10,7 @@
 
 ASAA Templates is planned as a private, owner-controlled internal software-development and business-operations platform. Its first purpose is to help the owner build, test, integrate, deploy, monitor, maintain and deliver software products efficiently using reusable templates, components, workflows, automation and AI assistance.
 
-This is **not initially a public template marketplace**. It is an internal company workspace and engineering operating platform. The owner is the only assumed user at the start; employees, teams, departments and other organizations are future capabilities, not current operational assumptions.
+This is **not a public template marketplace**. It is an internal ASAA workspace and engineering operating platform. The owner is the bootstrap administrator; the intended internal user group is authorized ASAA management and employees, enabled only after invitation, role enforcement, audit and isolation controls are verified. Public users and external organizations are not part of the initial release.
 
 The platform should reduce repeated engineering effort, delivery time and cost while improving quality, consistency, delivery capacity and business profitability. In the future, the platform may be offered to other companies as a configurable product or service.
 
@@ -190,7 +190,7 @@ Advanced multi-tenant SaaS, full accounting/payroll, public marketplace, autonom
 
 The POC planning baseline is acceptable when:
 - Product purpose, users, boundaries and future direction are unambiguous.
-- Owner-only and ₹0 constraints are explicit.
+- Owner governance, secure bootstrap, authorized internal management/employee access and the ₹0 constraint are explicit.
 - The proposed MVP can be described as an end-to-end user journey.
 - Architecture boundaries and integration principles are documented.
 - Selected JARVIS capabilities and strict isolation are documented.
