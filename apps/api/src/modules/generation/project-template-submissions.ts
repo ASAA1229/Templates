@@ -330,6 +330,7 @@ export function projectTemplateSubmissionsRouter(ctx: AppContext, generation: Ge
       const created = new Map<string, (typeof events)[number]>();
       const latest = new Map<string, (typeof events)[number]>();
       for (const event of events) {
+        if (!event.targetId) continue;
         if (event.action === "template.submission_create" && !created.has(event.targetId)) {
           created.set(event.targetId, event);
         }
