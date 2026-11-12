@@ -181,6 +181,19 @@ describe("workspace member identity and access control", () => {
         })
       ).status,
     ).toBe(200);
+    const listed = await admin.get("/api/auth/members");
+    expect(listed.status).toBe(200);
+    expect(listed.body.members.some((member: { email: string }) => member.email === OWNER_EMAIL)).toBe(true);
+
+    const staff = await admin.post("/api/auth/members", {
+      email: "employee@asaa.test",
+      displayName: "Workspace Employee",
+      role: "EMPLOYEE",
+      password: "a secure employee password",
+    });
+    expect(staff.status).toBe(201);
+    expect(staff.body.member).toMatchObject({ email: "employee@asaa.test", role: "EMPLOYEE" });
+
     const response = await admin.post("/api/auth/members", {
       email: "second-admin@asaa.test",
       displayName: "Second Admin",
