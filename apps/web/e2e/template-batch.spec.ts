@@ -13,7 +13,9 @@ test.describe("template library batch 001 browser review", () => {
     if (!OUTPUT_ROOT) throw new Error("E2E_GENERATION_DIR is not configured.");
 
     await signIn(page, "/catalog");
-    const response = await page.request.get("/api/templates/library", { headers: { "x-requested-with": "asaa-templates" } });
+    const response = await page.request.get("/api/templates/library", {
+      headers: { "x-requested-with": "asaa-templates" },
+    });
     expect(response.status()).toBe(200);
     const templates = (await response.json()).templates as { id: string; version: string; valid: boolean }[];
     const expectedIds = BUSINESS_TYPES.flatMap((businessType) =>
@@ -26,7 +28,10 @@ test.describe("template library batch 001 browser review", () => {
 
     for (const [index, template] of demos.entries()) {
       const key = `VIS-${String(index + 1).padStart(2, "0")}`;
-      const approval = await page.request.post(`/api/templates/library/${template.id}/${template.version}/approve`, { headers: { "x-requested-with": "asaa-templates" } });
+      const approval = await page.request.post(
+        `/api/templates/library/${template.id}/${template.version}/approve`,
+        { headers: { "x-requested-with": "asaa-templates" } },
+      );
       expect(approval.status(), `${template.id} approval`).toBe(201);
       const { item } = await approval.json();
 
