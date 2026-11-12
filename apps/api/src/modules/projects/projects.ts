@@ -1,4 +1,4 @@
-import { createProjectSchema, projectListQuerySchema, updateProjectSchema, type ProjectView } from "@asaa/contracts";
+import { createProjectSchema, projectListQuerySchema, updateProjectSchema, type ProjectBlueprint, type ProjectView } from "@asaa/contracts";
 import type { Prisma, Project } from "@prisma/client";
 import { Router } from "express";
 import type { AppContext } from "../../context.js";
@@ -10,6 +10,7 @@ export function projectView(project: Project & { _count?: { requirements: number
   return {
     id: project.id,
     key: project.key,
+    blueprint: project.blueprint ? (project.blueprint as ProjectBlueprint) : null,
     name: project.name,
     purpose: project.purpose,
     status: project.status,
