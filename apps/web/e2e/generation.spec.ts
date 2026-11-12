@@ -70,6 +70,14 @@ test.describe("project initialization (US-E01, US-E02)", () => {
     await page.getByRole("radio", { name: /API service/ }).check();
     await page.getByRole("button", { name: "Continue" }).click();
 
+    const selectedBlueprint = page.getByRole("region", { name: "Selected project blueprint" });
+    await expect(selectedBlueprint.getByText("Backend service")).toBeVisible();
+    await expect(selectedBlueprint.getByText("Layered service")).toBeVisible();
+    await expect(selectedBlueprint.getByText("Node.js 24")).toBeVisible();
+    await expect(selectedBlueprint.getByText("TypeScript 5.9")).toBeVisible();
+    await expect(selectedBlueprint.getByText("Express 5")).toBeVisible();
+    await expect(selectedBlueprint.getByText("npm", { exact: true })).toBeVisible();
+
     const key = unique("API");
     await page.getByLabel("Project key").fill(key);
     await page.getByLabel("Project name").fill("Orders API");
