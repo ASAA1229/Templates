@@ -1,4 +1,10 @@
-import { createProjectSchema, projectListQuerySchema, updateProjectSchema, type ProjectBlueprint, type ProjectView } from "@asaa/contracts";
+import {
+  createProjectSchema,
+  projectListQuerySchema,
+  updateProjectSchema,
+  type ProjectBlueprint,
+  type ProjectView,
+} from "@asaa/contracts";
 import type { Prisma, Project } from "@prisma/client";
 import { Router } from "express";
 import type { AppContext } from "../../context.js";
