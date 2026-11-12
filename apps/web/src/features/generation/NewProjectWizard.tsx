@@ -414,9 +414,7 @@ export function NewProjectWizard() {
                     }}
                   >
                     {availableFamilies.map((family) => (
-                      <option key={family} value={family}>
-                        {humanize(family)}
-                      </option>
+                      <option key={family} value={family}>{humanize(family)}</option>
                     ))}
                   </select>
                 </Field>
@@ -433,9 +431,7 @@ export function NewProjectWizard() {
                     }}
                   >
                     {availableArchitectures.map((architecture) => (
-                      <option key={architecture} value={architecture}>
-                        {humanize(architecture)}
-                      </option>
+                      <option key={architecture} value={architecture}>{humanize(architecture)}</option>
                     ))}
                   </select>
                 </Field>
@@ -465,9 +461,7 @@ export function NewProjectWizard() {
                         })
                       }
                       title={item.manifest.title}
-                      description={
-                        `${item.manifest.description || PROJECT_TYPE_LABELS[item.projectType]} · v${item.version}`
-                      }
+                      description={`${item.manifest.description || PROJECT_TYPE_LABELS[item.projectType]} · v${item.version}`}
                     >
                       <span className="flex flex-wrap gap-1 pt-1">
                         {item.manifest.technologies.map((tech) => (
