@@ -136,6 +136,55 @@ describe("sessions (US-A02)", () => {
   });
 });
 
+describe("workspace member identity and access control", () => {
+  it("creates a role-scoped member and revokes access when deactivated", async () => {
+    const owner = await h.signedIn();
+    const created = await owner.post("/api/auth/members", {
+      email: "developer@asaa.test",
+      displayName: "Project Developer",
+      role: "DEVELOPER",
+      password: "a secure temporary password",
+    });
+    expect(created.status).toBe(201);
+    expect(created.body.member).toMatchObject({ email: "developer@asaa.test", role: "DEVELOPER", isActive: true });
+
+    const member = h.agent();
+    const login = await member.post("/api/auth/login", {
+      email: "developer@asaa.test",
+      password: "a secure temporary password",
+    });
+    expect(login.status).toBe(200);
+    expect(login.body.owner.role).toBe("DEVELOPER");
+
+    const deactivated = await owner.patch("/api/auth/members/" + created.body.member.id + "/active", { isActive: false });
+    expect(deactivated.status).toBe(204);
+    expect((await member.get("/api/auth/session")).status).toBe(401);
+  });
+
+  it("prevents non-owner accounts from appointing administrators", async () => {
+    const owner = await h.signedIn();
+    const created = await owner.post("/api/auth/members", {
+      email: "admin@asaa.test",
+      displayName: "Workspace Admin",
+      role: "ADMIN",
+      password: "another secure temporary password",
+    });
+    expect(created.status).toBe(201);
+    const admin = h.agent();
+    expect((await admin.post("/api/auth/login", {
+      email: "admin@asaa.test",
+      password: "another secure temporary password",
+    })).status).toBe(200);
+    const response = await admin.post("/api/auth/members", {
+      email: "second-admin@asaa.test",
+      displayName: "Second Admin",
+      role: "ADMIN",
+      password: "yet another secure password",
+    });
+    expect(response.status).toBe(403);
+  });
+});
+
 describe("cross-site request protection and hardening", () => {
   it("rejects writes without the CSRF header or from a foreign origin", async () => {
     const agent = await h.signedIn();
