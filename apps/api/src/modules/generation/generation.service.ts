@@ -21,7 +21,8 @@ import { audit } from "../audit/audit.service.js";
 import { catalogView } from "../catalog/catalog.js";
 import { snapshot } from "../requirements/requirements.js";
 import { isUsable, TemplateLibrary, type LibraryTemplate } from "./library.js";
-import { GenerationError, projectVariables, renderPlan, type RenderPlan } from "./render.js";
+import { GenerationError, projectVariables, type RenderPlan } from "./render.js";
+import { renderWithAdapter } from "./adapters.js";
 import {
   digestOutput,
   nodeFs,
@@ -292,7 +293,12 @@ export class GenerationService {
     project: { key: string; name: string; purpose: string },
   ): RenderPlan {
     try {
-      return renderPlan(template.manifest, template.files, values, projectVariables(project));
+      return renderWithAdapter({
+        manifest: template.manifest,
+        sources: template.files,
+        values,
+        project: projectVariables(project),
+      });
     } catch (error) {
       if (error instanceof GenerationError) throw validationFailed({ inputs: error.message }, error.message);
       throw error;
