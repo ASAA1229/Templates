@@ -7,6 +7,7 @@ import {
   type GenerationPreviewView,
   type GenerationVerificationView,
   type GenerationView,
+  type ProjectBlueprint,
   type StarterOptionView,
   type TemplateInputValues,
   type TemplateManifest,
@@ -45,6 +46,7 @@ export function generationView(generation: GenerationWithProject): GenerationVie
   return {
     id: generation.id,
     projectId: generation.projectId,
+    blueprint: generation.project.blueprint ? (generation.project.blueprint as ProjectBlueprint) : null,
     projectKey: generation.project.key,
     projectName: generation.project.name,
     mode: generation.mode,
@@ -309,6 +311,13 @@ export class GenerationService {
     const input = createGenerationSchema.parse(raw);
     const { template, catalogItem } = await this.resolve(input);
     const values = this.values(template.manifest, input.inputs);
+    const blueprint = template.manifest.blueprint ?? null;
+    if (input.blueprint && canonical(input.blueprint) !== canonical(blueprint)) {
+      throw validationFailed(
+        { blueprint: "The selected project blueprint does not match the approved starter/template." },
+        "The selected project blueprint is not compatible with this source.",
+      );
+    }
     const plan = this.render(template, values, input.project);
     const outputDir = input.project.key.toLowerCase();
     const inputsHash = createHash("sha256")
@@ -316,12 +325,13 @@ export class GenerationService {
         canonical({
           template: { id: template.id, version: template.version, digest: template.digest },
           project: input.project,
+          blueprint,
           inputs: values,
           requirements: input.requirements,
         }),
       )
       .digest("hex");
-    return { input, template, catalogItem, values, plan, outputDir, inputsHash };
+    return { input, template, catalogItem, values, plan, outputDir, inputsHash, blueprint };
   }
 
   private async conflicts(key: string, outputDir: string): Promise<string[]> {
@@ -338,8 +348,9 @@ export class GenerationService {
 
   /** Validate everything and show exactly what would be generated, without writing anything. */
   async preview(raw: unknown): Promise<GenerationPreviewView> {
-    const { input, template, plan, outputDir } = await this.prepare(raw);
+    const { input, template, plan, outputDir, blueprint } = await this.prepare(raw);
     return {
+      blueprint,
       outputDir,
       files: plan.files.map((file) => ({ path: file.path, bytes: file.content.length })),
       directories: plan.directories,
@@ -366,7 +377,7 @@ export class GenerationService {
       }
       throw error;
     }
-    const { input, template, catalogItem, values, plan, outputDir, inputsHash } = prepared;
+    const { input, template, catalogItem, values, plan, outputDir, inputsHash, blueprint } = prepared;
     const conflicts = await this.conflicts(input.project.key, outputDir);
     if (conflicts.length > 0) throw conflict(conflicts.join(" "));
 
@@ -377,6 +388,7 @@ export class GenerationService {
           key: input.project.key,
           name: input.project.name,
           purpose: input.project.purpose,
+          blueprint: blueprint ? (blueprint as Prisma.InputJsonValue) : Prisma.DbNull,
           ownerId: req.owner!.id,
           requirementSeq: input.requirements.length,
         },
