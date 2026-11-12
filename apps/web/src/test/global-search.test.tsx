@@ -115,6 +115,6 @@ describe("GlobalSearch", () => {
       "portal",
     );
 
-    expect(await screen.findByRole("status")).toHaveTextContent("Search is unavailable. Try again.");
+    expect(await screen.findByText("Search is unavailable. Try again.")).toHaveAttribute("role", "status");
   });
 });
