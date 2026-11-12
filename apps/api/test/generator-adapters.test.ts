@@ -60,6 +60,23 @@ describe("generator adapter registry (US-X02)", () => {
     ).toThrow(/requires a api-service starter/);
   });
 
+  it("rejects a blueprint that does not match its selected adapter", async () => {
+    const template = await new TemplateLibrary(LIBRARY).get("starter-web-app", "1.0.0");
+    if (!template || !isUsable(template)) throw new Error("Web starter is not usable.");
+    const values = templateInputValuesSchema(template.manifest.inputs).parse({}) as TemplateInputValues;
+    expect(() =>
+      renderWithAdapter({
+        manifest: {
+          ...template.manifest,
+          blueprint: { ...template.manifest.blueprint!, family: "backend-service" },
+        },
+        sources: template.files,
+        values,
+        project,
+      }),
+    ).toThrow(/requires blueprint web-app\\/single-page-app/);
+  });
+
   it("rejects unregistered adapters instead of executing template-provided code", () => {
     expect(() => getGeneratorAdapter("arbitrary-script")).toThrow(/not supported by this platform/);
   });
