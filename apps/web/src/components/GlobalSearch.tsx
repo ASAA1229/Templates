@@ -106,7 +106,7 @@ export function GlobalSearch() {
     if (event.key === "Enter" && results.length > 0) {
       event.preventDefault();
       const selected = results[activeIndex >= 0 ? activeIndex : 0];
-      openResult(selected.href);
+      if (selected) openResult(selected.href);
     }
   }
 
