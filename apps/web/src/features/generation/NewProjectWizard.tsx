@@ -609,7 +609,9 @@ export function NewProjectWizard() {
                       <div key={label}>
                         <p className="text-muted-foreground">{label}</p>
                         <p className="font-medium">
-                          {values.length ? values.map((item) => `${item.name} ${item.version}`).join(", ") : "Not specified"}
+                          {values.length
+                            ? values.map((item) => `${item.name} ${item.version}`).join(", ")
+                            : "Not specified"}
                         </p>
                       </div>
                     ))}
