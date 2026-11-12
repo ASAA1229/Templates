@@ -157,14 +157,8 @@ describe("start from scratch (US-E02)", () => {
 
   it("resolves the exact starter ID and version selected by the builder", async () => {
     const options = await agent.get("/api/templates/options");
-    const starter = options.body.starters.find(
-      (item: { id: string }) => item.id === "starter-api-service",
-    );
-    expect(starter).toMatchObject({
-      id: "starter-api-service",
-      version: "1.0.0",
-      projectType: "api-service",
-    });
+    const starter = options.body.starters.find((item: { id: string }) => item.id === "starter-api-service");
+    expect(starter).toMatchObject({ id: "starter-api-service", version: "1.0.0", projectType: "api-service" });
     const response = await agent.post(
       "/api/generations",
       scratch("EXACTAPI", {
@@ -196,10 +190,7 @@ describe("start from scratch (US-E02)", () => {
       infrastructure: [{ name: "Node.js server", version: "1" }],
       operatingSystems: ["linux", "windows", "macos"],
     };
-    const response = await agent.post(
-      "/api/generations",
-      scratch("MISMATCH", { blueprint: incompatible }),
-    );
+    const response = await agent.post("/api/generations", scratch("MISMATCH", { blueprint: incompatible }));
     expect(response.status).toBe(400);
     expect(response.body.error.fields).toHaveProperty("blueprint");
     expect(await h.ctx.prisma.project.count()).toBe(0);
