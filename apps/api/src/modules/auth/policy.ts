@@ -26,7 +26,7 @@ export const PERMISSIONS = [
   "workspace:read",
   "workspace:write",
   "audit:read",
-  "session:manage",
+  "session:self-manage",
   "session:self-manage",
   "identity:manage",
 ] as const;
@@ -61,7 +61,7 @@ const ROLE_PERMISSIONS: Record<AuthenticatedOwner["role"], ReadonlySet<Permissio
     "generation:read",
     "workspace:read",
     "workspace:write",
-    "session:manage",
+    "session:self-manage",
   ]),
   EMPLOYEE: new Set([
     "dashboard:read",
@@ -76,7 +76,7 @@ const ROLE_PERMISSIONS: Record<AuthenticatedOwner["role"], ReadonlySet<Permissio
     "generation:write",
     "workspace:read",
     "workspace:write",
-    "session:manage",
+    "session:self-manage",
   ]),
 };
 
