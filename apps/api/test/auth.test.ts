@@ -187,9 +187,12 @@ describe("audit trail integrity (US-I02)", () => {
     await expect(h.ctx.prisma.auditEvent.delete({ where: { id: event.id } })).rejects.toThrow(/append-only/);
   });
 
-  it("allows only one owner", async () => {
+  it("allows multiple staff accounts but enforces one platform owner", async () => {
+    await h.ctx.prisma.owner.create({
+      data: { email: "developer@asaa.test", displayName: "Developer", role: "DEVELOPER", passwordHash: "x" },
+    });
     await expect(
-      h.ctx.prisma.owner.create({ data: { email: "second@asaa.test", displayName: "Two", passwordHash: "x" } }),
+      h.ctx.prisma.owner.create({ data: { email: "second@asaa.test", displayName: "Two", role: "OWNER", passwordHash: "x" } }),
     ).rejects.toThrow();
   });
 });
