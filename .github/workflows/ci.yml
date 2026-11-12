@@ -45,6 +45,10 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - name: Diagnostic formatting pass
+        run: |
+          npx prettier --write apps/api/src/modules/search/search.ts apps/web/src/features/search/SearchPage.tsx
+          git diff -- apps/api/src/modules/search/search.ts apps/web/src/features/search/SearchPage.tsx
       - name: Dependency audit (fails on high/critical)
         run: npm run audit:deps
       - name: Apply database migrations
