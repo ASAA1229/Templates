@@ -33,7 +33,7 @@ const TEXT_EXTENSIONS = new Set([
   ".graphql", ".properties", ".gradle", ".tf", ".ini", ".conf", ".csv", ".log", ".vue", ".svelte",
   ".astro", ".php", ".rb", ".swift", ".dart", ".ipynb", ".gitignore", ".gitattributes", ".editorconfig",
 ]);
-const TEXT_BASENAMES = new Set(["dockerfile", "makefile", "license", "readme", "procfile", "justfile"]);
+const TEXT_BASENAMES = new Set(["dockerfile", "makefile", "license", "readme", "procfile", "justfile", ".gitignore", ".gitattributes", ".editorconfig"]);
 
 function substitutionMode(filePath: string): "text" | "none" {
   const base = path.basename(filePath).toLowerCase();
