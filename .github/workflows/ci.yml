@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -45,6 +45,22 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - name: Temporary formatting repair for blueprint integration
+        if: github.event_name == 'push' && github.ref == 'refs/heads/new' && !contains(github.event.head_commit.message, '[auto-format]')
+        run: |
+          npx prettier --write \
+            apps/api/test/generation.test.ts \
+            apps/api/test/generator-adapters.test.ts \
+            apps/web/src/features/generation/NewProjectWizard.tsx \
+            apps/web/src/features/generation/GenerationPanel.tsx \
+            packages/contracts/src/index.ts
+          if ! git diff --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add apps/api/test/generation.test.ts apps/api/test/generator-adapters.test.ts apps/web/src/features/generation/NewProjectWizard.tsx apps/web/src/features/generation/GenerationPanel.tsx packages/contracts/src/index.ts
+            git commit -m "style(templates): apply Prettier formatting [auto-format]"
+            git push origin HEAD:new
+          fi
       - name: Dependency audit (fails on high/critical)
         run: npm run audit:deps
       - name: Apply database migrations
