@@ -140,6 +140,8 @@ export function NewProjectWizard() {
   const [step, setStep] = useState<Step>(preselected ? "source" : "start");
   const [mode, setMode] = useState<Mode | null>(preselected ? "TEMPLATE" : null);
   const [projectType, setProjectType] = useState<ProjectType | null>(null);
+  const [starterId, setStarterId] = useState<string | null>(null);
+  const [starterVersion, setStarterVersion] = useState<string | null>(null);
   const [blueprintFamily, setBlueprintFamily] = useState("web-app");
   const [blueprintArchitecture, setBlueprintArchitecture] = useState("single-page-app");
   const [catalogItemId, setCatalogItemId] = useState<string | null>(preselected);
@@ -168,7 +170,9 @@ export function NewProjectWizard() {
   const selectedTemplate = templates.find((option) => option.catalogItem.id === catalogItemId) ?? null;
   const starterBlueprints = starters.flatMap((starter) => {
     const parsed = parseManifest(starter.manifest).manifest;
-    return parsed?.blueprint ? [{ projectType: starter.projectType, blueprint: parsed.blueprint }] : [];
+    return parsed?.blueprint
+      ? [{ id: starter.id, version: starter.version, projectType: starter.projectType, blueprint: parsed.blueprint, manifest: parsed }]
+      : [];
   });
   const availableFamilies = [...new Set(starterBlueprints.map((item) => item.blueprint.family))];
   const activeFamily = availableFamilies.includes(blueprintFamily as ProjectBlueprint["family"])
@@ -186,7 +190,8 @@ export function NewProjectWizard() {
   )
     ? blueprintArchitecture
     : (availableArchitectures[0] ?? "minimal");
-  const selectedStarter = starters.find((starter) => starter.projectType === projectType) ?? null;
+  const selectedStarter =
+    starters.find((starter) => starter.id === starterId && starter.version === starterVersion) ?? null;
   const source = useMemo(() => {
     if (mode === "TEMPLATE" && selectedTemplate) return parseManifest(selectedTemplate.manifest);
     if (mode === "SCRATCH" && selectedStarter) return parseManifest(selectedStarter.manifest);
@@ -212,14 +217,23 @@ export function NewProjectWizard() {
       : {
           mode: "SCRATCH" as const,
           projectType: projectType ?? "blank",
+          starterId: selectedStarter?.id,
+          starterVersion: selectedStarter?.version,
           blueprint: manifest?.blueprint,
           project,
           inputs: manifest ? cleanInputValues(manifest.inputs, inputs) : {},
           requirements,
         };
 
-  function chooseSource(next: { type?: ProjectType; templateId?: string }) {
+  function chooseSource(next: {
+    type?: ProjectType;
+    starterId?: string;
+    starterVersion?: string;
+    templateId?: string;
+  }) {
     setProjectType(next.type ?? null);
+    setStarterId(next.starterId ?? null);
+    setStarterVersion(next.starterVersion ?? null);
     setCatalogItemId(next.templateId ?? null);
     setInputs({});
     setErrors({});
@@ -416,36 +430,37 @@ export function NewProjectWizard() {
               </p>
               <fieldset className="grid gap-3 md:grid-cols-3">
                 <legend className="sr-only">Compatible project starter</legend>
-                {PROJECT_TYPES.map((type) => {
-                  const starter = starters.find((item) => item.projectType === type);
-                  const parsed = starter ? parseManifest(starter.manifest).manifest : null;
-                  const compatible =
-                    parsed?.blueprint?.family === activeFamily &&
-                    parsed.blueprint.architecture === activeArchitecture;
-                  if (!compatible) return null;
-                  return (
+                {starterBlueprints
+                  .filter(
+                    (item) =>
+                      item.blueprint.family === activeFamily &&
+                      item.blueprint.architecture === activeArchitecture,
+                  )
+                  .map((item) => (
                     <ChoiceCard
-                      key={type}
-                      name="projectType"
-                      value={type}
-                      disabled={!parsed}
-                      selected={projectType === type}
-                      onSelect={() => chooseSource({ type })}
-                      title={PROJECT_TYPE_LABELS[type]}
-                      description={parsed?.description ?? "Not available."}
+                      key={`${item.id}@${item.version}`}
+                      name="starter"
+                      value={`${item.id}@${item.version}`}
+                      selected={starterId === item.id && starterVersion === item.version}
+                      onSelect={() =>
+                        chooseSource({
+                          type: item.projectType,
+                          starterId: item.id,
+                          starterVersion: item.version,
+                        })
+                      }
+                      title={item.manifest.title}
+                      description={item.manifest.description || PROJECT_TYPE_LABELS[item.projectType]}
                     >
-                      {parsed && (
-                        <span className="flex flex-wrap gap-1 pt-1">
-                          {parsed.technologies.map((tech) => (
-                            <Badge key={tech.name} tone="info">
-                              {tech.name} {tech.version}
-                            </Badge>
-                          ))}
-                        </span>
-                      )}
+                      <span className="flex flex-wrap gap-1 pt-1">
+                        {item.manifest.technologies.map((tech) => (
+                          <Badge key={tech.name} tone="info">
+                            {tech.name} {tech.version}
+                          </Badge>
+                        ))}
+                      </span>
                     </ChoiceCard>
-                  );
-                })}
+                  ))}
               </fieldset>
               {availableArchitectures.length === 0 && (
                 <EmptyState title="No compatible architecture" description="Choose another project family." />
