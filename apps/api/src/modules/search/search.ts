@@ -8,7 +8,7 @@ const PROJECT_STATUSES = ["PLANNING", "ACTIVE", "ON_HOLD", "COMPLETED"] as const
 const REQUIREMENT_STATUSES = ["DRAFT", "READY", "IN_DEVELOPMENT", "DEVELOPED", "BUILT", "TESTED", "RELEASED"] as const;
 
 const searchFiltersSchema = z.object({
-  types: z.array(z.enum(SEARCH_TYPES)).max(3).default([...SEARCH_TYPES]),
+  types: z.array(z.enum(SEARCH_TYPES)).min(1).max(3).default([...SEARCH_TYPES]),
   projectStatus: z.enum(PROJECT_STATUSES).optional(),
   requirementStatus: z.enum(REQUIREMENT_STATUSES).optional(),
   catalogCategory: z.string().trim().max(80).optional(),
