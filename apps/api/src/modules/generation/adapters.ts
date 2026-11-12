@@ -30,10 +30,8 @@ function requireStarter(
       `The ${context.manifest.compatibility.adapter} adapter requires a ${projectType} starter.`,
     );
   }
-  if (
-    context.manifest.blueprint?.family !== family ||
-    context.manifest.blueprint.architecture !== architecture
-  ) {
+  const blueprint = context.manifest.blueprint;
+  if (!blueprint || blueprint.family !== family || blueprint.architecture !== architecture) {
     throw new GenerationError(
       `The ${context.manifest.compatibility.adapter} adapter requires blueprint ${family}/${architecture}.`,
     );
