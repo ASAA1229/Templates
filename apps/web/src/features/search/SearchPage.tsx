@@ -106,6 +106,7 @@ export function SearchPage() {
     if (term.length < 2) {
       setData(null);
       setError("");
+      setLoading(false);
       return;
     }
     const controller = new AbortController();
