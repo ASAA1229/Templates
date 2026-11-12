@@ -23,7 +23,7 @@ const savedSearchInputSchema = z
   .object({
     name: z.string().trim().min(1).max(100),
     query: z.string().trim().min(2).max(80),
-    filters: searchFiltersSchema.default({}),
+    filters: searchFiltersSchema.optional(),
   })
   .strict();
 
@@ -234,8 +234,9 @@ export function searchRouter(ctx: AppContext): Router {
         return;
       }
 
+      const filters = parsed.data.filters ?? searchFiltersSchema.parse({});
       const search = await ctx.prisma.savedSearch.create({
-        data: { ...parsed.data, ownerId: req.owner!.id },
+        data: { name: parsed.data.name, query: parsed.data.query, filters, ownerId: req.owner!.id },
         select: { id: true, name: true, query: true, filters: true, createdAt: true, updatedAt: true },
       });
       res.status(201).json({ search });
@@ -256,8 +257,13 @@ export function searchRouter(ctx: AppContext): Router {
         return;
       }
 
+      const id = z.string().uuid().safeParse(req.params.id);
+      if (!id.success) {
+        res.status(404).json({ error: { code: "NOT_FOUND", message: "Saved search not found." } });
+        return;
+      }
       const existing = await ctx.prisma.savedSearch.findFirst({
-        where: { id: req.params.id, ownerId: req.owner!.id },
+        where: { id: id.data, ownerId: req.owner!.id },
         select: { id: true },
       });
       if (!existing) {
@@ -267,7 +273,11 @@ export function searchRouter(ctx: AppContext): Router {
 
       const search = await ctx.prisma.savedSearch.update({
         where: { id: existing.id },
-        data: parsed.data,
+        data: {
+          name: parsed.data.name,
+          query: parsed.data.query,
+          filters: parsed.data.filters ?? searchFiltersSchema.parse({}),
+        },
         select: { id: true, name: true, query: true, filters: true, createdAt: true, updatedAt: true },
       });
       res.json({ search });
@@ -282,8 +292,13 @@ export function searchRouter(ctx: AppContext): Router {
 
   router.delete("/saved/:id", authorize(ctx, "project:write"), async (req, res, next) => {
     try {
+      const id = z.string().uuid().safeParse(req.params.id);
+      if (!id.success) {
+        res.status(404).json({ error: { code: "NOT_FOUND", message: "Saved search not found." } });
+        return;
+      }
       const existing = await ctx.prisma.savedSearch.findFirst({
-        where: { id: req.params.id, ownerId: req.owner!.id },
+        where: { id: id.data, ownerId: req.owner!.id },
         select: { id: true },
       });
       if (!existing) {
