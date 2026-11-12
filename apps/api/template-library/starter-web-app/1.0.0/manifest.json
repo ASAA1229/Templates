@@ -145,7 +145,8 @@
   ],
   "compatibility": {
     "generator": 1,
-    "node": ">=22"
+    "node": ">=22",
+    "adapter": "react-vite"
   },
   "license": {
     "spdx": "MIT",
