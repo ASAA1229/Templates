@@ -6,8 +6,10 @@ import {
   GENERATOR_MAJOR,
   TEMPLATE_MANIFEST_VERSION,
   templateManifestSchema,
+  templateInputSchema,
   unsafePathReason,
   type ProjectBlueprint,
+  type TemplateInput,
 } from "@asaa/contracts";
 import type { AppContext } from "../../context.js";
 import { conflict, notFound, validationFailed } from "../../lib/errors.js";
@@ -42,6 +44,7 @@ type SubmissionInput = {
   customerPermission: boolean;
   rightsConfirmed: boolean;
   secretsChecked: boolean;
+  inputs: TemplateInput[];
 };
 
 function parseInput(raw: unknown): SubmissionInput {
@@ -62,7 +65,19 @@ function parseInput(raw: unknown): SubmissionInput {
     customerPermission: value?.customerPermission === true,
     rightsConfirmed: value?.rightsConfirmed === true,
     secretsChecked: value?.secretsChecked === true,
+    inputs: [],
   };
+  const rawInputs = value?.inputs === undefined ? [] : value.inputs;
+  if (!Array.isArray(rawInputs) || rawInputs.length > 30) {
+    issues.inputs = "Provide at most 30 valid reusable input definitions.";
+  } else {
+    const parsedInputs = rawInputs.map((entry) => templateInputSchema.safeParse(entry));
+    if (parsedInputs.some((entry) => !entry.success)) {
+      issues.inputs = "One or more reusable input definitions are invalid.";
+    } else {
+      result.inputs = parsedInputs.map((entry) => (entry as { success: true; data: TemplateInput }).data);
+    }
+  }
   if (!/^[a-z0-9][a-z0-9-]{1,79}$/.test(result.slug)) issues.slug = "Use a lowercase template slug (2–80 characters).";
   if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(result.version)) issues.version = "Use semantic versioning, e.g. 1.0.0.";
   if (!result.customerPermission) issues.customerPermission = "Confirm customer permission or that no customer-owned material is included.";
@@ -139,8 +154,14 @@ export function projectTemplateSubmissionsRouter(ctx: AppContext, generation: Ge
         category: input.category,
         technologies: technologies(blueprint),
         ...(blueprint ? { blueprint } : {}),
-        inputs: [],
-        files: files.map(({ path: filePath }) => ({ source: filePath, target: filePath, substitute: "none" as const })),
+        inputs: input.inputs,
+        files: files.map(({ path: filePath }) => ({
+          source: filePath,
+          target: filePath,
+          substitute: /\.(png|jpe?g|gif|webp|ico|pdf|zip|gz|woff2?|ttf|eot|mp[34]|wasm)$/i.test(filePath)
+            ? "none" as const
+            : "text" as const,
+        })),
         directories: [],
         dependencies: [],
         compatibility: { generator: GENERATOR_MAJOR, adapter: "file-tree" as const },
