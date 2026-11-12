@@ -1,11 +1,29 @@
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { expectAccessible, signIn } from "./fixtures";
 
 const BUSINESS_TYPES = ["restaurant", "clinic", "education", "retail", "professional"];
 const VARIANTS = ["essential", "editorial", "catalog", "booking", "multisite"];
 const OUTPUT_ROOT = process.env.E2E_GENERATION_DIR;
+
+async function apiRequest(page: Page, url: string, method: "GET" | "POST", data?: unknown) {
+  return page.evaluate(
+    async ({ requestUrl, requestMethod, requestData }) => {
+      const response = await fetch(requestUrl, {
+        method: requestMethod,
+        headers: {
+          "x-requested-with": "asaa-templates",
+          ...(requestData === undefined ? {} : { "content-type": "application/json" }),
+        },
+        credentials: "same-origin",
+        ...(requestData === undefined ? {} : { body: JSON.stringify(requestData) }),
+      });
+      return { status: response.status, body: await response.json() };
+    },
+    { requestUrl: url, requestMethod: method, requestData: data },
+  );
+}
 
 test.describe("template library batch 001 browser review", () => {
   test("renders all 25 generated demos at desktop and mobile widths", async ({ page }) => {
@@ -13,11 +31,10 @@ test.describe("template library batch 001 browser review", () => {
     if (!OUTPUT_ROOT) throw new Error("E2E_GENERATION_DIR is not configured.");
 
     await signIn(page, "/catalog");
-    const response = await page.request.get("/api/templates/library", {
-      headers: { "x-requested-with": "asaa-templates" },
-    });
-    expect(response.status()).toBe(200);
-    const templates = (await response.json()).templates as { id: string; version: string; valid: boolean }[];
+    await expect(page).toHaveURL(/\\/catalog$/);
+    const response = await apiRequest(page, "/api/templates/library", "GET");
+    expect(response.status).toBe(200);
+    const templates = response.body.templates as { id: string; version: string; valid: boolean }[];
     const expectedIds = BUSINESS_TYPES.flatMap((businessType) =>
       VARIANTS.map((variant) => `${businessType}-${variant}`),
     );
@@ -28,27 +45,26 @@ test.describe("template library batch 001 browser review", () => {
 
     for (const [index, template] of demos.entries()) {
       const key = `VIS-${String(index + 1).padStart(2, "0")}`;
-      const approval = await page.request.post(`/api/templates/library/${template.id}/${template.version}/approve`, {
-        headers: { "x-requested-with": "asaa-templates" },
-      });
-      expect(approval.status(), `${template.id} approval`).toBe(201);
-      const { item } = await approval.json();
+      const approval = await apiRequest(
+        page,
+        `/api/templates/library/${template.id}/${template.version}/approve`,
+        "POST",
+      );
+      expect(approval.status, `${template.id} approval`).toBe(201);
+      const { item } = approval.body;
 
-      const generated = await page.request.post("/api/generations", {
-        headers: { "x-requested-with": "asaa-templates" },
-        data: {
-          mode: "TEMPLATE",
-          catalogItemId: item.id,
-          project: {
-            key,
-            name: `Visual review ${template.id}`,
-            purpose: `Browser rendering review for ${template.id}`,
-          },
-          inputs: {},
+      const generated = await apiRequest(page, "/api/generations", "POST", {
+        mode: "TEMPLATE",
+        catalogItemId: item.id,
+        project: {
+          key,
+          name: `Visual review ${template.id}`,
+          purpose: `Browser rendering review for ${template.id}`,
         },
+        inputs: {},
       });
-      expect(generated.status(), `${template.id} generation`).toBe(201);
-      const { generation } = await generated.json();
+      expect(generated.status, `${template.id} generation`).toBe(201);
+      const { generation } = generated.body;
       expect(generation.status).toBe("SUCCEEDED");
       expect(generation.files).toContain("index.html");
 
