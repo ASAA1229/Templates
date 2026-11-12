@@ -11,6 +11,7 @@ import { GenerationCard } from "@/features/generation/GenerationPanel";
 import { ProjectForm } from "./ProjectForm";
 import { RequirementCard } from "./RequirementCard";
 import { RequirementForm } from "./RequirementForm";
+import { ProjectTemplateContribution } from "@/features/templates/ProjectTemplateContribution";
 
 interface ProjectDetail {
   project: ProjectView;
@@ -161,6 +162,10 @@ export function ProjectDetailPage() {
                 )}
               </CardContent>
             </Card>
+          )}
+
+          {generations.state === "ready" && generations.data.generations[0]?.status === "SUCCEEDED" && !archived && (
+            <ProjectTemplateContribution projectId={project.id} onSubmitted={generations.reload} />
           )}
 
           {generations.state === "ready" && generations.data.generations[0] && (
