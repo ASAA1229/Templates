@@ -1,8 +1,8 @@
 # Proof of Concept (POC) — ASAA Templates Platform
 
 **Document status:** Requirements discovery consolidated — planning baseline; implementation status is tracked separately  
-**Version:** 1.1  
-**Date:** 2026-11-11  
+**Version:** 1.2  
+**Date:** 2026-11-12  
 **Owner:** ASAA platform owner  
 **Repository:** https://github.com/ASAA1229/Templates
 
@@ -25,7 +25,7 @@ The proposed platform provides one governed workspace for reusable engineering a
 ### Initial operating model
 - Private repository and private-first application.
 - Owner-controlled administration and approvals.
-- Owner-only use initially; do not assume an existing company or staff.
+- Owner-controlled bootstrap initially; the first internal rollout is for explicitly authorized ASAA management and employees only. Do not enable employee access until invitation, role enforcement, audit and isolation controls are verified.
 - Local-first and free/open-source by default.
 - Strict operating-cost ceiling of **₹0 until the owner explicitly authorizes spending**.
 - Architecture prepared for later teams, organizations, isolated tenants and SaaS operation.
@@ -44,7 +44,8 @@ The proposed platform provides one governed workspace for reusable engineering a
 
 | Stage | Users | Access model |
 |---|---|---|
-| Initial | Owner only | Owner has full platform authority |
+| Bootstrap | Owner only | Owner creates and governs the platform; no other account is enabled until access controls are ready |
+| First internal rollout | Owner, authorized management and employees | Invitation-only accounts with least-privilege roles; no public or external-organization access |
 | Later internal | Admins, employees, teams, departments | Configurable least-privilege permissions and approvals |
 | Future external | Separate organizations and their users | Tenant-isolated workspaces, data, identity, configuration and administration |
 
@@ -229,7 +230,7 @@ The first implemented MVP is acceptable only when its owner can create a project
 
 ## 16. Current status
 
-This document records a planning baseline only. Repository documentation and branch setup do not mean the application has been developed, built, tested, integrated or deployed. See [Project Status](PROJECT_STATUS.md) for the current evidence-based status and [User Stories](USER_STORIES.md) for the requirements backlog.
+This document records the product and architecture baseline. Implementation evidence is tracked separately: parts of the platform have been implemented on branch new, but implementation, build verification, testing, integration and deployment remain distinct states. See [Project Status](PROJECT_STATUS.md) for evidence and [User Stories](USER_STORIES.md) for the requirements backlog.
 
 
 ## 17. Approved technology baseline — decision update (2026-11-09)
@@ -397,3 +398,42 @@ The first implementation slice derived from Q24 is committed to the new branch:
 This is a keyword-search foundation, not the complete Q24 target. Semantic/natural-language search, filters/facets, saved queries, search analytics, indexing, mobile command palette and AI task orchestration remain unimplemented. Search uses direct database queries at this stage; a dedicated search index is deferred until scale and query measurements justify it.
 
 Verification: implementation and API tests are committed. The latest GitHub Actions run is being used for format, lint, typecheck, database-backed tests and build verification. Do not treat the story as complete until the run passes.
+
+
+## 26. Objective gap analysis and delivery priorities — 2026-11-12
+
+A comparison of the agreed product objective with the current new branch implementation identified a substantial gap between the existing owner-first template/project foundation and the intended reusable software-development ecosystem.
+
+### 26.1 Current implementation boundary
+
+The current source tree contains:
+- Owner-only authentication/session handling and permission checks.
+- Project and requirement management, audit events, dashboard and keyword/advanced search.
+- A private catalog metadata API and a local manifest-driven template library.
+- A generation flow with template approval, preview, output generation, provenance and integrity verification.
+- A project workspace with local Git operations, branch policy and environment metadata.
+- 25 initial website demo packages across five business types.
+- Repository CI and automated API/UI/browser test foundations.
+
+These are meaningful foundations, but they do not establish the complete product objective. In particular, the current generator schema primarily describes files, inputs, dependencies and compatibility; the current demo batch is website-oriented. The current identity model is a single owner. The current workspace is not a full online IDE. The repository CI workflow is not, by itself, a product-level build/test orchestration service for arbitrary generated projects.
+
+### 26.2 Material gaps
+
+1. **Template certification:** all 25 packages still require actual loader, approval, preview, generation, output-integrity and browser/responsive validation before they can be called certified.
+2. **Multi-stack generation:** the generator needs project-family blueprints and adapters for complete applications, APIs, backend services and other technology families; static website files are not sufficient.
+3. **Template authoring:** a governed in-platform workflow is needed to create/import/edit, validate, package, version, review and release templates.
+4. **Configuration and preview:** guided, low-code and advanced configuration, visual customization and responsive previews are not yet a complete workflow.
+5. **Safe execution:** project builds and tests need isolated runners, resource limits, cancellation, logs and evidence; arbitrary code must not execute in the trusted API process.
+6. **Project delivery:** complete ZIP export and approved remote repository provisioning/push are required for independent project hand-off.
+7. **Internal identity:** the current single-owner data/auth model must evolve to invitation-only management and employee accounts with server-enforced least-privilege roles before internal rollout. The owner remains the ultimate authority.
+8. **Reusable composition:** a governed component, design-system, asset and integration registry plus dependency-aware composition is needed.
+9. **Development workspace:** source browsing/editing and safe hand-off to local/online development tools need to extend beyond the current Git/environment panel.
+10. **End-to-end operations:** product-level CI/CD, release approvals, environment promotion, deployment verification, observability, incidents and tested backup/restore remain incomplete.
+11. **Coverage expansion:** the sector/division registry is not a populated library. New templates must follow demand and project-family priorities with certification evidence.
+
+### 26.3 First implementation priority
+
+The first execution sequence is recorded in [User Stories](USER_STORIES.md), Epic X (US-X01–US-X12). The immediate work is to stabilize current CI and certify all 25 initial packages, then generalize project blueprints/generation, add governed template authoring and project configuration, and build isolated execution and delivery workflows. Internal employee/management access follows only after its security and audit gates are verified.
+
+The ₹0 operating-cost limit, private/internal access boundary, owner governance, separate JARVIS identity/memory, independent generated projects and no automatic production/client publishing remain mandatory constraints.
+
