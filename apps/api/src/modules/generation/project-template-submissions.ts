@@ -301,18 +301,16 @@ export function projectTemplateSubmissionsRouter(ctx: AppContext, generation: Ge
           reviewStatus: "PENDING",
         },
       });
-      res
-        .status(201)
-        .json({
-          submission: {
-            id,
-            templateId: input.slug,
-            version: input.version,
-            title: input.title,
-            status: "PENDING_REVIEW",
-            fileCount: files.length,
-          },
-        });
+      res.status(201).json({
+        submission: {
+          id,
+          templateId: input.slug,
+          version: input.version,
+          title: input.title,
+          status: "PENDING_REVIEW",
+          fileCount: files.length,
+        },
+      });
     } catch (error) {
       next(error);
     }
