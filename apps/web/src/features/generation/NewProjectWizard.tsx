@@ -184,7 +184,7 @@ export function NewProjectWizard() {
   const availableFamilies = [...new Set(starterBlueprints.map((item) => item.blueprint.family))];
   const activeFamily = availableFamilies.includes(blueprintFamily as ProjectBlueprint["family"])
     ? blueprintFamily
-    : (availableFamilies[0] ?? "general");
+    : availableFamilies[0] ?? "general";
   const availableArchitectures = [
     ...new Set(
       starterBlueprints
@@ -196,7 +196,7 @@ export function NewProjectWizard() {
     blueprintArchitecture as ProjectBlueprint["architecture"],
   )
     ? blueprintArchitecture
-    : (availableArchitectures[0] ?? "minimal");
+    : availableArchitectures[0] ?? "minimal";
   const selectedStarter =
     starters.find((starter) => starter.id === starterId && starter.version === starterVersion) ?? null;
   const source = useMemo(() => {
