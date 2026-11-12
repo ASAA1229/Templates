@@ -10,6 +10,7 @@ import { DashboardPage } from "@/features/dashboard/DashboardPage";
 import { ProjectDetailPage } from "@/features/projects/ProjectDetailPage";
 import { ProjectsPage } from "@/features/projects/ProjectsPage";
 import { SecurityPage } from "@/features/security/SecurityPage";
+import { SearchPage } from "@/features/search/SearchPage";
 import { AuthProvider, useAuth } from "@/lib/auth";
 
 // Project initialization is loaded on demand to keep the initial bundle small.
@@ -126,6 +127,7 @@ export const routes: RouteObject[] = [
       },
       { path: "projects/:projectId", element: <ProjectDetailPage /> },
       { path: "catalog", element: <CatalogPage /> },
+      { path: "search", element: <SearchPage /> },
       { path: "audit", element: <AuditPage /> },
       { path: "security", element: <SecurityPage /> },
       { path: "*", element: <NotFound /> },
