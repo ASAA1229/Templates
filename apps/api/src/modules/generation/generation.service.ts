@@ -183,10 +183,15 @@ export class GenerationService {
 
   async starterOptions(): Promise<StarterOptionView[]> {
     const starters: StarterOptionView[] = [];
+    const seen = new Set<string>();
     for (const template of await this.options.library.list()) {
       if (!isUsable(template) || template.manifest.kind !== "starter" || !template.manifest.projectType) continue;
-      if (starters.some((starter) => starter.projectType === template.manifest.projectType)) continue;
+      // The library is sorted newest-version-first within each ID; retain that exact version.
+      if (seen.has(template.id)) continue;
+      seen.add(template.id);
       starters.push({
+        id: template.id,
+        version: template.version,
         projectType: template.manifest.projectType,
         manifest: template.rawManifest,
         digest: template.digest,
@@ -255,9 +260,14 @@ export class GenerationService {
     input: ReturnType<typeof createGenerationSchema.parse>,
   ): Promise<{ template: UsableTemplate; catalogItem: CatalogItem | null }> {
     if (input.mode === "SCRATCH") {
-      const template = await this.options.library.starterFor(input.projectType);
-      if (!template || !isUsable(template)) {
-        throw notEligible(`No approved starter is available for "${input.projectType}" projects.`);
+      const template = input.starterId && input.starterVersion
+        ? await this.options.library.get(input.starterId, input.starterVersion)
+        : await this.options.library.starterFor(input.projectType);
+      if (!template || !isUsable(template) || template.manifest.kind !== "starter") {
+        throw notEligible(`No usable starter is available for "${input.projectType}" projects.`);
+      }
+      if (template.manifest.projectType !== input.projectType) {
+        throw notEligible("The selected starter does not implement the requested project type.");
       }
       return { template, catalogItem: null };
     }
