@@ -485,3 +485,29 @@ describe("conflicts, failures and recovery", () => {
     expect(landingSummary).toMatchObject({ valid: true, approved: false, kind: "template" });
   });
 });
+
+describe("project-to-template contribution (US-X03)", () => {
+  it("captures developed project files as a pending candidate and only adds it after owner approval", async () => {
+    const generated = (await agent.post("/api/generations", scratch("CONTRIB"))).body.generation;
+    const submitted = await agent.post("/api/projects/" + generated.projectId + "/template-submissions", {
+      title: "Customer portal starter", slug: "customer-portal-starter", description: "Reusable baseline from a completed customer portal project.",
+      category: "web-app", version: "1.0.0", license: "UNLICENSED", customerPermission: true, rightsConfirmed: true, secretsChecked: true,
+    });
+    expect(submitted.status).toBe(201);
+    expect(submitted.body.submission).toMatchObject({ status: "PENDING_REVIEW", templateId: "customer-portal-starter" });
+    expect((await agent.get("/api/templates/options")).body.templates).toEqual([]);
+    const pending = await agent.get("/api/projects/template-submissions");
+    expect(pending.body.submissions).toEqual(expect.arrayContaining([expect.objectContaining({ id: submitted.body.submission.id, status: "PENDING_REVIEW", projectKey: "CONTRIB" })]));
+    const approved = await agent.post("/api/projects/template-submissions/" + submitted.body.submission.id + "/approve");
+    expect(approved.status).toBe(201);
+    expect(approved.body).toMatchObject({ status: "APPROVED", item: { slug: "customer-portal-starter", trustStatus: "TRUSTED", lifecycle: "ACTIVE" } });
+    const options = await agent.get("/api/templates/options");
+    expect(options.body.templates).toEqual(expect.arrayContaining([expect.objectContaining({ catalogItem: expect.objectContaining({ slug: "customer-portal-starter" }), eligible: true })]));
+  });
+  it("rejects submissions without customer permission, contribution rights and secret-review attestations", async () => {
+    const generated = (await agent.post("/api/generations", scratch("NOATTEST"))).body.generation;
+    const response = await agent.post("/api/projects/" + generated.projectId + "/template-submissions", { title: "Unsafe candidate", slug: "unsafe-candidate", description: "", category: "web-app", version: "1.0.0", license: "UNLICENSED", customerPermission: false, rightsConfirmed: false, secretsChecked: false });
+    expect(response.status).toBe(400);
+    expect(response.body.error.fields).toHaveProperty("customerPermission");
+  });
+});
