@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { EmptyState, LoadingState, PageHeader } from "@/components/common";
 import { Alert, Button, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
@@ -23,7 +23,7 @@ export function TemplateSubmissionsPage() {
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState("");
 
-  async function reload() {
+  const reload = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
@@ -34,9 +34,9 @@ export function TemplateSubmissionsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  useEffect(() => { void reload(); }, []);
+  useEffect(() => { void reload(); }, [reload]);
 
   async function approve(id: string) {
     setBusyId(id);
