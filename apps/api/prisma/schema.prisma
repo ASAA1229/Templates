@@ -10,12 +10,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/// The single platform owner. `singleton` makes a second owner impossible at the DB level.
+enum OwnerRole {
+  OWNER
+  ADMIN
+  DEVELOPER
+  TESTER
+  EMPLOYEE
+}
+
+/// Account principal retained under the historical Owner model name.
+/// Multiple members are supported; only one OWNER is permitted by the database.
 model Owner {
   id                String    @id @default(uuid()) @db.Uuid
-  singleton         Boolean   @unique @default(true)
   email             String    @unique @db.VarChar(254)
   displayName       String    @db.VarChar(120)
+  role              OwnerRole @default(EMPLOYEE)
+  isActive          Boolean   @default(true)
   passwordHash      String    @db.VarChar(512)
   passwordChangedAt DateTime  @default(now()) @db.Timestamptz(3)
   createdAt         DateTime  @default(now()) @db.Timestamptz(3)
