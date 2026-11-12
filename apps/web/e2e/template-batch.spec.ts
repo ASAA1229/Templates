@@ -14,11 +14,7 @@ test.describe("template library batch 001 browser review", () => {
     await signIn(page, "/catalog");
     const response = await page.request.get("/api/templates/library");
     expect(response.status()).toBe(200);
-    const templates = (await response.json()).templates as {
-      id: string;
-      version: string;
-      valid: boolean;
-    }[];
+    const templates = (await response.json()).templates as { id: string; version: string; valid: boolean }[];
     const expectedIds = BUSINESS_TYPES.flatMap((businessType) =>
       VARIANTS.map((variant) => `${businessType}-${variant}`),
     );
@@ -29,9 +25,7 @@ test.describe("template library batch 001 browser review", () => {
 
     for (const [index, template] of demos.entries()) {
       const key = `VIS-${String(index + 1).padStart(2, "0")}`;
-      const approval = await page.request.post(
-        `/api/templates/library/${template.id}/${template.version}/approve`,
-      );
+      const approval = await page.request.post(`/api/templates/library/${template.id}/${template.version}/approve`);
       expect(approval.status(), `${template.id} approval`).toBe(201);
       const { item } = await approval.json();
 
@@ -52,9 +46,7 @@ test.describe("template library batch 001 browser review", () => {
       expect(generation.status).toBe("SUCCEEDED");
       expect(generation.files).toContain("index.html");
 
-      const fileUrl = pathToFileURL(
-        path.join(OUTPUT_ROOT, generation.outputDir, "index.html"),
-      ).href;
+      const fileUrl = pathToFileURL(path.join(OUTPUT_ROOT, generation.outputDir, "index.html")).href;
 
       for (const viewport of [
         { width: 1366, height: 900, label: "desktop" },
