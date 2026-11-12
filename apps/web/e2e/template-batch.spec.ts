@@ -31,7 +31,7 @@ test.describe("template library batch 001 browser review", () => {
     if (!OUTPUT_ROOT) throw new Error("E2E_GENERATION_DIR is not configured.");
 
     await signIn(page, "/catalog");
-    await expect(page).toHaveURL(/\\/catalog$/);
+    await expect(page).toHaveURL(/\/catalog$/);
     const response = await apiRequest(page, "/api/templates/library", "GET");
     expect(response.status).toBe(200);
     const templates = response.body.templates as { id: string; version: string; valid: boolean }[];
