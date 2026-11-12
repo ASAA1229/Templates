@@ -531,6 +531,34 @@ describe("project-to-template contribution (US-X03)", () => {
       ]),
     );
   });
+  it("blocks approval when a pending manifest or file changes after submission", async () => {
+    const generated = (await agent.post("/api/generations", scratch("TAMPER"))).body.generation;
+    const submitted = await agent.post("/api/projects/" + generated.projectId + "/template-submissions", {
+      title: "Tamper check template",
+      slug: "tamper-check-template",
+      description: "Integrity verification test.",
+      category: "web-app",
+      version: "1.0.0",
+      license: "UNLICENSED",
+      customerPermission: true,
+      rightsConfirmed: true,
+      secretsChecked: true,
+    });
+    expect(submitted.status).toBe(201);
+    const manifestPath = path.join(
+      h.ctx.config.TEMPLATE_LIBRARY_DIR,
+      ".submissions",
+      submitted.body.submission.id,
+      "manifest.json",
+    );
+    const manifest = JSON.parse(await readFile(manifestPath, "utf8")) as { title: string };
+    manifest.title = "Changed after submission";
+    await writeFile(manifestPath, JSON.stringify(manifest, null, 2));
+    const approval = await agent.post("/api/projects/template-submissions/" + submitted.body.submission.id + "/approve");
+    expect(approval.status).toBe(409);
+    expect(approval.body.error.message).toMatch(/content changed/);
+  });
+
   it("rejects submissions without customer permission, contribution rights and secret-review attestations", async () => {
     const generated = (await agent.post("/api/generations", scratch("NOATTEST"))).body.generation;
     const response = await agent.post("/api/projects/" + generated.projectId + "/template-submissions", {
