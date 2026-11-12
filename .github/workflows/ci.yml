@@ -45,6 +45,8 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - name: Temporary formatting diagnostic
+        run: npx prettier apps/api/test/template-library-batch.test.ts > /tmp/template-library-batch.formatted.ts && diff -u apps/api/test/template-library-batch.test.ts /tmp/template-library-batch.formatted.ts || true
       - name: Dependency audit (fails on high/critical)
         run: npm run audit:deps
       - name: Apply database migrations
