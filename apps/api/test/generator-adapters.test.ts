@@ -49,7 +49,10 @@ describe("generator adapter registry (US-X02)", () => {
     const values = templateInputValuesSchema(template.manifest.inputs).parse({}) as TemplateInputValues;
     expect(() =>
       renderWithAdapter({
-        manifest: { ...template.manifest, compatibility: { ...template.manifest.compatibility, adapter: "node-api" } },
+        manifest: {
+          ...template.manifest,
+          compatibility: { ...template.manifest.compatibility, adapter: "node-api" },
+        },
         sources: template.files,
         values,
         project,
