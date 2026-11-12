@@ -183,12 +183,8 @@ export class GenerationService {
 
   async starterOptions(): Promise<StarterOptionView[]> {
     const starters: StarterOptionView[] = [];
-    const seen = new Set<string>();
     for (const template of await this.options.library.list()) {
       if (!isUsable(template) || template.manifest.kind !== "starter" || !template.manifest.projectType) continue;
-      // The library is sorted newest-version-first within each ID; retain that exact version.
-      if (seen.has(template.id)) continue;
-      seen.add(template.id);
       starters.push({
         id: template.id,
         version: template.version,
