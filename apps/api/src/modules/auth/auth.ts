@@ -1,11 +1,10 @@
-import { changePasswordSchema, loginSchema, type OwnerView, type SessionView } from "@asaa/contracts";
+import { changePasswordSchema, loginSchema, passwordSchema, type OwnerView, type SessionView } from "@asaa/contracts";
 import type { CookieOptions, NextFunction, Request, Response } from "express";
 import { Router } from "express";
 import { z } from "zod";
 import type { AppContext } from "../../context.js";
 import { AppError, unauthenticated, validationFailed } from "../../lib/errors.js";
 import { hashPassword, needsRehash, timingDummyHash, verifyPassword } from "../../lib/password.js";
-import { passwordSchema } from "@asaa/contracts";
 import { hashToken, newSessionToken } from "../../lib/tokens.js";
 import { RateLimiter } from "../../middleware/security.js";
 import { audit } from "../audit/audit.service.js";
@@ -108,7 +107,7 @@ export function authRouter(ctx: AppContext): Router {
           data: { passwordHash: await hashPassword(parsed.data.password) },
         });
       }
-      // Only the single owner can succeed, so a success clears both counters.
+      // A successful account login clears both counters.
       emailLimiter.reset(email);
       ipLimiter.reset(req.ip ?? "unknown");
       const { token, tokenHash } = newSessionToken();
