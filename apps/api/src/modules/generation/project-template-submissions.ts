@@ -251,12 +251,23 @@ export function projectTemplateSubmissionsRouter(ctx: AppContext, generation: Ge
       if (!manifestStats?.isFile() || manifestStats.isSymbolicLink() || manifestStats.size > 64 * 1024) {
         throw validationFailed({ manifest: "The pending manifest is missing, unsafe or too large." });
       }
-      const rawManifest: unknown = JSON.parse(await readFile(manifestPath, "utf8"));
+      const manifestBytes = await readFile(manifestPath);
+      const rawManifest: unknown = JSON.parse(manifestBytes.toString("utf8"));
       const parsedManifest = templateManifestSchema.safeParse(rawManifest);
       if (!parsedManifest.success) throw validationFailed({ manifest: "The pending manifest failed schema validation." });
       const manifest = parsedManifest.data;
       if (!/^[a-z0-9][a-z0-9-]{1,79}$/.test(manifest.id) || !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(manifest.version)) {
         throw validationFailed({ manifest: "The pending template identity is invalid." });
+      }
+      const pendingFiles = await collectFiles(path.join(source, "files"));
+      const actualDigest = contentDigest(manifestBytes, new Map(pendingFiles.map((file) => [file.path, file.bytes])));
+      const createdEvent = await ctx.prisma.auditEvent.findFirst({
+        where: { action: "template.submission_create", targetType: "template_submission", targetId: id, outcome: "SUCCESS" },
+        orderBy: { at: "asc" },
+      });
+      const expectedDigest = (createdEvent?.metadata as Record<string, unknown> | undefined)?.digest;
+      if (typeof expectedDigest !== "string" || actualDigest !== expectedDigest) {
+        throw conflict("The pending submission content changed after it was submitted; approval is blocked.");
       }
       const libraryRoot = path.resolve(ctx.config.TEMPLATE_LIBRARY_DIR);
       const target = path.resolve(libraryRoot, manifest.id, manifest.version);
