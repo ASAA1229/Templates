@@ -53,11 +53,12 @@ jobs:
             apps/api/test/generator-adapters.test.ts \
             apps/web/src/features/generation/NewProjectWizard.tsx \
             apps/web/src/features/generation/GenerationPanel.tsx \
+            apps/web/src/test/generation.test.tsx \
             packages/contracts/src/index.ts
           if ! git diff --quiet; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add apps/api/test/generation.test.ts apps/api/test/generator-adapters.test.ts apps/web/src/features/generation/NewProjectWizard.tsx apps/web/src/features/generation/GenerationPanel.tsx packages/contracts/src/index.ts
+            git add apps/api/test/generation.test.ts apps/api/test/generator-adapters.test.ts apps/web/src/features/generation/NewProjectWizard.tsx apps/web/src/features/generation/GenerationPanel.tsx apps/web/src/test/generation.test.tsx packages/contracts/src/index.ts
             git commit -m "style(templates): apply Prettier formatting [auto-format]"
             git push origin HEAD:new
           fi
