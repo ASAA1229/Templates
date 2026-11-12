@@ -28,11 +28,27 @@ export const PERMISSIONS = [
   "workspace:write",
   "audit:read",
   "session:manage",
+  "identity:manage",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
 const ROLE_PERMISSIONS: Record<AuthenticatedOwner["role"], ReadonlySet<Permission>> = {
   OWNER: new Set(PERMISSIONS),
+  ADMIN: new Set(PERMISSIONS.filter((permission) => permission !== "identity:manage" && permission !== "session:manage")),
+  DEVELOPER: new Set([
+    "dashboard:read", "project:read", "project:write", "requirement:read", "requirement:write",
+    "catalog:read", "template:read", "template:submit", "generation:read", "generation:write",
+    "workspace:read", "workspace:write",
+  ]),
+  TESTER: new Set([
+    "dashboard:read", "project:read", "requirement:read", "requirement:write", "catalog:read",
+    "template:read", "template:submit", "generation:read", "workspace:read", "workspace:write",
+  ]),
+  EMPLOYEE: new Set([
+    "dashboard:read", "project:read", "project:write", "requirement:read", "requirement:write",
+    "catalog:read", "template:read", "template:submit", "generation:read", "generation:write",
+    "workspace:read", "workspace:write",
+  ]),
 };
 
 export function isAllowed(actor: AuthenticatedOwner | undefined, permission: Permission): boolean {
