@@ -128,6 +128,35 @@ export function ProjectDetailPage() {
               </CardHeader>
               <CardContent>
                 <p className="whitespace-pre-wrap text-sm">{project.purpose || "No purpose recorded yet."}</p>
+                {project.blueprint && (
+                  <div className="mt-4 space-y-2 border-t pt-4">
+                    <h3 className="text-sm font-semibold">Project blueprint</h3>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge tone="info">{humanize(project.blueprint.family)}</Badge>
+                      <Badge>{humanize(project.blueprint.architecture)}</Badge>
+                      {project.blueprint.packageManager && <Badge>{project.blueprint.packageManager}</Badge>}
+                    </div>
+                    <dl className="grid grid-cols-[minmax(6rem,auto)_1fr] gap-x-3 gap-y-1 text-sm">
+                      {[
+                        ["Runtimes", project.blueprint.runtimes],
+                        ["Languages", project.blueprint.languages],
+                        ["Frameworks", project.blueprint.frameworks],
+                        ["Databases", project.blueprint.databases],
+                        ["APIs", project.blueprint.apis],
+                        ["Infrastructure", project.blueprint.infrastructure],
+                      ].filter(([, values]) => (values as { name: string; version: string }[]).length > 0).map(([label, values]) => (
+                        <div key={label as string} className="contents">
+                          <dt className="text-muted-foreground">{label as string}</dt>
+                          <dd>
+                            {(values as { name: string; version: string }[])
+                              .map((item) => `${item.name} ${item.version}`)
+                              .join(", ")}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
