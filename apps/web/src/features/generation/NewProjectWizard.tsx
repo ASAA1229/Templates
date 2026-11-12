@@ -187,13 +187,13 @@ export function NewProjectWizard() {
     ? blueprintArchitecture
     : (availableArchitectures[0] ?? "minimal");
   const selectedStarter = starters.find((starter) => starter.projectType === projectType) ?? null;
-  const selectedBlueprint = manifest?.blueprint ?? null;
   const source = useMemo(() => {
     if (mode === "TEMPLATE" && selectedTemplate) return parseManifest(selectedTemplate.manifest);
     if (mode === "SCRATCH" && selectedStarter) return parseManifest(selectedStarter.manifest);
     return { manifest: null, problem: null };
   }, [mode, selectedTemplate, selectedStarter]);
   const manifest = source.manifest;
+  const selectedBlueprint = manifest?.blueprint ?? null;
   const requirements = requirementsText
     .split("\n")
     .map((line) => line.trim())
