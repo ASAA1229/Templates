@@ -117,7 +117,15 @@ export function SearchPage() {
   useEffect(() => {
     const params = new URLSearchParams(paramsKey);
     const term = params.get("q")?.trim() ?? "";
+    const filters = toFilters(params);
     setQuery(term);
+    setType(filters.types.length === 1 ? filters.types[0]! : "ALL");
+    setProjectStatus(filters.projectStatus ?? "");
+    setRequirementStatus(filters.requirementStatus ?? "");
+    setCatalogCategory(filters.catalogCategory ?? "");
+    setSortBy(filters.sortBy);
+    setSortOrder(filters.sortOrder);
+    setPageSize(String(filters.pageSize));
     if (term.length < 2) {
       setData(null);
       setError("");
@@ -436,7 +444,12 @@ export function SearchPage() {
               <div className="flex flex-wrap gap-2">
                 {data.facets.types.map((facet) => (
                   <Badge key={facet.value}>
-                    {facet.value.toLowerCase()}: {facet.count}
+                    {facet.value === "PROJECT"
+                      ? "projects"
+                      : facet.value === "REQUIREMENT"
+                        ? "requirements"
+                        : "catalog"}
+                    : {facet.count}
                   </Badge>
                 ))}
               </div>
