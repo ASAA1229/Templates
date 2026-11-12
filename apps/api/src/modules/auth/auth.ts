@@ -229,7 +229,7 @@ export function authRouter(ctx: AppContext): Router {
     res.json({ owner: req.owner });
   });
 
-  router.get("/sessions", requireOwner(), authorize(ctx, "session:manage"), async (req, res, next) => {
+  router.get("/sessions", requireOwner(), authorize(ctx, "session:self-manage"), async (req, res, next) => {
     try {
       const sessions = await ctx.prisma.session.findMany({
         where: { ownerId: req.owner!.id, revokedAt: null, expiresAt: { gt: ctx.now() } },
@@ -249,7 +249,7 @@ export function authRouter(ctx: AppContext): Router {
     }
   });
 
-  router.post("/sessions/:id/revoke", requireOwner(), authorize(ctx, "session:manage"), async (req, res, next) => {
+  router.post("/sessions/:id/revoke", requireOwner(), authorize(ctx, "session:self-manage"), async (req, res, next) => {
     try {
       const id = String(req.params.id);
       const result = await ctx.prisma.session.updateMany({
@@ -265,7 +265,7 @@ export function authRouter(ctx: AppContext): Router {
     }
   });
 
-  router.post("/sessions/revoke-others", requireOwner(), authorize(ctx, "session:manage"), async (req, res, next) => {
+  router.post("/sessions/revoke-others", requireOwner(), authorize(ctx, "session:self-manage"), async (req, res, next) => {
     try {
       const result = await ctx.prisma.session.updateMany({
         where: { ownerId: req.owner!.id, revokedAt: null, NOT: { id: req.sessionId! } },
