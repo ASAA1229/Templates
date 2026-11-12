@@ -14,7 +14,7 @@ export interface AuthenticatedOwner {
   id: string;
   email: string;
   displayName: string;
-  role: "OWNER";
+  role: "OWNER" | "ADMIN" | "DEVELOPER" | "TESTER" | "EMPLOYEE";
 }
 
 declare global {
