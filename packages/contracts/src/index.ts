@@ -551,11 +551,6 @@ const templateFileSchema = z.object({
 
 const DEFAULT_VALIDATION = { requiredOutputs: [] as string[], maxFiles: 200, maxTotalBytes: 2 * 1024 * 1024 };
 
-/**
- * Versioned template manifest (template definition). Catalog records describe a
- * template for discovery; the manifest plus its files/ folder is the template
- * content that generation actually uses.
- */
 export const projectBlueprintSchema = z.object({
   family: z.enum(PROJECT_FAMILIES),
   architecture: z.enum(ARCHITECTURE_PROFILES),
@@ -570,6 +565,11 @@ export const projectBlueprintSchema = z.object({
 });
 export type ProjectBlueprint = z.infer<typeof projectBlueprintSchema>;
 
+/**
+ * Versioned template manifest (template definition). Catalog records describe a
+ * template for discovery; the manifest plus its files/ folder is the template
+ * content that generation actually uses.
+ */
 export const templateManifestSchema = z
   .object({
     manifestVersion: z.number().int(),
