@@ -88,6 +88,13 @@ describe("start from scratch (US-E02)", () => {
     const provenance = JSON.parse(await readFile(path.join(out, ".asaa", "generation.json"), "utf8"));
     expect(provenance).toMatchObject({
       generationId: generation.id,
+      project: {
+        blueprint: {
+          family: "web-app",
+          architecture: "single-page-app",
+          packageManager: "npm",
+        },
+      },
       template: { id: "starter-web-app", version: "1.0.0", digest: generation.templateDigest },
       inputsHash: generation.inputsHash,
       outputDigest: generation.outputDigest,
