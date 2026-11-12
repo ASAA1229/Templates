@@ -41,7 +41,7 @@ async function main() {
   const prisma = new PrismaClient();
   try {
     if (command === "init") {
-      if (await prisma.owner.findFirst())
+      if (await prisma.owner.findFirst({ where: { role: "OWNER" } }))
         throw new Error("An owner already exists. Use `owner:recover` to reset the password.");
       const email = loginSchema.shape.email.parse(process.env.OWNER_EMAIL ?? (await ask("Owner email: ")));
       const displayName = (process.env.OWNER_NAME ?? (await ask("Display name: "))).trim().slice(0, 120) || "Owner";
@@ -58,7 +58,7 @@ async function main() {
       });
       console.log(`Owner ${email} created.`);
     } else if (command === "recover") {
-      const owner = await prisma.owner.findFirst();
+      const owner = await prisma.owner.findFirst({ where: { role: "OWNER" } });
       if (!owner) throw new Error("No owner exists yet. Run `owner:init` first.");
       const passwordHash = await hashPassword(await readPassword());
       const now = new Date();
