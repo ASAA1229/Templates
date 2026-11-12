@@ -68,7 +68,8 @@ jobs:
             apps/api/src/modules/audit/audit.service.ts \
             apps/api/test/auth.test.ts \
             apps/api/test/helpers.ts \
-            apps/api/test/policy.test.ts
+            apps/api/test/policy.test.ts apps/api/src/cli/owner.ts \
+            apps/api/src/cli/owner.ts
           if ! git diff --quiet; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
