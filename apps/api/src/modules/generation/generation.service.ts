@@ -14,7 +14,7 @@ import {
   type TemplateOptionView,
   type TemplateSummaryView,
 } from "@asaa/contracts";
-import type { CatalogItem, Prisma, Project, ProjectGeneration } from "@prisma/client";
+import { Prisma, type CatalogItem, type Project, type ProjectGeneration } from "@prisma/client";
 import type { Request } from "express";
 import type { AppContext } from "../../context.js";
 import { AppError, conflict, notEligible, notFound, validationFailed } from "../../lib/errors.js";
