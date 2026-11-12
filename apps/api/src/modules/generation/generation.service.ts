@@ -46,9 +46,7 @@ export function generationView(generation: GenerationWithProject): GenerationVie
   return {
     id: generation.id,
     projectId: generation.projectId,
-    blueprint: generation.project.blueprint
-      ? (generation.project.blueprint as ProjectBlueprint)
-      : null,
+    blueprint: generation.project.blueprint ? (generation.project.blueprint as ProjectBlueprint) : null,
     projectKey: generation.project.key,
     projectName: generation.project.name,
     mode: generation.mode,
