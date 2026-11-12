@@ -265,7 +265,8 @@ export function SearchPage() {
         <CardHeader>
           <CardTitle>Search criteria</CardTitle>
           <CardDescription>
-            Filters are applied on the server. Opening a result still uses the destination's normal authorization checks.
+            Filters are applied on the server. Opening a result still uses the destination's normal
+            authorization checks.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -298,7 +299,11 @@ export function SearchPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="project-status">Project status</Label>
-                <Select id="project-status" value={projectStatus} onChange={(event) => setProjectStatus(event.target.value)}>
+                <Select
+                  id="project-status"
+                  value={projectStatus}
+                  onChange={(event) => setProjectStatus(event.target.value)}
+                >
                   <option value="">Any status</option>
                   <option value="PLANNING">Planning</option>
                   <option value="ACTIVE">Active</option>
@@ -333,7 +338,11 @@ export function SearchPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="sort-by">Sort by</Label>
-                <Select id="sort-by" value={sortBy} onChange={(event) => setSortBy(event.target.value as SearchFilters["sortBy"])}>
+                <Select
+                  id="sort-by"
+                  value={sortBy}
+                  onChange={(event) => setSortBy(event.target.value as SearchFilters["sortBy"])}
+                >
                   <option value="updatedAt">Recently updated</option>
                   <option value="title">Title</option>
                 </Select>
