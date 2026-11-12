@@ -127,7 +127,8 @@
   ],
   "compatibility": {
     "generator": 1,
-    "node": ">=22"
+    "node": ">=22",
+    "adapter": "node-api"
   },
   "license": {
     "spdx": "MIT",
