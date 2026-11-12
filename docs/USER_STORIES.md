@@ -914,3 +914,165 @@ The requirements discovery questionnaire is closed at Q31. Any future change sho
 - API tests: apps/api/test/search.test.ts cover cross-domain results, query validation and authentication.
 - Implementation commits: ae22a81, 69ac914, 90684b0, 90551f0, 0c65ae0, 3ee0501, 34f174b and 1c08aee.
 - Current status: committed; automated validation is pending. US-O01 is not complete until acceptance criteria and test evidence are verified. US-O02 remains partial.
+
+
+## 21. Objective gap-closure backlog — 2026-11-12
+
+This epic translates the agreed product objective into implementation-ready work. It closes gaps found by comparing the objective and POC with the current new branch source tree, Prisma model, API modules, UI features and template packages. These stories are Not Started unless later updated with implementation and verification evidence. They supplement existing stories and do not replace or duplicate their broader scope.
+
+### Epic X — Complete the reusable software-project platform
+
+#### US-X01 — Template validation and certification pipeline (P0)
+As the platform owner, I want every template to pass repeatable quality checks before approval so that generated projects are safe, usable and trustworthy.
+- Validate manifest schema, file inventory, paths, placeholders, dependencies, license/provenance metadata and content digest through the actual library loader.
+- Validate generated output for unresolved placeholders, missing required files, unsafe paths, unexpected files and reproducibility.
+- Run applicable install/build, functional, link, responsive, accessibility and security checks in an isolated test workspace.
+- Render previews at representative desktop, tablet and mobile viewports; record results and evidence per template version.
+- A template cannot become trusted/active for generation until mandatory checks and an authorized review pass.
+- Reports identify failures and affected template versions; fixes require a new reviewed version or explicit revalidation.
+- The initial 25 demo packages are all included in the first certification run; a static source review alone is not certification.
+
+Related stories: US-D02, US-D04, US-G03, US-G04, US-G06, US-G07, US-I04.
+
+#### US-X02 — Multi-stack project blueprints and generator adapters (P0)
+As a developer, I want templates to represent complete software project types and technology stacks so that the platform can initialize more than static websites.
+- Versioned blueprints identify project family, architecture profile, runtimes, languages, frameworks, package managers, databases, APIs, infrastructure and supported operating systems where relevant.
+- Initial supported families are web applications, websites, e-commerce, backend services/APIs and full-stack applications; the architecture must allow mobile, desktop, enterprise, data/AI and DevOps project families to be added through adapters.
+- Generator adapters have explicit capabilities, inputs, outputs, dependency rules, compatibility and version contracts.
+- A generated project includes the required source structure, configuration, dependencies, scripts, tests and documentation declared by its blueprint.
+- Incompatible or unsupported combinations are rejected with actionable explanations; the platform must not silently generate incomplete projects.
+- Generator and blueprint versions are recorded in provenance so output can be reproduced.
+
+Related stories: US-D03, US-E01, US-E02, US-F04, US-G01.
+
+#### US-X03 — Template authoring, packaging and release workspace (P0)
+As an authorized template maintainer, I want to create and maintain templates inside the platform so that the reusable library can grow without manual repository-only edits.
+- Create a template from a blank package, duplicate an existing version, or import a source package/repository.
+- Edit manifest metadata, source files, assets, inputs, dependencies, documentation and compatibility declarations.
+- Validate continuously and show actionable errors before a package can be submitted for review.
+- Support draft, review, approved/released, deprecated and archived lifecycle transitions with actor, timestamp and evidence.
+- Released versions are immutable; edits create a new version with changelog and compatibility information.
+- Imported content remains untrusted until provenance, licensing, security and functional review pass.
+- Only authorized maintainers can publish or approve versions; every consequential action is audited.
+
+Related stories: US-D02, US-D04, US-D05, US-T03.
+
+#### US-X04 — Configurable project builder and live preview (P0)
+As a project creator, I want to configure a generated project at the appropriate level of detail so that the output matches its requirements before generation.
+- Support guided/no-code configuration, structured low-code options and full-code/advanced configuration without forcing every user into one mode.
+- Configure project identity, branding, themes, modules/features, pages/components, technology profile, integrations and environment-specific settings when supported by the blueprint.
+- Build configuration controls dynamically from validated schemas and declared dependencies; show required, optional, conditional and incompatible options.
+- Preview the configured result before generation, including supported responsive viewports and representative states.
+- Save and reuse approved configuration profiles; compare configuration changes and show their impact.
+- Validate all configuration on the server; never expose secrets in previews, URLs, logs or generated client-side code.
+
+Related stories: US-E01, US-E04, US-D05, US-R01, US-W01, US-W02.
+
+#### US-X05 — Isolated build and test execution engine (P0)
+As a developer or QA engineer, I want to run project builds and tests through controlled execution jobs so that generated projects can be verified safely and consistently.
+- Execute jobs in isolated, disposable workspaces/runners rather than executing arbitrary project code inside the API process or trusted application host.
+- Select approved toolchain adapters and pinned versions from the project blueprint; deny unsupported or unapproved executables.
+- Apply time, memory, CPU, disk, network and output limits; secrets and credentials are scoped, masked and unavailable by default.
+- Support queued, running, succeeded, failed, cancelled and timed-out states with safe retry and idempotency rules.
+- Capture structured logs, test reports, exit codes, artifact references and provenance, with access controlled by project permissions.
+- Provide cancellation, cleanup and failure diagnostics; verify that one job cannot read or modify another project's files.
+- Build/test results update project evidence but never automatically mark a project production-ready.
+
+Related stories: US-G01, US-G02, US-G03, US-G04, US-G06, US-I01, US-I03.
+
+#### US-X06 — Generated-project export and repository provisioning (P0)
+As a project owner, I want to take generated source code into an independent delivery destination so that the project can be developed and delivered outside the Templates platform.
+- Export a generated project as a complete ZIP with directory structure, required files, documentation and provenance; verify archive integrity with a checksum.
+- Allow local folder access and approved remote repository provisioning through provider adapters.
+- Before creating or pushing to a remote repository, show destination, visibility, owner, branch and files to be published and require explicit authorization.
+- Never publish secrets, local environment files, generated credentials or restricted assets.
+- Preserve source-template ID/version/digest and generator/configuration provenance in the project.
+- Generated projects remain independent; future template updates require the explicit migration workflow in US-E05.
+- Failed exports or repository operations are recoverable and auditable.
+
+Related stories: US-E01, US-F01, US-F02, US-H03, US-I01.
+
+#### US-X07 — Internal employee and management access (P0)
+As the platform owner, I want to grant platform access to authorized ASAA management and employees so that the platform can be used internally without becoming public.
+- Preserve a secure owner bootstrap account and ultimate owner authority.
+- Support explicit invitation, activation, suspension, deactivation and recovery for internal users.
+- Provide least-privilege role profiles for management/administration, project management, development, design, QA and DevOps; permissions are checked server-side at module, action and resource level.
+- Project, template, asset, audit, integration and generated-output access is restricted by assigned permissions and ownership.
+- Role changes, invitations, access denials and account lifecycle actions are audited.
+- No anonymous, public-marketplace or external-organization access is enabled by this story.
+- Employee access must not be enabled until role enforcement, session controls, audit coverage and access-isolation tests pass.
+
+Related stories: US-A01, US-A02, US-A03, US-A04, US-I02, US-I03, US-M03, US-T03.
+
+#### US-X08 — Governed integration connector registry (P1)
+As a platform administrator, I want integrations managed through replaceable connectors so that projects can use development and delivery tools without hard-coding provider dependencies.
+- Define a connector contract for authentication, capabilities, configuration, health, operations, errors, versioning and revocation.
+- Prioritize local Git and GitHub repository workflows, Jenkins CI, file/artifact storage and supported database/toolchain integrations.
+- Store credentials securely outside source control, scope permissions to the minimum required and support rotation/revocation.
+- Show connection status and actionable failures; audit configuration changes and consequential provider actions.
+- Integrations remain optional and the core platform remains usable without them.
+- Use free/local-first configurations; no paid provider or service is activated without explicit owner approval.
+
+Related stories: US-F01, US-F04, US-H02, US-H03, US-J04.
+
+#### US-X09 — Reusable component, design-system and asset composition (P1)
+As a designer or developer, I want reusable components and assets to be discoverable and composable so that projects share approved building blocks.
+- Register UI components, page sections, design tokens/themes, API modules, workflows, documentation and other reusable engineering assets.
+- Record owner, source, license, version, dependencies, compatibility, security status and supported project families.
+- Support search, preview, documentation, dependency resolution and controlled release.
+- Compose multiple compatible assets into a project blueprint and detect version conflicts, duplicate resources and incompatible dependencies before generation.
+- Pin exact asset versions and produce a reproducible composition manifest.
+- Updates never silently change generated projects; impact analysis and explicit migration are required.
+
+Related stories: US-D05, US-E04, US-E05, US-W01, US-W02.
+
+#### US-X10 — Online project source workspace (P1)
+As a developer, I want to inspect and work with generated project files through a project workspace so that development does not depend only on generation and external Git commands.
+- Provide a permission-aware file tree and source/document preview for generated project files.
+- Support safe file editing, save/reload, diff against the last committed state and clear unsaved-change handling.
+- Keep project boundaries and canonical output paths enforced on every file operation.
+- Integrate with repository status, commit history and branches without bypassing configured branch policy.
+- Any terminal, build or test execution uses US-X05's isolated execution engine; the web/API process must not expose an unrestricted shell.
+- Provide a clear hand-off to external IDEs and local development when a full online IDE is not available.
+
+Related stories: US-F01, US-F02, US-F03, US-G01.
+
+#### US-X11 — End-to-end delivery and operations lifecycle (P1)
+As a project owner or DevOps engineer, I want one traceable delivery lifecycle from validation through operations so that a project can be released and maintained responsibly.
+- Model development, build verification, testing, security review, release candidate, approval, deployment, post-deployment verification, maintenance and rollback as distinct states.
+- Support separate local/development/test/staging/production environment profiles without mixing secrets or data.
+- Connect CI/CD runs, artifacts, approvals, deployments and smoke-test results to the project and release.
+- Require explicit authorization for production or client deployment; no automatic publication or paid infrastructure.
+- Capture structured operational logs, health/metrics, actionable alerts, incidents and deployment history.
+- Provide backup, integrity verification, restore testing and documented recovery objectives for platform and project data.
+- Failed health checks or deployment gates block promotion and expose a tested recovery/rollback path.
+
+Related stories: US-H01, US-H02, US-H03, US-H04, US-H05, US-H06, US-I05, US-T01, US-T02.
+
+#### US-X12 — Expandable sector and technology coverage (P1)
+As a platform owner, I want template coverage to grow through a governed taxonomy and coverage plan so that the library can support the range of ASAA projects rather than remain limited to the first demo batch.
+- Maintain expandable sector, business-type, technical-division and organizational-function taxonomies without hard-coded template-count limits.
+- Track planned, drafted, validated, approved and missing coverage by sector, project family and technology profile.
+- Prioritize new packages using actual ASAA project demand and reuse value, not arbitrary equal counts.
+- Every new package follows US-X01 certification and US-X03 authoring/release governance.
+- Report coverage honestly; a registered taxonomy entry is not counted as a completed template.
+
+Related stories: US-D03, US-D04, US-X01, US-X02.
+
+## 22. First implementation order for the objective
+
+The following order is the initial execution queue. It is dependency-based; it does not mean all P0 stories must be completed before any P1 work begins.
+
+1. **Stabilize and certify the current baseline:** finish CI/E2E/accessibility validation and run the actual loader → approval → preview → generation → integrity verification path for all 25 initial packages (US-X01).
+2. **Generalize the generator:** define versioned project-family blueprints and adapter contracts beyond static HTML (US-X02).
+3. **Build the template authoring lifecycle:** create, edit, import, validate, version, review and release packages in the platform (US-X03).
+4. **Build project configuration and preview:** guided, low-code and advanced configuration with responsive preview (US-X04).
+5. **Build safe execution:** isolated build/test jobs and evidence capture (US-X05).
+6. **Complete project hand-off:** ZIP export and approved remote repository provisioning (US-X06).
+7. **Enable internal access:** employee/management invitations, roles and isolation after security gates pass (US-X07).
+8. **Add integration connectors and reusable composition:** GitHub/Jenkins/storage/tool adapters and governed component assets (US-X08, US-X09).
+9. **Add online source workspace and delivery operations:** safe source editing, CI/CD, release, deployment, monitoring and recovery (US-X10, US-X11).
+10. **Expand coverage by demand:** progressively populate sectors, business types and technology families (US-X12).
+
+Do not divert into P2 enterprise tenancy, public marketplace, native clients, paid AI or broad business-operation modules before the core software-project lifecycle works end to end.
+
