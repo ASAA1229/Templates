@@ -58,9 +58,7 @@ test.describe("template library batch 001 browser review", () => {
         await expect(page.locator("main h1").first()).toBeVisible();
         expect(await page.title(), `${template.id} ${viewport.label} title`).not.toBe("");
 
-        const overflow = await page.evaluate(
-          () => document.documentElement.scrollWidth - window.innerWidth,
-        );
+        const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
         expect(overflow, `${template.id} horizontal overflow at ${viewport.width}px`).toBeLessThanOrEqual(0);
         await expectAccessible(page);
       }
