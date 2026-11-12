@@ -80,10 +80,12 @@ test.describe("project initialization (US-E01, US-E02)", () => {
     await expect(page.getByRole("list", { name: "Files to generate" }).getByText("src/server.ts")).toBeVisible();
     await page.getByRole("button", { name: "Generate project" }).click();
     await expect(page.getByRole("heading", { name: "Project generated" })).toBeVisible();
-    await expect(page.getByText("Backend service · Layered service")).toBeVisible();
-    await page.getByRole("link", { name: "Open project" }).click();
     await expect(page.getByText("Backend service")).toBeVisible();
     await expect(page.getByText("Layered service")).toBeVisible();
+    await page.getByRole("link", { name: "Open project" }).click();
+    const blueprint = page.getByRole("heading", { name: "Project blueprint" }).locator("..");
+    await expect(blueprint.getByText("Backend service")).toBeVisible();
+    await expect(blueprint.getByText("Layered service")).toBeVisible();
     await expect(page.getByText("List orders")).toBeVisible();
     await expect(page.getByText("starter-api-service@1.0.0")).toBeVisible();
 
