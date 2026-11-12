@@ -1,9 +1,11 @@
 import { changePasswordSchema, loginSchema, type OwnerView, type SessionView } from "@asaa/contracts";
 import type { CookieOptions, NextFunction, Request, Response } from "express";
 import { Router } from "express";
+import { z } from "zod";
 import type { AppContext } from "../../context.js";
 import { AppError, unauthenticated, validationFailed } from "../../lib/errors.js";
 import { hashPassword, needsRehash, timingDummyHash, verifyPassword } from "../../lib/password.js";
+import { passwordSchema } from "@asaa/contracts";
 import { hashToken, newSessionToken } from "../../lib/tokens.js";
 import { RateLimiter } from "../../middleware/security.js";
 import { audit } from "../audit/audit.service.js";
@@ -21,10 +23,11 @@ function cookieOptions(ctx: AppContext): CookieOptions {
   };
 }
 
-const ownerView = (owner: { id: string; email: string; displayName: string }): OwnerView => ({
+const ownerView = (owner: { id: string; email: string; displayName: string; role: OwnerView["role"] }): OwnerView => ({
   id: owner.id,
   email: owner.email,
   displayName: owner.displayName,
+  role: owner.role,
 });
 
 /**
@@ -44,6 +47,7 @@ export function authenticate(ctx: AppContext) {
       const idleLimit = ctx.config.SESSION_IDLE_MINUTES * 60_000;
       if (
         !session ||
+        !session.owner.isActive ||
         session.revokedAt ||
         session.expiresAt <= now ||
         now.getTime() - session.lastSeenAt.getTime() > idleLimit ||
@@ -52,7 +56,7 @@ export function authenticate(ctx: AppContext) {
         res.clearCookie(SESSION_COOKIE, cookieOptions(ctx));
         return next();
       }
-      req.owner = { ...ownerView(session.owner), role: "OWNER" };
+      req.owner = ownerView(session.owner);
       req.sessionId = session.id;
       // Throttle last-seen writes to once a minute.
       if (now.getTime() - session.lastSeenAt.getTime() > 60_000) {
@@ -90,7 +94,7 @@ export function authRouter(ctx: AppContext): Router {
       const owner = await ctx.prisma.owner.findUnique({ where: { email } });
       // Always run one scrypt verification so response time does not reveal whether the account exists.
       const valid = await verifyPassword(parsed.data.password, owner?.passwordHash ?? (await timingDummyHash()));
-      if (!owner || !valid) {
+      if (!owner || !owner.isActive || !valid) {
         await audit(ctx, req, {
           action: "auth.login",
           outcome: "FAILURE",
@@ -120,9 +124,70 @@ export function authRouter(ctx: AppContext): Router {
         },
       });
       res.cookie(SESSION_COOKIE, token, { ...cookieOptions(ctx), expires: session.expiresAt });
-      req.owner = { ...ownerView(owner), role: "OWNER" };
+      req.owner = ownerView(owner);
       await audit(ctx, req, { action: "auth.login", outcome: "SUCCESS", targetType: "session", targetId: session.id });
       res.status(200).json({ owner: ownerView(owner) });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.get("/members", requireOwner(), authorize(ctx, "identity:manage"), async (_req, res, next) => {
+    try {
+      const members = await ctx.prisma.owner.findMany({
+        select: { id: true, email: true, displayName: true, role: true, isActive: true, createdAt: true },
+        orderBy: [{ role: "asc" }, { displayName: "asc" }],
+      });
+      res.json({ members: members.map((member) => ({ ...member, createdAt: member.createdAt.toISOString() })) });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.post("/members", requireOwner(), authorize(ctx, "identity:manage"), async (req, res, next) => {
+    try {
+      const input = z.object({
+        email: z.string().trim().toLowerCase().email().max(254),
+        displayName: z.string().trim().min(1).max(120),
+        role: z.enum(["ADMIN", "DEVELOPER", "TESTER", "EMPLOYEE"]),
+        password: passwordSchema,
+      }).parse(req.body);
+      if (req.owner!.role !== "OWNER" && input.role === "ADMIN") {
+        throw new AppError(403, "FORBIDDEN", "Only the owner can appoint an administrator.");
+      }
+      const member = await ctx.prisma.owner.create({
+        data: { ...input, passwordHash: await hashPassword(input.password) },
+        select: { id: true, email: true, displayName: true, role: true, isActive: true, createdAt: true },
+      });
+      await audit(ctx, req, {
+        action: "identity.member.create",
+        outcome: "SUCCESS",
+        targetType: "member",
+        targetId: member.id,
+        metadata: { role: member.role },
+      });
+      res.status(201).json({ member: { ...member, createdAt: member.createdAt.toISOString() } });
+    } catch (error) {
+      if (error && typeof error === "object" && "code" in error && error.code === "P2002") {
+        next(new AppError(409, "CONFLICT", "An account with this email already exists."));
+        return;
+      }
+      next(error);
+    }
+  });
+
+  router.patch("/members/:id/active", requireOwner(), authorize(ctx, "identity:manage"), async (req, res, next) => {
+    try {
+      const input = z.object({ isActive: z.boolean() }).parse(req.body);
+      const id = String(req.params.id);
+      if (id === req.owner!.id && !input.isActive) throw validationFailed({ isActive: "You cannot deactivate your own account." });
+      const target = await ctx.prisma.owner.findUnique({ where: { id } });
+      if (!target) throw new AppError(404, "NOT_FOUND", "Member not found.");
+      if (target.role === "OWNER") throw new AppError(403, "FORBIDDEN", "The owner account cannot be deactivated here.");
+      await ctx.prisma.owner.update({ where: { id }, data: { isActive: input.isActive } });
+      if (!input.isActive) await ctx.prisma.session.updateMany({ where: { ownerId: id, revokedAt: null }, data: { revokedAt: ctx.now() } });
+      await audit(ctx, req, { action: "identity.member.status", outcome: "SUCCESS", targetType: "member", targetId: id, metadata: input });
+      res.status(204).end();
     } catch (error) {
       next(error);
     }
@@ -147,7 +212,7 @@ export function authRouter(ctx: AppContext): Router {
   });
 
   router.get("/session", requireOwner(), (req, res) => {
-    res.json({ owner: { id: req.owner!.id, email: req.owner!.email, displayName: req.owner!.displayName } });
+    res.json({ owner: req.owner });
   });
 
   router.get("/sessions", requireOwner(), authorize(ctx, "session:manage"), async (req, res, next) => {
