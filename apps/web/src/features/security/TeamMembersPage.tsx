@@ -2,11 +2,13 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Alert, Button, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import { EmptyState, LoadingState, PageHeader } from "@/components/common";
 import { ApiError, api } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 
 type Role = "ADMIN" | "DEVELOPER" | "TESTER" | "EMPLOYEE";
 type Member = { id: string; email: string; displayName: string; role: Role | "OWNER"; isActive: boolean; createdAt: string };
 
 export function TeamMembersPage() {
+  const { owner } = useAuth();
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -63,6 +65,10 @@ export function TeamMembersPage() {
     } catch (cause) {
       setError(cause instanceof ApiError ? cause.message : "Unable to update account status.");
     }
+  }
+
+  if (owner?.role !== "OWNER" && owner?.role !== "ADMIN") {
+    return <EmptyState title="Access restricted" description="Only owners and administrators can manage team accounts." />;
   }
 
   return (
