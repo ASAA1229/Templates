@@ -123,7 +123,7 @@ describe("template library batch 001", () => {
           if (!/\.(?:html?|css|m?js|json|md|txt|svg|xml)$/i.test(file)) continue;
           const rendered = await readFile(path.join(output, generation.outputDir, file), "utf8");
           expect(rendered, `${template.id} ${file} unresolved placeholders`).not.toMatch(
-            /{{\\s*[A-Za-z][A-Za-z0-9_]*\\s*}}/,
+            /{{\s*[A-Za-z][A-Za-z0-9_]*\s*}}/,
           );
         }
       }
