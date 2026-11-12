@@ -127,7 +127,7 @@ export const ARCHITECTURE_PROFILES = [
   "data-pipeline",
   "native-client",
 ] as const;
-export const PACKAGE_MANAGERS = [
+export const PROJECT_PACKAGE_MANAGERS = [
   "npm",
   "pnpm",
   "yarn",
@@ -150,7 +150,7 @@ export const projectBlueprintSchema = z.object({
   runtimes: z.array(versionedNameSchema).max(10).default([]),
   languages: z.array(versionedNameSchema).max(10).default([]),
   frameworks: z.array(versionedNameSchema).max(20).default([]),
-  packageManager: z.enum(PACKAGE_MANAGERS).optional(),
+  packageManager: z.enum(PROJECT_PACKAGE_MANAGERS).optional(),
   databases: z.array(versionedNameSchema).max(10).default([]),
   apis: z.array(versionedNameSchema).max(20).default([]),
   infrastructure: z.array(versionedNameSchema).max(20).default([]),
@@ -1111,6 +1111,7 @@ export interface BranchCreateResultView {
 
 export const ENVIRONMENT_TOOLS = ["node", "npm", "pnpm", "yarn", "git", "postgresql", "docker"] as const;
 export type EnvironmentTool = (typeof ENVIRONMENT_TOOLS)[number];
+export const PACKAGE_MANAGERS = ["npm", "pnpm", "yarn", "none"] as const;
 export const DATABASE_ENGINES = ["none", "postgresql"] as const;
 
 /** "*", "24", "24.x", "24.1", "24.1.2" or ">=22[.1[.0]]". */
