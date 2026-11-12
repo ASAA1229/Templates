@@ -1,5 +1,5 @@
+import { Router, type Response } from "express";
 import { z } from "zod";
-import { Router } from "express";
 import type { AppContext } from "../../context.js";
 import { authorize } from "../auth/policy.js";
 
@@ -7,27 +7,31 @@ const SEARCH_TYPES = ["PROJECT", "REQUIREMENT", "CATALOG"] as const;
 const PROJECT_STATUSES = ["PLANNING", "ACTIVE", "ON_HOLD", "COMPLETED"] as const;
 const REQUIREMENT_STATUSES = ["DRAFT", "READY", "IN_DEVELOPMENT", "DEVELOPED", "BUILT", "TESTED", "RELEASED"] as const;
 
-const searchFiltersSchema = z.object({
-  types: z.array(z.enum(SEARCH_TYPES)).min(1).max(3).default([...SEARCH_TYPES]),
-  projectStatus: z.enum(PROJECT_STATUSES).optional(),
-  requirementStatus: z.enum(REQUIREMENT_STATUSES).optional(),
-  catalogCategory: z.string().trim().max(80).optional(),
-  sortBy: z.enum(["updatedAt", "title"]).default("updatedAt"),
-  sortOrder: z.enum(["asc", "desc"]).default("desc"),
-  pageSize: z.coerce.number().int().min(1).max(50).default(10),
-}).strict();
+const searchFiltersSchema = z
+  .object({
+    types: z.array(z.enum(SEARCH_TYPES)).min(1).max(3).default([...SEARCH_TYPES]),
+    projectStatus: z.enum(PROJECT_STATUSES).optional(),
+    requirementStatus: z.enum(REQUIREMENT_STATUSES).optional(),
+    catalogCategory: z.string().trim().max(80).optional(),
+    sortBy: z.enum(["updatedAt", "title"]).default("updatedAt"),
+    sortOrder: z.enum(["asc", "desc"]).default("desc"),
+    pageSize: z.coerce.number().int().min(1).max(50).default(10),
+  })
+  .strict();
 
-const savedSearchInputSchema = z.object({
-  name: z.string().trim().min(1).max(100),
-  query: z.string().trim().min(2).max(80),
-  filters: searchFiltersSchema.default({}),
-}).strict();
+const savedSearchInputSchema = z
+  .object({
+    name: z.string().trim().min(1).max(100),
+    query: z.string().trim().min(2).max(80),
+    filters: searchFiltersSchema.default({}),
+  })
+  .strict();
 
 function queryString(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
-function invalid(res: import("express").Response, message: string) {
+function invalid(res: Response, message: string) {
   res.status(400).json({
     error: { code: "VALIDATION_FAILED", message, fields: {} },
   });
@@ -51,9 +55,10 @@ export function searchRouter(ctx: AppContext): Router {
         }
 
         const rawTypes = req.query.types;
-        const types = rawTypes === undefined
-          ? [...SEARCH_TYPES]
-          : (Array.isArray(rawTypes) ? rawTypes : String(rawTypes).split(",")).map(String);
+        const types =
+          rawTypes === undefined
+            ? [...SEARCH_TYPES]
+            : (Array.isArray(rawTypes) ? rawTypes : String(rawTypes).split(",")).map(String);
         const rawFilters = {
           types,
           projectStatus: queryString(req.query.projectStatus),
@@ -68,15 +73,16 @@ export function searchRouter(ctx: AppContext): Router {
           invalid(res, "One or more search filters are invalid.");
           return;
         }
+
         const filters = parsed.data;
         const pageParsed = z.coerce.number().int().min(1).max(10000).safeParse(req.query.page ?? "1");
         if (!pageParsed.success) {
           invalid(res, "Page must be a positive integer.");
           return;
         }
+
         const page = pageParsed.data;
         const ownerId = req.owner!.id;
-
         const [projects, requirements, catalog] = await Promise.all([
           filters.types.includes("PROJECT")
             ? ctx.prisma.project.findMany({
@@ -106,7 +112,15 @@ export function searchRouter(ctx: AppContext): Router {
                     { description: { contains: query, mode: "insensitive" } },
                   ],
                 },
-                select: { id: true, code: true, title: true, status: true, updatedAt: true, projectId: true, project: { select: { key: true } } },
+                select: {
+                  id: true,
+                  code: true,
+                  title: true,
+                  status: true,
+                  updatedAt: true,
+                  projectId: true,
+                  project: { select: { key: true } },
+                },
                 orderBy: { updatedAt: "desc" },
                 take: 201,
               })
@@ -114,7 +128,9 @@ export function searchRouter(ctx: AppContext): Router {
           filters.types.includes("CATALOG")
             ? ctx.prisma.catalogItem.findMany({
                 where: {
-                  ...(filters.catalogCategory ? { category: { equals: filters.catalogCategory, mode: "insensitive" as const } } : {}),
+                  ...(filters.catalogCategory
+                    ? { category: { equals: filters.catalogCategory, mode: "insensitive" as const } }
+                    : {}),
                   OR: [
                     { title: { contains: query, mode: "insensitive" } },
                     { slug: { contains: query, mode: "insensitive" } },
@@ -169,20 +185,25 @@ export function searchRouter(ctx: AppContext): Router {
         });
 
         const facets = {
-          types: SEARCH_TYPES.map((type) => ({ value: type, count: matches.filter((item) => item.type === type).length })),
+          types: SEARCH_TYPES.map((type) => ({
+            value: type,
+            count: matches.filter((item) => item.type === type).length,
+          })),
           statuses: [...new Set(matches.map((item) => item.status))].sort(),
-          categories: [...new Set(matches.flatMap((item) => item.category ? [item.category] : []))].sort(),
+          categories: [...new Set(matches.flatMap((item) => (item.category ? [item.category] : [])))].sort(),
         };
         const start = (page - 1) * filters.pageSize;
         const results = matches.slice(start, start + filters.pageSize);
+        const truncated = projects.length > 200 || requirements.length > 200 || catalog.length > 200;
+
         res.json({
           query,
           filters,
           page,
           pageSize: filters.pageSize,
           total: matches.length,
-          hasMore: matches.length > start + filters.pageSize || projects.length > 200 || requirements.length > 200 || catalog.length > 200,
-          truncated: projects.length > 200 || requirements.length > 200 || catalog.length > 200,
+          hasMore: matches.length > start + filters.pageSize,
+          truncated,
           facets,
           results: results.map(({ status: _status, category: _category, updatedAt: _updatedAt, ...item }) => item),
         });
@@ -212,6 +233,7 @@ export function searchRouter(ctx: AppContext): Router {
         invalid(res, "Saved search name, query or filters are invalid.");
         return;
       }
+
       const search = await ctx.prisma.savedSearch.create({
         data: { ...parsed.data, ownerId: req.owner!.id },
         select: { id: true, name: true, query: true, filters: true, createdAt: true, updatedAt: true },
@@ -233,6 +255,7 @@ export function searchRouter(ctx: AppContext): Router {
         invalid(res, "Saved search name, query or filters are invalid.");
         return;
       }
+
       const existing = await ctx.prisma.savedSearch.findFirst({
         where: { id: req.params.id, ownerId: req.owner!.id },
         select: { id: true },
@@ -241,6 +264,7 @@ export function searchRouter(ctx: AppContext): Router {
         res.status(404).json({ error: { code: "NOT_FOUND", message: "Saved search not found." } });
         return;
       }
+
       const search = await ctx.prisma.savedSearch.update({
         where: { id: existing.id },
         data: parsed.data,
@@ -266,6 +290,7 @@ export function searchRouter(ctx: AppContext): Router {
         res.status(404).json({ error: { code: "NOT_FOUND", message: "Saved search not found." } });
         return;
       }
+
       await ctx.prisma.savedSearch.delete({ where: { id: existing.id } });
       res.status(204).end();
     } catch (error) {
