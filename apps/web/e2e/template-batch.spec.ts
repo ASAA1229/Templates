@@ -73,6 +73,5 @@ test.describe("template library batch 001 browser review", () => {
         await expectAccessible(page);
       }
     }
-
   }, 120_000);
 });
