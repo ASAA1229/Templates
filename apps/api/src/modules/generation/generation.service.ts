@@ -492,7 +492,11 @@ export class GenerationService {
         license: template.manifest.license.spdx,
         catalogItemId: generation.catalogItemId,
       },
-      project: { key: generation.project.key, name: generation.project.name },
+      project: {
+        key: generation.project.key,
+        name: generation.project.name,
+        blueprint: generation.project.blueprint,
+      },
       inputs: generation.inputs,
       requirements: generation.requirements,
       inputsHash: generation.inputsHash,
