@@ -99,7 +99,7 @@ test.describe("owner MVP journey", () => {
     await card.getByRole("button", { name: "Activate" }).click();
     await expect(card.getByText("Active")).toBeVisible();
 
-    await page.getByLabel("Search").fill("postgres");
+    await page.getByRole("searchbox", { name: "Search" }).fill("postgres");
     await page.getByRole("button", { name: "Search" }).click();
     await expect(page.getByRole("listitem").filter({ hasText: title })).toBeVisible();
     await expectAccessible(page);
