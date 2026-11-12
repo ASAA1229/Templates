@@ -19,7 +19,17 @@ export function ProjectTemplateContribution({ projectId, onSubmitted }: Props) {
     setBusy(true);
     setError("");
     setSuccess("");
-    const data = new FormData(event.currentTarget);
+    const data = new FormData(form);
+    let inputs: unknown[];
+    try {
+      const parsedInputs: unknown = JSON.parse(String(data.get("inputs") || "[]"));
+      if (!Array.isArray(parsedInputs)) throw new Error("Reusable inputs must be a JSON array.");
+      inputs = parsedInputs;
+    } catch {
+      setError("Reusable inputs must be valid JSON in array format.");
+      setBusy(false);
+      return;
+    }
     try {
       const result = await api<{ submission: { id: string; status: string } }>(
         `/projects/${projectId}/template-submissions`,
@@ -35,6 +45,7 @@ export function ProjectTemplateContribution({ projectId, onSubmitted }: Props) {
             customerPermission,
             rightsConfirmed,
             secretsChecked,
+            inputs,
           },
         },
       );
@@ -76,6 +87,10 @@ export function ProjectTemplateContribution({ projectId, onSubmitted }: Props) {
               <label className="space-y-1 text-sm sm:col-span-2">License / usage terms<input required name="license" maxLength={80} placeholder="MIT, Apache-2.0, UNLICENSED…" className="w-full rounded-md border bg-background px-3 py-2" /></label>
             </div>
             <label className="block space-y-1 text-sm">Description<textarea name="description" maxLength={2000} rows={3} className="w-full rounded-md border bg-background px-3 py-2" /></label>
+            <label className="block space-y-1 text-sm">Reusable configuration inputs (JSON)
+              <textarea name="inputs" defaultValue="[]" rows={6} spellCheck={false} className="w-full rounded-md border bg-background px-3 py-2 font-mono text-xs" />
+              <span className="text-xs text-muted-foreground">Define inputs with id, label, type (string, text, boolean or select), and optional defaults. Use matching placeholders such as {{projectName}} in text files and paths.</span>
+            </label>
             <fieldset className="space-y-2 rounded-md border p-3 text-sm">
               <legend className="px-1 font-medium">Required confirmations</legend>
               <label className="flex gap-2"><input type="checkbox" checked={customerPermission} onChange={(event) => setCustomerPermission(event.target.checked)} required /> Customer permission is secured, or no customer-owned material is included.</label>
