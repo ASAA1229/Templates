@@ -5,10 +5,9 @@ import { audit } from "../audit/audit.service.js";
 
 /**
  * Policy-based authorization foundation (US-A04). Every protected route declares
- * the permission it needs; the check runs server-side. Initially only the OWNER
- * role exists and holds every permission. New roles (admin, employee, org admin)
- * are added here without touching routes; ABAC/ReBAC rules can be layered into
- * `isAllowed` through the resource argument.
+ * the permission it needs; the check runs server-side. Workspace roles receive
+ * least-privilege permission sets here; resource-level ownership checks remain
+ * enforced by the corresponding project and domain services.
  */
 export const PERMISSIONS = [
   "dashboard:read",
