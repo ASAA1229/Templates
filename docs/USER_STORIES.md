@@ -955,10 +955,9 @@ As an authorized template maintainer, I want to create and maintain templates in
 - Imported content remains untrusted until provenance, licensing, security and functional review pass.
 - Developers and testers can submit a successfully developed project as a candidate reusable template, with source-project and contributor attribution, customer-permission/IP-rights attestations, and secret scanning; submissions remain isolated in a pending-review area and never become selectable templates until an authorized maintainer approves them.
 - Capture excludes repository metadata, generated provenance, dependency/build/cache folders, environment files and private-key files; unsafe paths, symlinks, oversized content and detected high-confidence credentials block submission.
-- Approval promotes the exact submitted package into the versioned library and records the reviewer and source submission in the audit trail; later edits require a new version.
-- Developers and testers can submit a successfully developed project as a candidate reusable template, with source-project and contributor attribution, customer-permission/IP-rights attestations, and secret scanning; submissions remain isolated in a pending-review area and never become selectable templates until an authorized maintainer approves them.
-- Capture excludes repository metadata, generated provenance, dependency/build/cache folders, environment files and private-key files; unsafe paths, symlinks, oversized content and detected high-confidence credentials block submission.
 - Approval promotes the exact submitted package into the immutable versioned library and records the reviewer and source submission in the audit trail; later edits require a new version.
+- Provide a project-detail contribution form and a reviewer queue with an explicit approve-and-publish action; enforce server-side permissions regardless of UI visibility.
+- Current implementation is owner-only. Employee/developer/tester identities, invitations, role assignment and least-privilege review permissions remain blocked on the US-X07 identity foundation.
 - Only authorized maintainers can publish or approve versions; every consequential action is audited.
 
 Related stories: US-D02, US-D04, US-D05, US-T03.
