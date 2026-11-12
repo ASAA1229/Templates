@@ -75,9 +75,7 @@ function toFilters(params: URLSearchParams): SearchFilters {
 
   return {
     types,
-    ...(params.get("projectStatus")
-      ? { projectStatus: params.get("projectStatus") as ProjectStatus }
-      : {}),
+    ...(params.get("projectStatus") ? { projectStatus: params.get("projectStatus") as ProjectStatus } : {}),
     ...(params.get("requirementStatus")
       ? { requirementStatus: params.get("requirementStatus") as RequirementStatus }
       : {}),
@@ -265,8 +263,8 @@ export function SearchPage() {
         <CardHeader>
           <CardTitle>Search criteria</CardTitle>
           <CardDescription>
-            Filters are applied on the server. Opening a result still uses the destination's normal
-            authorization checks.
+            Filters are applied on the server. Opening a result still uses the destination's normal authorization
+            checks.
           </CardDescription>
         </CardHeader>
         <CardContent>
