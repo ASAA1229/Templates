@@ -205,3 +205,56 @@ Known remaining or unverified areas include:
 - Expanded template coverage beyond the initial 25 website demos.
 
 This document describes desired requirements and known gaps. Verify current code and test evidence before changing status. No production deployment or external publication is implied.
+
+
+## 10. Consolidated backlog index and traceability
+
+The detailed story backlog was consolidated into the capability and acceptance requirements above. Preserve the original story identifiers below for implementation, issue tracking and test traceability; these identifiers are references, not a claim that the stories are complete.
+
+| Epic | Story range | Scope retained in this requirements baseline |
+|---|---|---|
+| A — Identity and access | US-A01–A04 | Owner sign-in, sessions/recovery, MFA and policy-based authorization |
+| B — Workspace and UI/UX | US-B01–B06 | Dashboard, navigation, global search, responsive accessibility, design system and screen specifications |
+| C — Requirements and projects | US-C01–C04 | Project lifecycle, requirements, tasks/milestones and requirement-to-delivery traceability |
+| D — Catalog and reusable assets | US-D01–D05 | Catalog discovery, import/metadata, taxonomy, immutable versions and reusable assets |
+| E — Initialization and generation | US-E01–E05 | Template/scratch/import/composition starts and safe template updates |
+| F — Engineering workspace and source control | US-F01–F04 | Repository integration, branch/review controls, reproducible environments and technology adapters |
+| G — Build, test and quality | US-G01–G07 | Reproducible builds, automated/extensible testing, security/performance tests, quality gates and test traceability |
+| H — DevOps and operations | US-H01–H07 | Environment profiles, CI, release/deploy/rollback, observability, backup/restore and infrastructure as code |
+| I — Security and resilience | US-I01–I05 | Secrets, audit, data isolation, supply-chain controls and resilience/recovery |
+| J — AI/JARVIS | US-J01–J05 | Optional assistant, specialized agents, monitoring bot, strict JARVIS boundary and cost/privacy controls |
+| K — Multi-organization future | US-K01–K03 | Tenant workspaces, delegated administration and organization customization |
+| L — Business operations future | Epic L | CRM, sales, proposals/contracts, finance, HR, procurement, inventory, support, knowledge, BI, legal/compliance and continuity |
+| M — Collaboration | US-M01–M05 | Co-editing, comments/reviews, assignments, presence/chat and explicitly controlled external collaboration |
+| N — Notifications | US-N01–N06 | Notification center, channel adapters, preferences, grouping, escalation and advisory AI prioritization |
+| O — Search and command center | US-O01–O06 | Permission-aware search, facets/saved queries, semantic search, command palette, approved orchestration and relevance analytics |
+| P — Dashboards | US-P01–P06 | Role dashboards, personal builder, shared dashboards, executive/operational views, refresh and AI-assisted layouts |
+| Q — Reporting and BI | US-Q01–Q06 | Report builder, visualizations, governed cross-module metrics, historical/predictive analysis, AI insights and scheduled export |
+| R — Forms and workflows | US-R01–R06 | Form schemas, conditional/multi-step flows, drafts, validation/imports, approvals/signatures and AI suggestions |
+| S — Documents and assets | US-S01–S06 | File repository, preview/editing, version comparison, secure sharing, retention and document intelligence/scanning |
+| T — Activity and audit | US-T01–T05 | Activity feeds, change comparison/correlation, protected audit, live summaries and evidence retention/export |
+| U — Organization navigation | US-U01–U04 | Organization hierarchy, context-preserving navigation, app launcher/tabs and adaptive navigation |
+| V — Onboarding and learning | US-V01–V05 | Tours, contextual guidance, searchable knowledge, support/issue reporting and training/feedback |
+| W — Design system and device maturity | US-W01–W06 | Themes/tokens, component registry, advanced data views, device/offline support, accessibility/localization and visual quality gates |
+| X — Core objective gap closure | US-X01–X12 | Template certification, multi-stack blueprints, authoring, configuration/preview, isolated execution, export/repository provisioning, internal access, connectors, asset composition, source workspace, delivery operations and coverage expansion |
+
+### Definition of Done
+
+A story is complete only when:
+- Its acceptance criteria are implemented and reviewed.
+- Relevant automated and manual tests pass with evidence tied to the relevant commit/version.
+- Security, privacy, accessibility, performance, compatibility and recovery checks appropriate to the risk are complete.
+- Documentation and operational procedures are updated where the change affects them.
+- No unresolved blocker or unapproved high-severity risk remains.
+- The change passes required review and branch/release controls.
+- Its state is recorded accurately: implementation, build verification, test completion, approval, release and production readiness are distinct.
+
+A commit, merge, passing build, static source inspection or attractive UI alone does not satisfy Definition of Done.
+
+### Requirements change control
+
+The initial discovery sequence Q1–Q31 is consolidated in this document. Future changes must identify the requirement/story, rationale, affected users and domains, acceptance criteria, dependencies, cost, security/privacy impact, architecture impact, test evidence and priority. Do not reopen completed discovery questions by assumption or silently change approved constraints.
+
+### Current verification boundary
+
+The current `new` branch contains implementation foundations described in Section 9. All remaining stories and unverified acceptance criteria stay open until code inspection and reproducible test evidence support a status change. The ₹0 limit, private/internal access boundary, owner governance and JARVIS separation remain binding across every epic.
