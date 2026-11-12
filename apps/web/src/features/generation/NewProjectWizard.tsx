@@ -576,6 +576,64 @@ export function NewProjectWizard() {
                 </div>
               </CardContent>
             </Card>
+            <section aria-labelledby="selected-blueprint" className="space-y-3">
+              <div>
+                <h3 id="selected-blueprint" className="font-semibold">
+                  Selected project blueprint
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  This versioned blueprint determines the compatible generator and project structure.
+                </p>
+              </div>
+              {selectedBlueprint ? (
+                <Card>
+                  <CardContent className="grid gap-3 pt-5 text-sm sm:grid-cols-2">
+                    <div>
+                      <p className="text-muted-foreground">Project family</p>
+                      <p className="font-medium">{humanize(selectedBlueprint.family)}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Architecture</p>
+                      <p className="font-medium">{humanize(selectedBlueprint.architecture)}</p>
+                    </div>
+                    {(
+                      [
+                        ["Runtimes", selectedBlueprint.runtimes],
+                        ["Languages", selectedBlueprint.languages],
+                        ["Frameworks", selectedBlueprint.frameworks],
+                        ["Databases", selectedBlueprint.databases],
+                        ["APIs", selectedBlueprint.apis],
+                        ["Infrastructure", selectedBlueprint.infrastructure],
+                      ] as const
+                    ).map(([label, values]) => (
+                      <div key={label}>
+                        <p className="text-muted-foreground">{label}</p>
+                        <p className="font-medium">
+                          {values.length ? values.map((item) => `${item.name} ${item.version}`).join(", ") : "Not specified"}
+                        </p>
+                      </div>
+                    ))}
+                    <div>
+                      <p className="text-muted-foreground">Package manager</p>
+                      <p className="font-medium">{selectedBlueprint.packageManager ?? "Not specified"}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Supported operating systems</p>
+                      <p className="font-medium">
+                        {selectedBlueprint.operatingSystems.length
+                          ? selectedBlueprint.operatingSystems.map(humanize).join(", ")
+                          : "Not specified"}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Alert tone="warning">
+                  This source predates structured project blueprints. Generation will use its legacy manifest and
+                  registered adapter compatibility instead.
+                </Alert>
+              )}
+            </section>
             <section aria-labelledby="template-settings" className="space-y-3">
               <h3 id="template-settings" className="font-semibold">
                 {mode === "TEMPLATE" ? "Template settings" : "Technology choices"}
