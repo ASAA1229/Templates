@@ -420,7 +420,7 @@ export interface CatalogItemView {
 export interface AuditEventView {
   id: string;
   at: string;
-  actorType: "OWNER" | "SYSTEM" | "ANONYMOUS";
+  actorType: "OWNER" | "MEMBER" | "SYSTEM" | "ANONYMOUS";
   action: string;
   targetType: string | null;
   targetId: string | null;
