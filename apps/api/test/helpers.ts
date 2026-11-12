@@ -86,6 +86,7 @@ export function createHarness(overrides: Record<string, string> = {}): TestHarne
         data: {
           email: OWNER_EMAIL,
           displayName: "Owner",
+          role: "OWNER",
           passwordHash: ownerHash,
           passwordChangedAt: new Date(clock.now.getTime() - 1000),
           createdAt: new Date(clock.now.getTime() - 1000),
