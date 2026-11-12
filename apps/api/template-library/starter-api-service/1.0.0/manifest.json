@@ -147,5 +147,46 @@
     ],
     "maxFiles": 40,
     "maxTotalBytes": 262144
+  },
+  "blueprint": {
+    "family": "backend-service",
+    "architecture": "layered-service",
+    "runtimes": [
+      {
+        "name": "Node.js",
+        "version": "24"
+      }
+    ],
+    "languages": [
+      {
+        "name": "TypeScript",
+        "version": "5.9"
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "Express",
+        "version": "5"
+      }
+    ],
+    "packageManager": "npm",
+    "databases": [],
+    "apis": [
+      {
+        "name": "REST HTTP",
+        "version": "1"
+      }
+    ],
+    "infrastructure": [
+      {
+        "name": "Node.js server",
+        "version": "1"
+      }
+    ],
+    "operatingSystems": [
+      "linux",
+      "windows",
+      "macos"
+    ]
   }
 }
