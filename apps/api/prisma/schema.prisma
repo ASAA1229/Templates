@@ -78,6 +78,8 @@ enum ProjectStatus {
 
 model Project {
   id             String              @id @default(uuid()) @db.Uuid
+  /// Selected project architecture, captured from the approved starter/template blueprint.
+  blueprint      Json?
   key            String              @unique @db.VarChar(20)
   name           String              @db.VarChar(120)
   purpose        String              @default("") @db.VarChar(2000)
