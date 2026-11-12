@@ -78,7 +78,7 @@ describe("SearchPage", () => {
     await user.click(screen.getByRole("button", { name: "Search" }));
 
     expect(await screen.findByRole("link", { name: "Portal workspace" })).toBeInTheDocument();
-    expect(screen.getByText(/projects\\s*:\\s*1/)).toBeInTheDocument();
+    expect(screen.getByText(/projects\s*:\s*1/)).toBeInTheDocument();
 
     await user.type(screen.getByLabelText("Name this search"), "Active projects");
     await user.click(screen.getByRole("button", { name: "Save search" }));
