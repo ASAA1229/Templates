@@ -1,5 +1,5 @@
 import { Search } from "lucide-react";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useState, type KeyboardEvent } from "react";
 import { useNavigate } from "react-router";
 import { Input } from "@/components/ui";
 import { api } from "@/lib/api";
@@ -85,7 +85,7 @@ export function GlobalSearch() {
     navigate(href);
   }
 
-  function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+  function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === "Escape") {
       closeSearch();
       return;
@@ -154,12 +154,7 @@ export function GlobalSearch() {
             </p>
           )}
           {results.length > 0 && (
-            <div
-              id={id + "-results"}
-              role="listbox"
-              aria-label="Search results"
-              className="space-y-1"
-            >
+            <div id={id + "-results"} role="listbox" aria-label="Search results" className="space-y-1">
               {results.map((result, index) => (
                 <div
                   key={result.type + "-" + result.id}
