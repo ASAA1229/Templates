@@ -11,7 +11,8 @@ async function ensureLandingApproved(page: Page) {
     await approve.click();
     await expect(page.getByText("Business landing page v1.0.0 is approved and active.")).toBeVisible();
   }
-  await expect(library.getByText("In catalog")).toBeVisible();
+  const landingTemplate = library.getByRole("listitem").filter({ hasText: "Business landing page" });
+  await expect(landingTemplate.getByText("In catalog")).toBeVisible();
 }
 
 test.describe("project initialization (US-E01, US-E02)", () => {
