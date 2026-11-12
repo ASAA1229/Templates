@@ -74,7 +74,7 @@ describe("generator adapter registry (US-X02)", () => {
         values,
         project,
       }),
-    ).toThrow(/requires blueprint web-app\\/single-page-app/);
+    ).toThrow(/requires blueprint web-app\/single-page-app/);
   });
 
   it("rejects unregistered adapters instead of executing template-provided code", () => {
