@@ -9,7 +9,11 @@ const REQUIREMENT_STATUSES = ["DRAFT", "READY", "IN_DEVELOPMENT", "DEVELOPED", "
 
 const searchFiltersSchema = z
   .object({
-    types: z.array(z.enum(SEARCH_TYPES)).min(1).max(3).default([...SEARCH_TYPES]),
+    types: z
+      .array(z.enum(SEARCH_TYPES))
+      .min(1)
+      .max(3)
+      .default([...SEARCH_TYPES]),
     projectStatus: z.enum(PROJECT_STATUSES).optional(),
     requirementStatus: z.enum(REQUIREMENT_STATUSES).optional(),
     catalogCategory: z.string().trim().max(80).optional(),
@@ -75,7 +79,12 @@ export function searchRouter(ctx: AppContext): Router {
         }
 
         const filters = parsed.data;
-        const pageParsed = z.coerce.number().int().min(1).max(10000).safeParse(req.query.page ?? "1");
+        const pageParsed = z.coerce
+          .number()
+          .int()
+          .min(1)
+          .max(10000)
+          .safeParse(req.query.page ?? "1");
         if (!pageParsed.success) {
           invalid(res, "Page must be a positive integer.");
           return;
