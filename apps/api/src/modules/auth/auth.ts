@@ -154,8 +154,9 @@ export function authRouter(ctx: AppContext): Router {
       if (req.owner!.role !== "OWNER" && input.role === "ADMIN") {
         throw new AppError(403, "FORBIDDEN", "Only the owner can appoint an administrator.");
       }
+      const { password, ...account } = input;
       const member = await ctx.prisma.owner.create({
-        data: { ...input, passwordHash: await hashPassword(input.password) },
+        data: { ...account, passwordHash: await hashPassword(password) },
         select: { id: true, email: true, displayName: true, role: true, isActive: true, createdAt: true },
       });
       await audit(ctx, req, {
