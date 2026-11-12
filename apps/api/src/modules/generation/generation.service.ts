@@ -260,6 +260,12 @@ export class GenerationService {
     input: ReturnType<typeof createGenerationSchema.parse>,
   ): Promise<{ template: UsableTemplate; catalogItem: CatalogItem | null }> {
     if (input.mode === "SCRATCH") {
+      if (Boolean(input.starterId) !== Boolean(input.starterVersion)) {
+        throw validationFailed(
+          { starterId: "Choose a starter ID and version together." },
+          "The selected starter reference is incomplete.",
+        );
+      }
       const template = input.starterId && input.starterVersion
         ? await this.options.library.get(input.starterId, input.starterVersion)
         : await this.options.library.starterFor(input.projectType);
