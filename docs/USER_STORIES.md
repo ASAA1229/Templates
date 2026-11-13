@@ -122,3 +122,51 @@ These remain future or phased requirements and must not displace P0 lifecycle an
 ## Definition of Done
 
 A story is complete only when all acceptance criteria are implemented, reviewed and backed by passing tests/evidence tied to the relevant commit and package version. Security, privacy, accessibility, performance and recovery checks must be completed according to risk. Documentation and operational guidance must be updated. Build, test, approval, release and production-ready are separate states.
+
+
+## Release-blocking implementation tasks — 2026-11-13
+
+The following task-level stories decompose the remaining internal-release work. They extend the existing epics and do not mark any capability complete. Each task must be linked to code, automated/manual evidence and the candidate commit. Status remains Open or Partial until that evidence exists.
+
+### P0 — internal release
+
+| Task ID | Parent stories | Task / user outcome | Acceptance criteria | Current state |
+|---|---|---|---|---|
+| RLC-01 | US-A05, US-A06, US-C01–C04, US-F01–F03, US-G01, US-I02 | As the owner, I can prove project and resource isolation across every API and asynchronous operation. | Maintain a route/job inventory; test owner, admin, editor, viewer, unrelated user, suspended user and revoked member; cover project, requirements, workspace, generation, submissions, search, dashboard, audit, export and background jobs; verify no IDOR or cross-project leakage. | Partial — core sharing paths/tests exist; exhaustive inventory and green evidence open. |
+| RLC-02 | US-A01–A04, US-A07 | As the owner, I can trust the complete authentication and account lifecycle before employee rollout. | E2E-test bootstrap/login, activation token expiry and one-time use, reset issuance/expiry/single-use, generic responses, rate limits, privileged-account restrictions, password change and all-session revocation; record MFA policy and implement required controls/recovery. | Partial — activation and reset implementations exist but are unverified; MFA open. |
+| RLC-03 | US-G02, US-G03, US-W06 | As a maintainer, I can rely on a deterministic CI pipeline without CI modifying or pushing source code. | Remove temporary formatter-and-push step; commit formatting changes normally; run install, migration, format, lint, typecheck, unit/integration, dependency audit, build, smoke, E2E and accessibility; retain reports; pass on exact PR head SHA. | Blocked — latest PR check recorded as action_required; prior failures need resolution and rerun. |
+| RLC-04 | US-D01–D05, US-G03, US-G04 | As a maintainer, I can certify each demo template before anyone generates a project from it. | For all 25 packages, validate manifest/schema, safe paths, license/provenance, dependencies, secrets, loader, preview, generation, output integrity, responsive/browser rendering, accessibility and security; attach version/checksum/evidence; only approved versions appear as certified. | Open — 25 demo packages exist; certification evidence pending. |
+| RLC-05 | US-E01–E05, US-G04 | As a developer, I can configure a supported blueprint and reproduce the same project output. | Versioned schema; typed required/optional inputs; generator capability declarations; runtime/stack compatibility matrix; actionable unsupported-combination errors; preview matches generation; deterministic output/provenance; safe explicit template migration with diff/rollback. | Partial — blueprint and generation foundation exists; full contract/reproducibility and migration remain open. |
+| RLC-06 | US-D02–D05 | As a maintainer, I can manage a template from draft through immutable release and deprecation. | Create/import/edit; validate package and metadata; review/approve; prevent unapproved selection; immutable release version; changelog; deprecation/replacement mapping; existing-project pinning and prior-version selection. | Partial — contribution/submission review foundation exists; full authoring and lifecycle open. |
+| RLC-07 | US-G01–G04, US-I02 | As a developer, I can build and test untrusted generated code without risking the platform host or other projects. | Disposable isolated worker; no execution in API process; enforce CPU/memory/disk/time/process/network/output limits; isolate secrets and filesystem; cancel jobs; clean up on success/failure/timeout; retain redacted logs, exit code, reports and artifact checksums. | Open — critical security blocker. |
+| RLC-08 | US-F02, US-F03, US-I01–I02 | As a developer, I can hand off a generated project without losing files or exposing secrets. | Complete ZIP with path validation, secret/cache exclusion, manifest, provenance and checksum; authorize export server-side; test archive integrity; remote Git creation/push requires scoped credentials, destination/content preview, explicit approval, branch policy, audit and revocation. | Partial — local Git foundation exists; ZIP and remote provisioning/push open. |
+| RLC-09 | US-B01–B05, US-W01–W06 | As an employee, I can complete critical workflows accessibly across supported screen sizes. | Test login/access request, project creation, catalog discovery, template selection, blueprint configuration, generation, review and export; keyboard-only and screen-reader checks; focus/contrast/labels/semantics; responsive layouts; loading/empty/error/denied states; resolve critical WCAG 2.2 AA findings. | Open — accessibility and end-to-end UX evidence not established. |
+| RLC-10 | US-H01–H04, US-I01, US-T01–T05 | As the owner, I can approve an internal release knowing recovery and operations are ready. | Define approved runtime/deployment topology without exceeding ₹0; assign operational ownership; backup database, template library and generated outputs; perform isolated restore drill; define owner-approved RPO/RTO, rollback, incident handling and post-release smoke test; obtain explicit owner sign-off. | Open — no production topology or deployment approval is established. |
+
+### P1 — post-gate platform maturity
+
+| Task ID | Parent stories | Task / user outcome | Acceptance criteria | Current state |
+|---|---|---|---|---|
+| RLC-11 | US-F01–F02 | Complete online engineering workspace. | Safe editor, file tree, diffs/history, autosave/conflict handling, branch operations, IDE hand-off and project isolation. | Partial — local workspace foundation only. |
+| RLC-12 | US-F02, US-H01–H03, US-J01–J05 | Govern external tool integrations. | Connector registry; optional GitHub/Jenkins/CI/storage/database/deployment adapters; scoped credentials; documented capability/version contracts; health checks; revocation; audit; no paid services without approval. | Open — integrations remain limited/future. |
+| RLC-13 | US-D06, US-W01–W03 | Reuse governed components, design systems and assets. | Dependency/license resolution, compatibility, version pinning, integrity checks, preview and controlled release. | Open. |
+| RLC-14 | US-H01–H04 | Complete delivery and recovery operations. | Environment profiles; CI/CD; artifact promotion; approvals; deployment verification; rollback; monitoring; automated backup and tested restore; incident records. | Partial — CI and basic health/logging/documentation foundations exist; product delivery and recovery proof open. |
+| RLC-15 | US-D01, US-G03–G04 | Expand verified template coverage by demand. | Prioritize actual reuse demand; add supported sectors/technical divisions through tested adapters; certify each package/version; do not count taxonomy registry entries as delivered templates. | Partial — taxonomy and 25 initial packages exist; broad certified coverage open. |
+
+### P2 — deferred, not release blockers
+
+The following remain future work and must not displace P0 closure: advanced collaboration/presence, notification channels, semantic search/command orchestration, configurable workflows/forms, advanced BI, optional company-safe AI/JARVIS, offline/native clients, multi-organization tenancy and business operations. Public marketplace, external customer onboarding, client deployment and paid infrastructure remain outside current authorization.
+
+### Execution order
+
+1. RLC-01 and RLC-02 — close access and authentication risks.
+2. RLC-03 — stabilize CI and establish trustworthy evidence.
+3. RLC-04, RLC-05 and RLC-06 — certify templates and complete the blueprint/authoring lifecycle.
+4. RLC-07 — implement isolated execution before enabling untrusted builds.
+5. RLC-08 — complete safe export and approved Git hand-off.
+6. RLC-09 and RLC-10 — complete accessibility, recovery rehearsal and owner release acceptance.
+7. Start RLC-11 through RLC-15 after the internal-release gates are closed.
+
+### Story closure evidence
+
+For every RLC task, record: implementation PR/commit, acceptance-test identifiers and results, security/accessibility findings, artifact or template version/checksum where applicable, reviewer/owner decision, and residual risks. Use the existing status vocabulary. Never change a task to complete because documentation was updated or code merely exists.
