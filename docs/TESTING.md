@@ -94,3 +94,10 @@ The hardened candidate is 7268eae2ace8d037c1797a4a306b3968ad9d3a42. GitHub Actio
 - No final result is available. Do not mark CI VERIFIED or infer a pass from the completed setup steps.
 - The template-batch request helper change is present in the candidate and is awaiting this run's E2E execution. The blueprint selection issue remains unresolved until evidence demonstrates otherwise.
 
+
+
+## Latest candidate — CI #738 (2026-11-13)
+
+- PR #1 head: `15fdfe1b016d2f7997008dc68701b99e4220ce26`; base: `7989af5e858a4221d71183636e0cf5c285d10180`.
+- [Run #738](https://github.com/ASAA1229/Templates/actions/runs/43419669158) was **in progress** when inspected. Checkout, Node setup, `npm ci`, dependency audit and migrations had passed. Combined format/lint/typecheck/unit+integration/build was running. Smoke, Playwright installation, E2E/accessibility and report upload had not started.
+- No final result is available. Do not mark CI VERIFIED. The template-batch request-helper change awaits E2E execution; the blueprint selection issue remains open pending evidence.
