@@ -102,3 +102,9 @@ See [Development](docs/DEVELOPMENT.md) for commands, environment variables, data
 ## Branches and delivery
 
 Standard branches are main, dev, new, fix and test. main is the production/release baseline, dev is integration, and the others support feature, defect and testing work. This assessment and documentation consolidation are limited to new; they do not merge or modify dev or main. See [Development](docs/DEVELOPMENT.md).
+
+
+## Current engineering status — 2026-11-13
+
+The authoritative maturity and release record is [PROJECT_STATUS.md](docs/PROJECT_STATUS.md). The current working candidate is branch `new`, PR #1 head `15fdfe1b016d2f7997008dc68701b99e4220ce26`; PR #1 is open and unmerged. CI run [#738](https://github.com/ASAA1229/Templates/actions/runs/43419669158) was in progress at last inspection; it is not yet a passing release gate. The product remains **NO-GO** for employee rollout until all P0 acceptance evidence and owner approval are complete.
+
