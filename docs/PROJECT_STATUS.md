@@ -104,3 +104,8 @@ A passing build, source presence, merged PR or documentation update alone is ins
 - Updated apps/web/e2e/template-batch.spec.ts to use Playwright's shared API request context instead of browser page.evaluate(fetch(...)) for its authenticated library API calls.
 - These are code/test-harness changes, not verified fixes yet. No CI run has been observed for the new commits at this log entry. The prior run #705 remains the latest confirmed result: 19 passed, 3 failed. The blueprint-selection E2E failure remains unresolved.
 - No project maturity score is increased until a new CI run and relevant review evidence pass.
+
+
+### 2026-11-13 — post-hardening CI queue
+
+The read-only CI workflow and Playwright API request-context change are now present on the latest PR candidate. GitHub reports CI run #731 (43419462644) as pending, with no jobs returned yet. This is not a pass and no score is increased. The latest completed run remains #705 and its three E2E failures remain the last verified test outcome until run #731 completes.
