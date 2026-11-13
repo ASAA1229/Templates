@@ -120,8 +120,15 @@ export function projectsRouter(ctx: AppContext): Router {
         orderBy: { id: "desc" },
         take: 50,
       });
+      const membership = project.ownerId === req.owner!.id
+        ? null
+        : await ctx.prisma.projectMember.findUnique({
+            where: { projectId_memberId: { projectId: project.id, memberId: req.owner!.id } },
+            select: { role: true },
+          });
       res.json({
         project: projectView(project),
+        access: project.ownerId === req.owner!.id ? "OWNER" : membership?.role ?? "VIEWER",
         history: history.map((event) => ({
           id: event.id.toString(),
           at: event.at.toISOString(),
@@ -171,7 +178,7 @@ export function projectsRouter(ctx: AppContext): Router {
   for (const action of ["archive", "restore"] as const) {
     router.post(`/:id/${action}`, authorize(ctx, "project:write"), async (req, res, next) => {
       try {
-        const project = await loadProjectAccess(ctx, req.owner!.id, String(req.params.id), "write");
+        const project = await loadOwnedProject(ctx, req.owner!.id, String(req.params.id));
         if ((action === "archive") === Boolean(project.archivedAt)) {
           throw conflict(action === "archive" ? "Project is already archived." : "Project is not archived.");
         }
