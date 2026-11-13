@@ -17,6 +17,7 @@ import { ProjectMembersPanel } from "./ProjectMembersPanel";
 interface ProjectDetail {
   project: ProjectView;
   history: { id: string; at: string; action: string; outcome: string }[];
+  access: "OWNER" | "VIEWER" | "EDITOR";
 }
 
 /** Project detail: metadata, archive/restore, history and requirements (US-C01/C02/C04). */
@@ -47,6 +48,8 @@ export function ProjectDetailPage() {
 
   const { project, history } = detail.data;
   const archived = Boolean(project.archivedAt);
+  const readOnly = archived || detail.data.access === "VIEWER";
+  const isOwner = detail.data.access === "OWNER";
 
   async function toggleArchive() {
     setMessage("");
@@ -73,15 +76,15 @@ export function ProjectDetailPage() {
                 </Link>
               </Button>
             )}
-            {!archived && !editing && (
+            {!readOnly && !editing && (
               <Button variant="outline" onClick={() => setEditing(true)}>
                 <Pencil aria-hidden="true" /> Edit
               </Button>
             )}
-            <Button variant="outline" onClick={() => void toggleArchive()}>
+            {isOwner && <Button variant="outline" onClick={() => void toggleArchive()}>
               {archived ? <ArchiveRestore aria-hidden="true" /> : <Archive aria-hidden="true" />}
               {archived ? "Restore" : "Archive"}
-            </Button>
+            </Button>}
           </>
         }
       />
@@ -165,7 +168,7 @@ export function ProjectDetailPage() {
             </Card>
           )}
 
-          {generations.state === "ready" && generations.data.generations[0]?.status === "SUCCEEDED" && !archived && (
+          {generations.state === "ready" && generations.data.generations[0]?.status === "SUCCEEDED" && isOwner && !archived && (
             <ProjectTemplateContribution projectId={project.id} onSubmitted={generations.reload} />
           )}
 
@@ -182,7 +185,7 @@ export function ProjectDetailPage() {
               <h2 id="requirements-heading" className="text-lg font-semibold">
                 Requirements and user stories
               </h2>
-              {!archived && !adding && (
+              {!readOnly && !adding && (
                 <Button size="sm" onClick={() => setAdding(true)}>
                   <Plus aria-hidden="true" /> Add requirement
                 </Button>
@@ -226,7 +229,7 @@ export function ProjectDetailPage() {
                       projectId={project.id}
                       requirement={requirement}
                       all={requirements}
-                      readOnly={archived}
+                      readOnly={readOnly}
                       onChange={(next) =>
                         setRequirements((current) => current.map((item) => (item.id === next.id ? next : item)))
                       }
