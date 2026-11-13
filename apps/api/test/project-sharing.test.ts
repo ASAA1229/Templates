@@ -59,7 +59,9 @@ describe("project-level sharing and isolation", () => {
     await strangerAgent.post("/api/projects", { key: "PRIVATE", name: "Shared project private" });
     const search = await viewerAgent.get("/api/projects?q=Shared");
     expect(search.body.projects.map((p: { id: string }) => p.id)).toEqual([item.id]);
-    expect((await viewerAgent.get(`/api/projects/${item.id}`)).status).toBe(200);
+    const viewerRead = await viewerAgent.get(`/api/projects/${item.id}`);
+    expect(viewerRead.status).toBe(200);
+    expect(viewerRead.body.access).toBe("VIEWER");
     expect((await viewerAgent.patch(`/api/projects/${item.id}`, {
       expectedVersion: 1,
       name: "Unauthorized edit",
@@ -85,6 +87,7 @@ describe("project-level sharing and isolation", () => {
     });
     expect(updated.status).toBe(200);
     expect(updated.body.project.name).toBe("Edited by member");
+    expect((await editorAgent.get(`/api/projects/${item.id}`)).body.access).toBe("EDITOR");
     expect((await editorAgent.get(`/api/projects/${item.id}/members`)).status).toBe(404);
     expect((await editorAgent.delete(`/api/projects/${item.id}/members/${editor.id}`)).status).toBe(404);
   });
