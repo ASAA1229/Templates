@@ -114,6 +114,14 @@ export class WorkspaceService {
 
   private async resolve(req: Request, projectId: string) {
     const project = await loadProjectAccess(this.ctx, req.owner!.id, projectId, "read");
+    const membership =
+      project.ownerId === req.owner!.id
+        ? null
+        : await this.ctx.prisma.projectMember.findUnique({
+            where: { projectId_memberId: { projectId: project.id, memberId: req.owner!.id } },
+            select: { role: true },
+          });
+    const access = project.ownerId === req.owner!.id ? "OWNER" : (membership?.role ?? "VIEWER");
     const generation = await this.ctx.prisma.projectGeneration.findUnique({ where: { projectId: project.id } });
     let dir: string | null = null;
     let reason: string | null = null;
@@ -126,7 +134,7 @@ export class WorkspaceService {
       if (!dir) reason = "The project folder is missing or is not a real folder.";
     }
     const record = await this.ctx.prisma.projectRepository.findUnique({ where: { projectId: project.id } });
-    return { project, generation, dir, reason, record };
+    return { project, access, generation, dir, reason, record };
   }
 
   private async requireWritable(req: Request, project: Project) {
@@ -156,7 +164,7 @@ export class WorkspaceService {
   }
 
   async overview(req: Request, projectId: string): Promise<WorkspaceView> {
-    const { project, generation, dir, reason, record } = await this.resolve(req, projectId);
+    const { project, access, generation, dir, reason, record } = await this.resolve(req, projectId);
     const git = await this.gitInfo();
     const warnings: string[] = [];
     const gitDir = dir ? await detectGitDir(dir) : "none";
@@ -213,7 +221,7 @@ export class WorkspaceService {
       metadata: event.metadata as Record<string, unknown>,
     }));
     return {
-      project: { id: project.id, key: project.key, name: project.name, archived: Boolean(project.archivedAt) },
+      project: { id: project.id, key: project.key, name: project.name, archived: Boolean(project.archivedAt), access },
       output: { available: Boolean(dir), outputDir: generation?.outputDir ?? null, reason },
       git,
       providers: [this.provider.capabilities(), ...FUTURE_PROVIDERS],
