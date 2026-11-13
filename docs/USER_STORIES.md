@@ -19,7 +19,7 @@ Do not upgrade a story's status based only on a commit, UI screen or successful 
 |---|---|---|---|
 | US-A01 | As the owner, I can initialize and securely access the platform so that ultimate authority is controlled. | Unique owner bootstrap; hashed passwords; secure sessions/cookies; no secret logging; owner-only privileged actions; session expiry/revocation tested. | Partial — owner/auth/session foundations exist; full lifecycle evidence remains open. |
 | US-A02 | As an employee, I can request access and activate an approved account without an administrator sharing a password. | Generic/rate-limited request response; Owner/Admin review; role restrictions; one-time hashed activation token; expiry and atomic consumption. | Implemented — unverified; manual activation-link delivery. |
-| US-A03 | As an active user, I can recover a forgotten password securely. | Generic response prevents account enumeration; single-use hashed token; short expiry; rate limits; revoke existing sessions; audit; reset flow tested. | Open — next implementation target. |
+| US-A03 | As an active user, I can recover a forgotten password securely. | Owner/Admin issues a 30-minute single-use link; only token hash is stored; consumption is rate-limited and atomic; password change revokes all sessions and other reset links; audit; reset flow tested. | Implemented — unverified; manual secure delivery, API, UI and tests added. |
 | US-A04 | As a user, I can enable MFA and review active sessions. | TOTP or passkey policy; recovery codes stored safely; challenge/rate limits; session list/revoke; privileged-action policy. | Open. |
 | US-A05 | As a project owner, I can share a project with a teammate as viewer or editor. | Owner-only member management; active account only; unique membership; revoke immediately; UI and API agree. | Implemented — unverified. |
 | US-A06 | As a shared project member, I only access resources and actions allowed by my project role. | VIEWER read-only; EDITOR write within organization permissions; unrelated users denied; cover all project-linked routes, search, dashboard, exports and jobs. | Partial — core paths and regression tests added; exhaustive route audit/CI evidence open. |
@@ -113,7 +113,7 @@ These remain future or phased requirements and must not displace P0 lifecycle an
 ## P0 implementation order
 
 1. Complete project-sharing endpoint authorization audit and regression suite; get CI green.
-2. Implement secure password recovery and session revocation.
+2. Verify secure password recovery and session revocation end to end; then add MFA policy and recovery controls.
 3. Certify the 25 existing demo packages with version-specific evidence.
 4. Complete blueprint/generator capability and compatibility contracts.
 5. Implement isolated build/test execution.
