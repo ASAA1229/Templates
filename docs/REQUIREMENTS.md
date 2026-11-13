@@ -2,7 +2,7 @@
 
 **Product:** ASAA Templates Platform  
 **Scope:** consolidated product requirements and acceptance baseline  
-**Last consolidated:** 2026-11-12
+**Last consolidated:** 2026-11-13
 
 ## 1. Product objective
 
@@ -33,7 +33,7 @@ The initial product is an internal engineering platform, not a public template m
 - **EMPLOYEE:** authorized internal user with scoped access.
 - Future profiles may include project/product manager, designer, QA/security specialist, DevOps engineer, domain specialist and requester.
 
-The current branch implements the initial five account roles, account creation/deactivation, public employee access requests, Owner/Admin review, one-time 24-hour activation links and server-side permission foundations. Activation tokens are stored only as hashes and consumed atomically. The activation link is displayed once to the approver for secure manual delivery; no email provider is assumed. General employee rollout remains blocked until password recovery, resource-level project sharing, specialized roles where needed and end-to-end access-isolation tests are complete. Never infer access from UI navigation alone.
+The current `new` branch implements the initial five account roles, account creation/deactivation, public employee access requests, Owner/Admin review, one-time 24-hour activation links and server-side permission foundations. Activation tokens are stored only as hashes and consumed atomically. The activation link is displayed once to the approver for secure manual delivery; no email provider is assumed. Project-level VIEWER/EDITOR sharing and owner-managed membership are now implemented, but full endpoint isolation remains under verification. General employee rollout remains blocked until secure password recovery, MFA policy, complete resource-level authorization tests and lifecycle edge cases are addressed. Never infer access from UI navigation alone.
 
 Future external organizations require independently isolated identity, data, configuration, storage, audit and administration. Multi-tenant SaaS is not part of the initial release.
 
@@ -166,23 +166,34 @@ Every capability must have observable acceptance criteria and appropriate tests.
 
 Use distinct states: Not started, In development, Development complete, Build verified, Testing in progress, Testing complete, Blocked/failed, Approved/released and Production ready. Never mark a story complete from documentation or build success alone.
 
-## 8. Priority and gap-closure sequence
+## 8. Refined priority and gap-closure sequence
 
-### P0 — core product lifecycle
-1. **Certify the existing 25 templates:** actual loader, approval, preview, generation, integrity, responsive/browser, accessibility and security validation for each version.
-2. **Generalize blueprints and generator adapters:** multi-stack project families, compatibility contracts and reproducible output beyond static websites.
-3. **Complete template authoring and release:** create/import/edit/validate/package/version/review/release in the platform.
-4. **Complete project configuration and preview:** guided, low-code and advanced options with validated schemas and responsive preview.
-5. **Build isolated execution:** safe build/test jobs, limits, cancellation, logs, reports and artifact evidence.
-6. **Complete project hand-off:** verified ZIP export and explicitly authorized remote repository provisioning.
-7. **Complete internal identity gates:** employee access request/review/activation is implemented on the current development branch; complete password recovery, resource-level sharing, least-privilege roles and end-to-end isolation tests before employee rollout.t.
+Priorities reflect the platform's actual objective: reliable, governed reuse from template discovery through verified project hand-off. A foundation or UI screen does not count as a finished capability.
 
-### P1 — reusable engineering platform
-8. Governed integration connector registry.
-9. Reusable component/design-system/asset composition with dependency resolution.
-10. Online source workspace with safe editing, diffs and IDE hand-off.
-11. End-to-end delivery/operations lifecycle: CI/CD, releases, deployments, observability, incidents and tested recovery.
-12. Expand sector and technology coverage by demand and certification evidence.
+### P0 — access safety and trustworthy template-to-project lifecycle
+1. **Close identity and authorization release gates:** secure password reset/recovery, session revocation/rotation and MFA decision; complete endpoint-by-endpoint owner/editor/viewer/unrelated-user tests for projects, requirements, workspace, generation, search, dashboard, exports and background work. Add expiry and lifecycle edge-case coverage.
+2. **Certify the existing 25 demo packages:** validate manifest/schema, provenance/license, dependency and secret scans, loader behavior, preview, generation, generated output, responsive/browser behavior, accessibility and security. Publish per-version evidence and maturity state; do not imply all 25 are certified.
+3. **Complete the blueprint-to-builder contract:** versioned blueprint schema, typed inputs, generator capability declarations, compatibility resolution, actionable validation, preview and reproducible generation. Support current website/full-stack scope honestly; add other families through tested adapters.
+4. **Complete template authoring and immutable release:** in-platform create/import/edit, package validation, review, approval, immutable versions, changelog, deprecation and rollback-to-prior-version selection.
+5. **Deliver safe engineering execution:** disposable isolated build/test workers with CPU/memory/disk/time/network/output limits, cancellation, cleanup, logs, reports and artifact checksums. Never execute untrusted code in the API process.
+6. **Complete project hand-off:** secure complete ZIP export with manifest/checksum and path protections; add remote Git repository creation/push only behind explicit destination/content preview and approval.
+
+### P1 — reusable engineering operations
+7. Complete source workspace editing, diff/history, branch operations and IDE hand-off.
+8. Build a governed connector registry and adapters for Git providers, CI (including optional Jenkins), storage, databases and deployment targets; enforce scoped credentials, health, revocation and audit.
+9. Add reusable component/design-system/asset composition with dependency and license resolution.
+10. Complete product delivery lifecycle: environment profiles, CI/CD, release approvals, deployment verification, rollback, monitoring, incidents and tested backup/restore.
+11. Expand sectors and technical divisions based on demand, with certification evidence per package/version.
+
+### P2 — advanced ecosystem (after P0/P1)
+12. Advanced collaboration, notifications, semantic search, configurable workflows/forms, reporting/BI and optional AI assistance.
+13. Offline/native clients, multi-organization tenancy and broader business operations.
+14. External productization only after independent security, privacy, support, compliance and operational-readiness review.
+
+### Immediate implementation sequence
+- First: finish project-sharing authorization audit and regression tests; fix any CI failures before layering new functionality.
+- Next: implement secure password recovery with hashed, single-use, expiring tokens, generic responses and rate limits; initially expose reset links only through an authenticated Owner/Admin recovery workflow because no email provider is approved.
+- Then: template certification pipeline and blueprint/generator contract, followed by isolated execution and export.
 
 ### P2 — advanced ecosystem
 - Advanced collaboration, notification channels, semantic search and AI-assisted command orchestration.
@@ -192,14 +203,14 @@ Use distinct states: Not started, In development, Development complete, Build ve
 
 ## 9. Current implementation boundary (not a completion claim)
 
-The current `new` branch includes a React/Vite and Express/Prisma foundation; multi-role account and session foundations; projects, requirements, dashboard, catalog, search, template library and generation; project blueprints; local Git/environment workspace; 25 demo website packages; project-to-template submission/review; shared contracts and CI/test foundations.
+The current `new` branch includes a React/Vite and Express/Prisma foundation; multi-role account and session foundations; projects, requirements, dashboard, catalog, search, template library and generation; project blueprints; local Git/environment workspace; 25 demo website packages; project-to-template submission/review; owner-managed project sharing; shared contracts and CI/test foundations.
 
-Current access implementation on `new`: public employee access request, Owner/Admin review, one-time 24-hour activation link, hashed/consumed activation token, multi-role accounts, and project-level VIEWER/EDITOR membership with owner-controlled sharing. Project, requirement, workspace and generation reads/writes are being scoped to membership; project lists, dashboard and search include shared projects. Automated isolation tests have been added, but remain unverified until CI completes.
+Current access implementation on `new`: public employee access request, Owner/Admin review, one-time 24-hour activation link, hashed/consumed activation token, multi-role accounts, and project-level VIEWER/EDITOR membership with owner-controlled sharing. Project, requirement, workspace and generation access paths use shared membership checks; project lists, dashboard and search include shared projects. Automated isolation and search-leakage regression tests have been added. The latest PR CI run is `action_required` (not a pass), and earlier runs failed; test validation must be rerun after required PR approval and any fixes.
 
 Known remaining or unverified areas include:
 - Final CI/E2E/accessibility evidence and full certification of the 25 packages.
 - Secure password recovery/reset, MFA, invitation delivery automation and lifecycle edge cases.
-- Complete isolation coverage for every project-linked endpoint, dashboard/search/analytics and background operation.
+- Complete isolation coverage for every project-linked endpoint, dashboard/search/analytics, file/export route and background operation.
 - Specialist roles, team/project group sharing, organization-level policy and access expiry.
 - Broader project-family adapters and complete multi-stack generation.
 - Full in-platform authoring/configuration/visual preview.
@@ -213,7 +224,7 @@ This document describes desired requirements and known gaps. Verify current code
 
 ## 10. Consolidated backlog index and traceability
 
-The detailed story backlog was consolidated into the capability and acceptance requirements above. Preserve the original story identifiers below for implementation, issue tracking and test traceability; these identifiers are references, not a claim that the stories are complete.
+The detailed backlog is maintained in [USER_STORIES.md](USER_STORIES.md). Preserve the original story identifiers below for implementation, issue tracking and test traceability; these identifiers are references, not a claim that the stories are complete.
 
 | Epic | Story range | Scope retained in this requirements baseline |
 |---|---|---|
