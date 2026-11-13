@@ -448,7 +448,7 @@ export class GenerationService {
   }
 
   async retry(req: Request, id: string, expectedVersion: number): Promise<GenerationWithProject> {
-    const generation = await this.load(req, id);
+    const generation = await this.load(req, id, "write");
     if (generation.status !== "FAILED") throw conflict("Only failed generations can be retried.");
     if (generation.version !== expectedVersion) {
       throw conflict("This generation was changed elsewhere. Reload and try again.");
@@ -657,10 +657,13 @@ export class GenerationService {
 
   // ───── Reads ─────
 
-  async load(req: Request, id: string): Promise<GenerationWithProject> {
+  async load(req: Request, id: string, access: "read" | "write" = "read"): Promise<GenerationWithProject> {
     if (!UUID.test(id)) throw notFound("Generation");
     const generation = await this.prisma.projectGeneration.findFirst({
-      where: { id, project: { ownerId: req.owner!.id } },
+      where: { id, project: { OR: [
+        { ownerId: req.owner!.id },
+        { members: { some: { memberId: req.owner!.id, ...(access === "write" ? { role: "EDITOR" as const } : {}) } } },
+      ] } },
       include: { project: true },
     });
     if (!generation) throw notFound("Generation");
@@ -670,7 +673,7 @@ export class GenerationService {
   async list(req: Request, query: { projectId?: string; status?: GenerationView["status"] }) {
     return this.prisma.projectGeneration.findMany({
       where: {
-        project: { ownerId: req.owner!.id },
+        project: { OR: [{ ownerId: req.owner!.id }, { members: { some: { memberId: req.owner!.id } } }] },
         ...(query.projectId ? { projectId: query.projectId } : {}),
         ...(query.status ? { status: query.status } : {}),
       },
