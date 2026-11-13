@@ -68,6 +68,105 @@ describe("owner sign-in (US-A01)", () => {
   });
 });
 
+
+describe("password recovery (US-A03)", () => {
+  it("issues a hashed one-time reset link and revokes all existing sessions", async () => {
+    const ownerAgent = await h.signedIn();
+    const secondSession = await h.signedIn();
+    const issued = await ownerAgent.post("/api/auth/password-reset/issue", { email: OWNER_EMAIL });
+    expect(issued.status).toBe(200);
+    const resetUrl = new URL(issued.body.resetUrl);
+    const token = resetUrl.searchParams.get("token");
+    expect(token).toBeTruthy();
+    expect(issued.body.expiresAt).toBeDefined();
+
+    const stored = await h.ctx.prisma.passwordResetToken.findFirstOrThrow();
+    expect(stored.tokenHash).not.toBe(token);
+    expect(stored.expiresAt.getTime() - h.clock.now.getTime()).toBe(30 * 60_000);
+
+    const consumed = await h.agent().post("/api/auth/password-reset/consume", {
+      token,
+      password: "a newly chosen secure password",
+    });
+    expect(consumed.status).toBe(204);
+    expect((await ownerAgent.get("/api/auth/session")).status).toBe(401);
+    expect((await secondSession.get("/api/auth/session")).status).toBe(401);
+
+    const oldPassword = await h.agent().post("/api/auth/login", {
+      email: OWNER_EMAIL,
+      password: OWNER_PASSWORD,
+    });
+    expect(oldPassword.status).toBe(401);
+    const newPassword = await h.agent().post("/api/auth/login", {
+      email: OWNER_EMAIL,
+      password: "a newly chosen secure password",
+    });
+    expect(newPassword.status).toBe(200);
+
+    const reused = await h.agent().post("/api/auth/password-reset/consume", {
+      token,
+      password: "another newly chosen secure password",
+    });
+    expect(reused.status).toBe(400);
+  });
+
+  it("expires older reset links when a new one is issued and rejects expired links", async () => {
+    const owner = await h.signedIn();
+    const first = await owner.post("/api/auth/password-reset/issue", { email: OWNER_EMAIL });
+    const firstToken = new URL(first.body.resetUrl).searchParams.get("token");
+    const second = await owner.post("/api/auth/password-reset/issue", { email: OWNER_EMAIL });
+    const secondToken = new URL(second.body.resetUrl).searchParams.get("token");
+    expect(
+      (
+        await h.agent().post("/api/auth/password-reset/consume", {
+          token: firstToken,
+          password: "a newly chosen secure password",
+        })
+      ).status,
+    ).toBe(400);
+    const active = await h.ctx.prisma.passwordResetToken.findFirstOrThrow({
+      where: { consumedAt: null },
+    });
+    await h.ctx.prisma.passwordResetToken.update({
+      where: { id: active.id },
+      data: { expiresAt: new Date(h.clock.now.getTime() - 1) },
+    });
+    expect(
+      (
+        await h.agent().post("/api/auth/password-reset/consume", {
+          token: secondToken,
+          password: "a newly chosen secure password",
+        })
+      ).status,
+    ).toBe(400);
+  });
+
+  it("allows only authorized administrators to issue reset links", async () => {
+    const employee = await h.ctx.prisma.owner.create({
+      data: {
+        email: "reset.employee@asaa.test",
+        displayName: "Reset Employee",
+        role: "EMPLOYEE",
+        passwordHash: await hashPassword("a temporary employee password"),
+        passwordChangedAt: new Date(h.clock.now.getTime() - 1000),
+        createdAt: new Date(h.clock.now.getTime() - 1000),
+      },
+    });
+    const employeeAgent = h.agent();
+    await employeeAgent.post("/api/auth/login", {
+      email: employee.email,
+      password: "a temporary employee password",
+    });
+    expect(
+      (await employeeAgent.post("/api/auth/password-reset/issue", { email: OWNER_EMAIL })).status,
+    ).toBe(403);
+    const owner = await h.signedIn();
+    expect(
+      (await owner.post("/api/auth/password-reset/issue", { email: "missing@asaa.test" })).status,
+    ).toBe(404);
+  });
+});
+
 describe("sessions (US-A02)", () => {
   it("requires a session for protected routes", async () => {
     expect((await h.agent().get("/api/projects")).status).toBe(401);
