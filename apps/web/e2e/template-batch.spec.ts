@@ -8,11 +8,12 @@ const VARIANTS = ["essential", "editorial", "catalog", "booking", "multisite"];
 const OUTPUT_ROOT = process.env.E2E_GENERATION_DIR;
 
 async function apiRequest(page: Page, url: string, method: "GET" | "POST", data?: unknown) {
+  const requestUrl = new URL(url, page.url()).toString();
   const headers = { "x-requested-with": "asaa-templates" };
   const response =
     method === "GET"
-      ? await page.request.get(url, { headers })
-      : await page.request.post(url, { headers, data });
+      ? await page.request.get(requestUrl, { headers })
+      : await page.request.post(requestUrl, { headers, data });
   return { status: response.status(), body: await response.json() };
 }
 
