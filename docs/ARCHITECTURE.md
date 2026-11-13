@@ -78,11 +78,11 @@ Initial project families include websites, web applications, e-commerce, backend
 
 ## 8. Identity and authorization architecture
 
-The current identity foundation supports OWNER, ADMIN, DEVELOPER, TESTER and EMPLOYEE account roles, server-side permission checks, member administration and audit attribution. The OWNER is unique and retains ultimate authority. Role names are not a substitute for resource-level authorization.
+The current identity foundation supports OWNER, ADMIN, DEVELOPER, TESTER and EMPLOYEE account roles, server-side permission checks, member administration and audit attribution. The OWNER is unique and retains ultimate authority. Project membership adds VIEWER and EDITOR resource roles without replacing organization-level account roles.
 
-Authorization must be enforced server-side for every route and action, then scoped to the requested project, template, asset, environment or other resource. UI visibility is not a security boundary. Project records currently retain owner-scoped access; resource-level project sharing is a remaining requirement.
+Project sharing is implemented on `new`: owners manage membership; VIEWER is read-only; EDITOR can write within the member's organization permissions. Project, requirement, workspace and generation access paths have been integrated with the centralized project-access helper, and list/search/dashboard scoping has been updated. This implementation is not yet fully verified: every project-linked route, background job, export, audit view and indirect lookup still requires endpoint-by-endpoint isolation tests. UI visibility is not a security boundary.
 
-Invitation/activation, secure password reset, specialized design/DevOps roles and end-to-end access-isolation validation remain required before general employee rollout.
+Employee access request, approval and one-time activation foundations exist. Secure password reset/recovery, MFA, lifecycle edge cases, specialist roles and full cross-user/project isolation evidence remain required before general employee rollout.
 
 ## 9. Integration and AI boundaries
 
