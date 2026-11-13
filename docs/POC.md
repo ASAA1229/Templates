@@ -57,3 +57,8 @@ All P0 gates in PROJECT_STATUS.md have objective evidence; critical journeys pas
 
 Candidate: `15fdfe1b016d2f7997008dc68701b99e4220ce26` on branch `new`, PR #1 open/unmerged. CI run #738 (`43419669158`) was in progress at last inspection; only setup, dependency audit and migrations had passed, while the core validation step was still running and browser tests had not started. The POC remains **not accepted / NO-GO**. See [PROJECT_STATUS.md](PROJECT_STATUS.md) and [TESTING.md](TESTING.md) for current evidence.
 
+
+
+## Latest candidate verification — 2026-11-13
+
+Candidate: `15fdfe1b016d2f7997008dc68701b99e4220ce26` on branch `new`, PR #1 open/unmerged. CI #738 (`43419669158`) was in progress at last inspection; setup, dependency audit and migrations had passed, but the core validation step was still running and browser tests had not started. The POC remains **not accepted / NO-GO**. See [PROJECT_STATUS.md](PROJECT_STATUS.md) and [TESTING.md](TESTING.md).
