@@ -181,3 +181,8 @@ Rules:
 Before adding a template, verify ownership/license, assign stable ID/family/tags/division, define supported technologies and inputs, record dependencies and compatibility, identify security/privacy/accessibility/compliance concerns, state maturity honestly and assign maintenance responsibility.
 
 Template packages must be self-contained, versioned, manifest-valid and reviewable. Imported assets remain untrusted until provenance, licensing, security and functional checks pass. Pull requests describe purpose, affected areas, migration impact, validation evidence, risks and known gaps. Never include secrets or client-sensitive data.
+
+
+## 10. Current verification authority — 2026-11-13
+
+Use [PROJECT_STATUS.md](PROJECT_STATUS.md) as the single source for maturity scores, implementation/test states, evidence, gaps and release readiness. The current observed PR CI run #705 failed in Playwright (19 passed, 3 failed); see [TESTING.md](TESTING.md). Do not infer that a feature is accepted from its source code or local development command alone.
