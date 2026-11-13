@@ -31,6 +31,11 @@ export function dashboardRouter(ctx: AppContext): Router {
     try {
       const ownerId = req.owner!.id;
       const projectScope = { project: { archivedAt: null, OR: [{ ownerId }, { members: { some: { memberId: ownerId } } }] } };
+      const accessibleProjects = await ctx.prisma.project.findMany({
+        where: { OR: [{ ownerId }, { members: { some: { memberId: ownerId } } }] },
+        select: { id: true },
+      });
+      const accessibleProjectIds = accessibleProjects.map((project) => project.id);
       const [
         projectGroups,
         archived,
@@ -56,7 +61,11 @@ export function dashboardRouter(ctx: AppContext): Router {
         }),
         ctx.prisma.catalogItem.count(),
         ctx.prisma.catalogItem.count({ where: { trustStatus: { not: "TRUSTED" } } }),
-        ctx.prisma.auditEvent.findMany({ orderBy: { id: "desc" }, take: 10 }),
+        ctx.prisma.auditEvent.findMany({
+          where: { OR: [{ actorId: ownerId }, { targetType: "project", targetId: { in: accessibleProjectIds } }] },
+          orderBy: { id: "desc" },
+          take: 10,
+        }),
         ctx.prisma.requirement.findMany({
           where: { ...projectScope, flaggedForReview: true },
           take: 5,
