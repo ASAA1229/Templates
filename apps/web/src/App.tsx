@@ -7,6 +7,7 @@ import { AuditPage } from "@/features/audit/AuditPage";
 import { LoginPage } from "@/features/auth/LoginPage";
 import { AccessRequestPage } from "@/features/auth/AccessRequestPage";
 import { ActivateAccountPage } from "@/features/auth/ActivateAccountPage";
+import { ResetPasswordPage } from "@/features/auth/ResetPasswordPage";
 import { AccessRequestsPage } from "@/features/security/AccessRequestsPage";
 import { CatalogPage } from "@/features/catalog/CatalogPage";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
@@ -39,6 +40,7 @@ const TITLES: [RegExp, string][] = [
   [/^\/team/, "Team members"],
   [/^\/template-submissions/, "Template submissions"],
   [/^\/login/, "Sign in"],
+  [/^\/reset-password/, "Reset password"],
 ];
 
 /** Route guard: unauthenticated visitors go to sign-in and return afterwards. */
@@ -119,6 +121,14 @@ export const routes: RouteObject[] = [
     element: (
       <Root>
         <LoginPage />
+      </Root>
+    ),
+  },
+  {
+    path: "/reset-password",
+    element: (
+      <Root>
+        <ResetPasswordPage />
       </Root>
     ),
   },
