@@ -186,3 +186,8 @@ Template packages must be self-contained, versioned, manifest-valid and reviewab
 ## 10. Current verification authority — 2026-11-13
 
 Use [PROJECT_STATUS.md](PROJECT_STATUS.md) as the single source for maturity scores, implementation/test states, evidence, gaps and release readiness. The current observed PR CI run #705 failed in Playwright (19 passed, 3 failed); see [TESTING.md](TESTING.md). Do not infer that a feature is accepted from its source code or local development command alone.
+
+
+## Current branch verification checkpoint — 2026-11-13
+
+PR #1 candidate is `15fdfe1b016d2f7997008dc68701b99e4220ce26` on `new`, targeting `dev`; it is open and unmerged. CI #738 (`43419669158`) was in progress at last inspection. Do not treat partial workflow steps as validation success. Current evidence and release decision are in [PROJECT_STATUS.md](PROJECT_STATUS.md).
