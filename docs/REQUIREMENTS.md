@@ -312,3 +312,12 @@ Advanced collaboration/presence, notification channels, semantic search and comm
 ### Release decision rule
 
 The initial internal release is blocked until RG-01 through RG-10 have objective evidence, all critical/high security findings are resolved or explicitly risk-accepted by the owner, the required CI/E2E/accessibility checks pass on the candidate commit, all released templates are certified, and backup/restore plus operational ownership are demonstrated. A passing build or merged PR alone is insufficient.
+
+
+## 2026-11-13 status authority and verification correction
+
+Current implementation, evidence, maturity scores, gap status and release decision are maintained only in [PROJECT_STATUS.md](PROJECT_STATUS.md). The detailed story acceptance criteria remain in [USER_STORIES.md](USER_STORIES.md); the status values in this requirements document are historical planning vocabulary and do not override the authoritative status record.
+
+The Owner/Admin password-reset implementation already exists on branch new (hashed, expiring, single-use tokens, rate limiting, audit and active-session revocation). Its API/UI/E2E behavior remains NEEDS TESTING; do not describe the feature as unimplemented. Activation foundations also exist and require verification. MFA policy remains an open owner/security decision. The latest observed CI run #705 failed in the Playwright stage (19 passed, 3 failed); earlier successful unit/integration/build/smoke steps do not make the overall workflow green.
+
+Use PROJECT_STATUS.md for the canonical status vocabulary: PLANNED, NOT STARTED, IN DEVELOPMENT, IMPLEMENTED, NEEDS TESTING, TEST FAILED, TEST PASSED, CI VERIFIED, DEVICE VERIFIED, OWNER ACCEPTANCE PENDING, ACCEPTED.
