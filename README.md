@@ -20,7 +20,7 @@ The repository contains a modular-monolith application with:
 - Project-to-template submission and maintainer review workflow.
 - 25 initial website demo packages across five business types.
 
-These are implementation foundations, not a claim that every product requirement is complete. Template certification, broader multi-stack generation, secure invitation/recovery, resource-level sharing, isolated build/test execution, complete export/repository provisioning and production operations remain subject to the requirements and verification gates.
+These are implementation foundations, not a claim that every product requirement is complete. Template certification, broader multi-stack generation, secure invitation/recovery, complete endpoint-level authorization verification, secure password recovery/MFA, template certification, isolated build/test execution, complete export/repository provisioning and production operations remain subject to the requirements and verification gates.
 
 ## Quick start
 
@@ -80,6 +80,7 @@ For individual commands, environment variables, database lifecycle, troubleshoot
 
 - [Architecture](docs/ARCHITECTURE.md) — system boundaries, approved technology baseline and core design decisions.
 - [Requirements](docs/REQUIREMENTS.md) — consolidated product scope, requirements, acceptance gates and remaining gaps.
+- [User Stories](docs/USER_STORIES.md) — prioritized, testable story backlog with acceptance criteria and implementation states.
 - [Development](docs/DEVELOPMENT.md) — setup, commands, contribution and branch workflow.
 - [Operations](docs/OPERATIONS.md) — runtime checks, release discipline, backup and recovery guidance.
 - [Security](docs/SECURITY.md) — access, data, application and operational security requirements.
@@ -90,7 +91,7 @@ For individual commands, environment variables, database lifecycle, troubleshoot
 - `apps/api/` — Express API, Prisma schema/migrations and local template packages.
 - `packages/contracts/` — shared TypeScript and Zod contracts.
 - `catalog/` — machine-readable template/sector coverage registry.
-- `docs/` — the six canonical project documents (this README plus five focused documents).
+- `docs/` — canonical product and engineering documentation, including the requirements and user-story backlog.
 
 ## Non-negotiable operating boundaries
 
