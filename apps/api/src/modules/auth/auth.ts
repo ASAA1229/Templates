@@ -84,11 +84,13 @@ export function authRouter(ctx: AppContext): Router {
   // Public access request: account existence and duplicate submissions are not disclosed.
   router.post("/access-requests", async (req, res, next) => {
     try {
-      const input = z.object({
-        email: z.string().trim().toLowerCase().email().max(254),
-        displayName: z.string().trim().min(1).max(120),
-        reason: z.string().trim().max(1000).default(""),
-      }).parse(req.body);
+      const input = z
+        .object({
+          email: z.string().trim().toLowerCase().email().max(254),
+          displayName: z.string().trim().min(1).max(120),
+          reason: z.string().trim().max(1000).default(""),
+        })
+        .parse(req.body);
       const retryAfter = Math.max(
         accessRequestIpLimiter.consume(req.ip ?? "unknown"),
         accessRequestEmailLimiter.consume(input.email),
@@ -97,7 +99,10 @@ export function authRouter(ctx: AppContext): Router {
         res.setHeader("retry-after", String(retryAfter));
         throw new AppError(429, "RATE_LIMITED", "Too many access requests. Try again later.");
       }
-      const existingAccount = await ctx.prisma.owner.findUnique({ where: { email: input.email }, select: { id: true } });
+      const existingAccount = await ctx.prisma.owner.findUnique({
+        where: { email: input.email },
+        select: { id: true },
+      });
       const existingRequest = await ctx.prisma.accessRequest.findFirst({
         where: { email: input.email, status: "PENDING" },
         select: { id: true },
@@ -111,7 +116,9 @@ export function authRouter(ctx: AppContext): Router {
           targetId: request.id,
         });
       }
-      res.status(202).json({ message: "If the address is eligible, the request will be reviewed by an administrator." });
+      res
+        .status(202)
+        .json({ message: "If the address is eligible, the request will be reviewed by an administrator." });
     } catch (error) {
       next(error);
     }
@@ -131,7 +138,8 @@ export function authRouter(ctx: AppContext): Router {
           where: { id: request.id, tokenHash, status: "APPROVED", activatedAt: null, tokenExpiresAt: { gt: now } },
           data: { activatedAt: now, tokenHash: null },
         });
-        if (claimed.count !== 1) throw new AppError(400, "VALIDATION_FAILED", "This activation link is invalid or has expired.");
+        if (claimed.count !== 1)
+          throw new AppError(400, "VALIDATION_FAILED", "This activation link is invalid or has expired.");
         return tx.owner.create({
           data: {
             email: request.email,
@@ -174,56 +182,81 @@ export function authRouter(ctx: AppContext): Router {
     }
   });
 
-  router.post("/access-requests/:id/approve", requireOwner(), authorize(ctx, "identity:manage"), async (req, res, next) => {
-    try {
-      const input = z.object({ role: z.enum(["ADMIN", "DEVELOPER", "TESTER", "EMPLOYEE"]).default("EMPLOYEE") }).parse(req.body);
-      if (req.owner!.role !== "OWNER" && input.role === "ADMIN") {
-        throw new AppError(403, "FORBIDDEN", "Only the owner can approve administrator access.");
+  router.post(
+    "/access-requests/:id/approve",
+    requireOwner(),
+    authorize(ctx, "identity:manage"),
+    async (req, res, next) => {
+      try {
+        const input = z
+          .object({ role: z.enum(["ADMIN", "DEVELOPER", "TESTER", "EMPLOYEE"]).default("EMPLOYEE") })
+          .parse(req.body);
+        if (req.owner!.role !== "OWNER" && input.role === "ADMIN") {
+          throw new AppError(403, "FORBIDDEN", "Only the owner can approve administrator access.");
+        }
+        const id = String(req.params.id);
+        const request = await ctx.prisma.accessRequest.findUnique({ where: { id } });
+        if (!request || request.status !== "PENDING")
+          throw new AppError(404, "NOT_FOUND", "Pending access request not found.");
+        if (await ctx.prisma.owner.findUnique({ where: { email: request.email }, select: { id: true } })) {
+          throw new AppError(409, "CONFLICT", "An account already exists for this email address.");
+        }
+        const { token, tokenHash } = newSessionToken();
+        const now = ctx.now();
+        const expiresAt = new Date(now.getTime() + 24 * 60 * 60_000);
+        const changed = await ctx.prisma.accessRequest.updateMany({
+          where: { id, status: "PENDING" },
+          data: {
+            status: "APPROVED",
+            approvedRole: input.role,
+            reviewerId: req.owner!.id,
+            reviewedAt: now,
+            tokenHash,
+            tokenExpiresAt: expiresAt,
+          },
+        });
+        if (changed.count !== 1) throw new AppError(409, "CONFLICT", "This request has already been reviewed.");
+        await audit(ctx, req, {
+          action: "identity.access_request.approve",
+          outcome: "SUCCESS",
+          targetType: "access_request",
+          targetId: id,
+          metadata: { role: input.role, expiresAt: expiresAt.toISOString() },
+        });
+        res.status(200).json({
+          activationUrl: `${ctx.config.WEB_ORIGIN}/activate?token=${encodeURIComponent(token)}`,
+          expiresAt: expiresAt.toISOString(),
+        });
+      } catch (error) {
+        next(error);
       }
-      const id = String(req.params.id);
-      const request = await ctx.prisma.accessRequest.findUnique({ where: { id } });
-      if (!request || request.status !== "PENDING") throw new AppError(404, "NOT_FOUND", "Pending access request not found.");
-      if (await ctx.prisma.owner.findUnique({ where: { email: request.email }, select: { id: true } })) {
-        throw new AppError(409, "CONFLICT", "An account already exists for this email address.");
-      }
-      const { token, tokenHash } = newSessionToken();
-      const now = ctx.now();
-      const expiresAt = new Date(now.getTime() + 24 * 60 * 60_000);
-      const changed = await ctx.prisma.accessRequest.updateMany({
-        where: { id, status: "PENDING" },
-        data: { status: "APPROVED", approvedRole: input.role, reviewerId: req.owner!.id, reviewedAt: now, tokenHash, tokenExpiresAt: expiresAt },
-      });
-      if (changed.count !== 1) throw new AppError(409, "CONFLICT", "This request has already been reviewed.");
-      await audit(ctx, req, {
-        action: "identity.access_request.approve",
-        outcome: "SUCCESS",
-        targetType: "access_request",
-        targetId: id,
-        metadata: { role: input.role, expiresAt: expiresAt.toISOString() },
-      });
-      res.status(200).json({
-        activationUrl: `${ctx.config.WEB_ORIGIN}/activate?token=${encodeURIComponent(token)}`,
-        expiresAt: expiresAt.toISOString(),
-      });
-    } catch (error) {
-      next(error);
-    }
-  });
+    },
+  );
 
-  router.post("/access-requests/:id/reject", requireOwner(), authorize(ctx, "identity:manage"), async (req, res, next) => {
-    try {
-      const id = String(req.params.id);
-      const changed = await ctx.prisma.accessRequest.updateMany({
-        where: { id, status: "PENDING" },
-        data: { status: "REJECTED", reviewerId: req.owner!.id, reviewedAt: ctx.now() },
-      });
-      if (changed.count !== 1) throw new AppError(404, "NOT_FOUND", "Pending access request not found.");
-      await audit(ctx, req, { action: "identity.access_request.reject", outcome: "SUCCESS", targetType: "access_request", targetId: id });
-      res.status(204).end();
-    } catch (error) {
-      next(error);
-    }
-  });
+  router.post(
+    "/access-requests/:id/reject",
+    requireOwner(),
+    authorize(ctx, "identity:manage"),
+    async (req, res, next) => {
+      try {
+        const id = String(req.params.id);
+        const changed = await ctx.prisma.accessRequest.updateMany({
+          where: { id, status: "PENDING" },
+          data: { status: "REJECTED", reviewerId: req.owner!.id, reviewedAt: ctx.now() },
+        });
+        if (changed.count !== 1) throw new AppError(404, "NOT_FOUND", "Pending access request not found.");
+        await audit(ctx, req, {
+          action: "identity.access_request.reject",
+          outcome: "SUCCESS",
+          targetType: "access_request",
+          targetId: id,
+        });
+        res.status(204).end();
+      } catch (error) {
+        next(error);
+      }
+    },
+  );
 
   router.post("/login", async (req, res, next) => {
     try {

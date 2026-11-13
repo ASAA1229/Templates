@@ -204,7 +204,6 @@ describe("workspace member identity and access control", () => {
   });
 });
 
-
 describe("employee access requests and activation", () => {
   it("lets an employee request access, requires review, and consumes a one-time activation link", async () => {
     const visitor = h.agent();
@@ -241,10 +240,14 @@ describe("employee access requests and activation", () => {
       displayName: "New Employee",
       role: "EMPLOYEE",
     });
-    expect((await visitor.post("/api/auth/access-requests/activate", {
-      token,
-      password: "another strong password",
-    })).status).toBe(400);
+    expect(
+      (
+        await visitor.post("/api/auth/access-requests/activate", {
+          token,
+          password: "another strong password",
+        })
+      ).status,
+    ).toBe(400);
 
     const login = await visitor.post("/api/auth/login", {
       email: "new.employee@asaa.test",
@@ -279,10 +282,14 @@ describe("employee access requests and activation", () => {
     });
     expect(created.status).toBe(201);
     const admin = h.agent();
-    expect((await admin.post("/api/auth/login", {
-      email: "admin.access@asaa.test",
-      password: "a secure administrator password",
-    })).status).toBe(200);
+    expect(
+      (
+        await admin.post("/api/auth/login", {
+          email: "admin.access@asaa.test",
+          password: "a secure administrator password",
+        })
+      ).status,
+    ).toBe(200);
     await h.agent().post("/api/auth/access-requests", {
       email: "another.admin@asaa.test",
       displayName: "Another Admin",

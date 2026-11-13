@@ -100,11 +100,19 @@ function Root({ children }: { children: ReactNode }) {
 export const routes: RouteObject[] = [
   {
     path: "/request-access",
-    element: <Root><AccessRequestPage /></Root>,
+    element: (
+      <Root>
+        <AccessRequestPage />
+      </Root>
+    ),
   },
   {
     path: "/activate",
-    element: <Root><ActivateAccountPage /></Root>,
+    element: (
+      <Root>
+        <ActivateAccountPage />
+      </Root>
+    ),
   },
   {
     path: "/login",
