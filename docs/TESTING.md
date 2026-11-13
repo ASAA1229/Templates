@@ -105,4 +105,4 @@ The hardened candidate is 7268eae2ace8d037c1797a4a306b3968ad9d3a42. GitHub Actio
 
 ## Documentation-only head update — 2026-11-13
 
-The documentation synchronization advanced PR #1 to `511e95ec9f0d2d35b2a6f271eb19c09b7f7e24f4`. Run #738 (`43419669158`) was observed against the prior code/test candidate `15fdfe1b016d2f7997008dc68701b99e4220ce26`, not this latest documentation-only head. No workflow run or status check was returned for `511e95ec9f0d2d35b2a6f271eb19c09b7f7e24f4` at the latest inspection. The earlier run's in-progress state is not evidence of a pass for the current PR head. Re-run/confirm CI on the exact current PR head before claiming CI VERIFIED.
+Documentation synchronization advanced PR #1 after the code/test candidate `15fdfe1b016d2f7997008dc68701b99e4220ce26`. Run #738 (`43419669158`) belongs to that earlier candidate, not the subsequent documentation-only commits. No workflow run or status check was observed for the latest documentation head at inspection. Confirm CI against the live PR head before claiming CI VERIFIED.
