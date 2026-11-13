@@ -139,7 +139,7 @@ export function projectsRouter(ctx: AppContext): Router {
   router.patch("/:id", authorize(ctx, "project:write"), async (req, res, next) => {
     try {
       const { expectedVersion, ...changes } = updateProjectSchema.parse(req.body);
-      const project = await loadOwnedProject(ctx, req.owner!.id, String(req.params.id));
+      const project = await loadProjectAccess(ctx, req.owner!.id, String(req.params.id), "write");
       if (project.archivedAt) throw conflict("Restore the project before editing it.");
       const result = await ctx.prisma.project.updateMany({
         where: { id: project.id, version: expectedVersion },
@@ -172,7 +172,7 @@ export function projectsRouter(ctx: AppContext): Router {
   for (const action of ["archive", "restore"] as const) {
     router.post(`/:id/${action}`, authorize(ctx, "project:write"), async (req, res, next) => {
       try {
-        const project = await loadOwnedProject(ctx, req.owner!.id, String(req.params.id));
+        const project = await loadProjectAccess(ctx, req.owner!.id, String(req.params.id), "write");
         if ((action === "archive") === Boolean(project.archivedAt)) {
           throw conflict(action === "archive" ? "Project is already archived." : "Project is not archived.");
         }
