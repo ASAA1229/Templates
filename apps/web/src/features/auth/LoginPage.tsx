@@ -1,7 +1,7 @@
 import { fieldErrors, loginSchema } from "@asaa/contracts";
 import { LogIn } from "lucide-react";
 import { useState, type FormEvent } from "react";
-import { Navigate, useLocation } from "react-router";
+import { Link, Navigate, useLocation } from "react-router";
 import { Field } from "@/components/common";
 import { Alert, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input } from "@/components/ui";
 import { ApiError } from "@/lib/api";
@@ -81,6 +81,9 @@ export function LoginPage() {
             <Button type="submit" className="w-full" disabled={pending} aria-busy={pending}>
               <LogIn aria-hidden="true" /> {pending ? "Signing in…" : "Sign in"}
             </Button>
+            <p className="text-center text-sm text-muted-foreground">
+              Need an account? <Link className="underline" to="/request-access">Request employee access</Link>
+            </p>
             <p className="text-xs text-muted-foreground">
               Forgot your password? Run{" "}
               <code className="rounded bg-muted px-1">npm run owner:recover -w @asaa/api</code> on the host.
