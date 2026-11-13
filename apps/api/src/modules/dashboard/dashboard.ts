@@ -30,7 +30,7 @@ export function dashboardRouter(ctx: AppContext): Router {
   router.get("/dashboard", authorize(ctx, "dashboard:read"), async (req, res, next) => {
     try {
       const ownerId = req.owner!.id;
-      const projectScope = { project: { ownerId, archivedAt: null } };
+      const projectScope = { project: { archivedAt: null, OR: [{ ownerId }, { members: { some: { memberId: ownerId } } }] } };
       const [
         projectGroups,
         archived,
@@ -43,7 +43,7 @@ export function dashboardRouter(ctx: AppContext): Router {
         flaggedSample,
         missingSample,
       ] = await Promise.all([
-        ctx.prisma.project.groupBy({ by: ["status"], where: { ownerId, archivedAt: null }, _count: true }),
+        ctx.prisma.project.groupBy({ by: ["status"], where: { archivedAt: null, OR: [{ ownerId }, { members: { some: { memberId: ownerId } } }] }, _count: true }),
         ctx.prisma.project.count({ where: { ownerId, archivedAt: { not: null } } }),
         ctx.prisma.requirement.groupBy({ by: ["status"], where: projectScope, _count: true }),
         ctx.prisma.requirement.count({ where: { ...projectScope, flaggedForReview: true } }),
