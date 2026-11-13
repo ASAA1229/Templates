@@ -170,3 +170,8 @@ The following remain future work and must not displace P0 closure: advanced coll
 ### Story closure evidence
 
 For every RLC task, record: implementation PR/commit, acceptance-test identifiers and results, security/accessibility findings, artifact or template version/checksum where applicable, reviewer/owner decision, and residual risks. Use the existing status vocabulary. Never change a task to complete because documentation was updated or code merely exists.
+
+
+## 2026-11-13 status authority
+
+This file is the authoritative detailed user-story and acceptance-criteria backlog. Current implementation state, evidence, maturity scores, gap status and release decision are maintained in [PROJECT_STATUS.md](PROJECT_STATUS.md). The release-blocking RLC task definitions below remain the execution backlog; their status must follow the canonical vocabulary and evidence in PROJECT_STATUS.md. A story is not accepted because its implementation exists or documentation has changed.
