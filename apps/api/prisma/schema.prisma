@@ -32,6 +32,7 @@ model Owner {
   sessions          Session[]
   projects          Project[]
   savedSearches     SavedSearch[]
+  reviewedAccessRequests AccessRequest[] @relation("AccessRequestReviewer")
 }
 
 /// Server-side session. Only a SHA-256 of the opaque cookie token is stored.
