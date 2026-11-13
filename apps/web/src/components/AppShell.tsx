@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   Upload,
   UserRound,
+  UserPlus,
   X,
 } from "lucide-react";
 import { GlobalSearch } from "./GlobalSearch";
@@ -44,7 +45,7 @@ export function AppShell() {
 
   const navItems =
     owner?.role === "OWNER" || owner?.role === "ADMIN"
-      ? [...NAV_ITEMS, { to: "/team", label: "Team members", icon: UserRound }]
+      ? [...NAV_ITEMS, { to: "/team", label: "Team members", icon: UserRound }, { to: "/access-requests", label: "Access requests", icon: UserPlus }]
       : NAV_ITEMS.filter((item) => item.to !== "/template-submissions");
   const nav = (
     <nav aria-label="Main navigation" className="flex flex-1 flex-col gap-1 p-3">
