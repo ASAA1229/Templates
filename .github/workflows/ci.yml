@@ -69,11 +69,14 @@ jobs:
             apps/api/src/cli/owner.ts \
             apps/api/test/auth.test.ts \
             apps/api/test/helpers.ts \
-            apps/api/test/policy.test.ts
+            apps/api/test/policy.test.ts \
+            apps/web/src/features/auth/AccessRequestPage.tsx \
+            apps/web/src/features/auth/ActivateAccountPage.tsx \
+            apps/web/src/features/security/AccessRequestsPage.tsx
           if ! git diff --quiet; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add apps/api/test/generation.test.ts apps/api/test/generator-adapters.test.ts apps/web/src/features/generation/NewProjectWizard.tsx apps/web/src/features/generation/GenerationPanel.tsx apps/web/src/test/generation.test.tsx packages/contracts/src/index.ts apps/api/src/modules/generation/project-template-submissions.ts apps/web/src/features/templates/ProjectTemplateContribution.tsx apps/web/src/features/templates/TemplateSubmissionsPage.tsx apps/web/src/features/security/TeamMembersPage.tsx apps/web/src/features/projects/ProjectDetailPage.tsx apps/web/src/App.tsx apps/web/src/components/AppShell.tsx apps/api/src/modules/auth/auth.ts apps/api/src/modules/auth/policy.ts apps/api/src/context.ts apps/api/src/modules/audit/audit.service.ts apps/api/src/cli/owner.ts apps/api/test/auth.test.ts apps/api/test/helpers.ts apps/api/test/policy.test.ts
+            git add apps/api/test/generation.test.ts apps/api/test/generator-adapters.test.ts apps/web/src/features/generation/NewProjectWizard.tsx apps/web/src/features/generation/GenerationPanel.tsx apps/web/src/test/generation.test.tsx packages/contracts/src/index.ts apps/api/src/modules/generation/project-template-submissions.ts apps/web/src/features/templates/ProjectTemplateContribution.tsx apps/web/src/features/templates/TemplateSubmissionsPage.tsx apps/web/src/features/security/TeamMembersPage.tsx apps/web/src/features/projects/ProjectDetailPage.tsx apps/web/src/App.tsx apps/web/src/components/AppShell.tsx apps/api/src/modules/auth/auth.ts apps/api/src/modules/auth/policy.ts apps/api/src/context.ts apps/api/src/modules/audit/audit.service.ts apps/api/src/cli/owner.ts apps/api/test/auth.test.ts apps/api/test/helpers.ts apps/api/test/policy.test.ts apps/web/src/features/auth/AccessRequestPage.tsx apps/web/src/features/auth/ActivateAccountPage.tsx apps/web/src/features/security/AccessRequestsPage.tsx
             git commit -m "style(templates): apply Prettier formatting [auto-format]"
             git push origin HEAD:new
           fi
