@@ -660,10 +660,22 @@ export class GenerationService {
   async load(req: Request, id: string, access: "read" | "write" = "read"): Promise<GenerationWithProject> {
     if (!UUID.test(id)) throw notFound("Generation");
     const generation = await this.prisma.projectGeneration.findFirst({
-      where: { id, project: { OR: [
-        { ownerId: req.owner!.id },
-        { members: { some: { memberId: req.owner!.id, ...(access === "write" ? { role: "EDITOR" as const } : {}) } } },
-      ] } },
+      where: {
+        id,
+        project: {
+          OR: [
+            { ownerId: req.owner!.id },
+            {
+              members: {
+                some: {
+                  memberId: req.owner!.id,
+                  ...(access === "write" ? { role: "EDITOR" as const } : {}),
+                },
+              },
+            },
+          ],
+        },
+      },
       include: { project: true },
     });
     if (!generation) throw notFound("Generation");
