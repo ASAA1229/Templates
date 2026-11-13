@@ -52,3 +52,9 @@ Advanced collaboration/presence, notifications, semantic search, command orchest
 ## Governance and dependencies
 
 Maintain the ₹0 ceiling; preserve the modular monolith absent measured reasons to change; keep work on new until reviewed; do not merge to dev or main without explicit approval. Use PROJECT_STATUS.md as the single current-state source.
+
+
+## Candidate verification checkpoint — 2026-11-13
+
+The active candidate is `15fdfe1b016d2f7997008dc68701b99e4220ce26` on `new`; PR #1 remains open and unmerged. CI #738 (`43419669158`) was in progress at last inspection. Continue Milestone 0 until the complete workflow, including browser E2E/accessibility, finishes successfully on the exact candidate SHA. Do not advance to acceptance or raise maturity scores based on partial job success. Current detailed state: [PROJECT_STATUS.md](PROJECT_STATUS.md).
+
