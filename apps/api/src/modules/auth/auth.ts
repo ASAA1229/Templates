@@ -269,6 +269,9 @@ export function authRouter(ctx: AppContext): Router {
         const input = z.object({ email: z.string().trim().toLowerCase().email().max(254) }).parse(req.body);
         const owner = await ctx.prisma.owner.findUnique({ where: { email: input.email } });
         if (!owner || !owner.isActive) throw new AppError(404, "NOT_FOUND", "Active account not found.");
+        if ((owner.role === "OWNER" || owner.role === "ADMIN") && req.owner!.role !== "OWNER") {
+          throw new AppError(403, "FORBIDDEN", "Only the owner can issue a reset link for privileged accounts.");
+        }
         const { token, tokenHash } = newSessionToken();
         const now = ctx.now();
         const expiresAt = new Date(now.getTime() + 30 * 60_000);
