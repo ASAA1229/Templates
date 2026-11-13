@@ -192,7 +192,7 @@ Priorities reflect the platform's actual objective: reliable, governed reuse fro
 
 ### Immediate implementation sequence
 - First: finish project-sharing authorization audit and regression tests; fix any CI failures before layering new functionality.
-- Next: implement secure password recovery with hashed, single-use, expiring tokens, generic responses and rate limits; initially expose reset links only through an authenticated Owner/Admin recovery workflow because no email provider is approved.
+- Next: verify the already-implemented Owner/Admin password-recovery flow end to end (hashed, single-use, expiring tokens, rate limits, audit and session revocation); do not treat implementation as accepted until API/UI/E2E evidence passes. Keep reset-link delivery manual while no email provider is approved.
 - Then: template certification pipeline and blueprint/generator contract, followed by isolated execution and export.
 
 ### P2 — advanced ecosystem
@@ -205,7 +205,7 @@ Priorities reflect the platform's actual objective: reliable, governed reuse fro
 
 The current `new` branch includes a React/Vite and Express/Prisma foundation; multi-role account and session foundations; projects, requirements, dashboard, catalog, search, template library and generation; project blueprints; local Git/environment workspace; 25 demo website packages; project-to-template submission/review; owner-managed project sharing; shared contracts and CI/test foundations.
 
-Current access implementation on `new`: public employee access request, Owner/Admin review, one-time 24-hour activation link, hashed/consumed activation token, multi-role accounts, and project-level VIEWER/EDITOR membership with owner-controlled sharing. Project, requirement, workspace and generation access paths use shared membership checks; project lists, dashboard and search include shared projects. Automated isolation and search-leakage regression tests have been added. The latest PR CI run is `action_required` (not a pass), and earlier runs failed; test validation must be rerun after required PR approval and any fixes.
+Current access implementation on `new`: public employee access request, Owner/Admin review, one-time 24-hour activation link, hashed/consumed activation token, multi-role accounts, and project-level VIEWER/EDITOR membership with owner-controlled sharing. Project, requirement, workspace and generation access paths use shared membership checks; project lists, dashboard and search include shared projects. Automated isolation and search-leakage regression tests have been added. The latest PR CI status recorded for this assessment is `action_required` (not a pass); earlier runs failed. Re-run the complete workflow after required PR approval and fixes, then record the exact commit and run URL. Do not mark the release gates green from a workflow that has not completed successfully.
 
 Known remaining or unverified areas include:
 - Final CI/E2E/accessibility evidence and full certification of the 25 packages.
@@ -274,3 +274,41 @@ The initial discovery sequence Q1–Q31 is consolidated in this document. Future
 ### Current verification boundary
 
 The current `new` branch contains implementation foundations described in Section 9. All remaining stories and unverified acceptance criteria stay open until code inspection and reproducible test evidence support a status change. The ₹0 limit, private/internal access boundary, owner governance and JARVIS separation remain binding across every epic.
+
+
+## 10. Release gap-closure register — 2026-11-13
+
+This register translates the remaining work into a release-focused execution plan. It is a status baseline, not a claim that the listed capabilities have been completed. The current implementation is on `new`; no changes to `dev` or `main` are implied.
+
+### Internal-release P0 gates
+
+| Gate | Required work | Acceptance evidence | Current status |
+|---|---|---|---|
+| RG-01 Access and authorization | Audit every API route and background operation for OWNER, ADMIN, DEVELOPER, TESTER, EMPLOYEE, VIEWER, EDITOR and unrelated-user access. Include projects, requirements, workspace, generation, submissions, search, dashboards, exports, audit and jobs. Verify denial paths, ownership changes, revoked membership and suspended accounts. | Route-to-role matrix; automated positive/negative tests; no cross-project data leakage; CI evidence tied to commit. | Partial — core shared-project paths and regression tests exist; exhaustive route/job coverage and passing CI remain open. |
+| RG-02 Authentication lifecycle | Verify owner bootstrap, login, activation expiry/consumption, password reset issuance/expiry/single-use behavior, rate limits, privileged-account protections, session invalidation and frontend recovery. Decide and implement an MFA policy before employee rollout. | API + browser E2E tests; security review; documented MFA decision and recovery procedure. | Partial — activation and Owner/Admin password-reset implementations exist but remain unverified; MFA remains open. |
+| RG-03 CI and regression baseline | Remove the temporary CI formatting-repair-and-push workaround after formatting is committed normally. Require deterministic install, migrations, formatting, lint, typecheck, unit/integration, dependency audit, build, smoke, E2E and accessibility checks. | Green required checks on the exact PR head commit; no workflow self-modification or automatic push; retained test reports. | Blocked — latest PR check was action_required and prior runs failed. |
+| RG-04 Template certification | Certify each of the 25 demo packages independently: manifest/schema, file paths, provenance/license, dependencies, secrets, loader, preview, generation, output integrity, browser/responsive behavior, accessibility and security. | Per-package/version certification record, test report, checksum, maturity state and maintainer approval. | Open — packages exist; none should be represented as certified without evidence. |
+| RG-05 Blueprint-to-builder contract | Finalize versioned blueprint schema, typed inputs, generator capability declarations, stack/runtime compatibility, validation, preview parity, deterministic generation and provenance. Clearly reject unsupported combinations. | Contract/schema tests; compatibility matrix; repeatable generation comparison; browser workflow evidence. | Partial — blueprint and generation foundations exist; complete contract and reproducibility evidence remain open. |
+| RG-06 Template authoring and release lifecycle | Complete create/import/edit, package validation, review, approval, immutable release versions, changelog, deprecation and safe selection of prior versions. | End-to-end lifecycle tests; immutable-version checks; audit trail; no unapproved package selectable. | Partial — submission/review and package foundations exist; complete authoring and lifecycle remain open. |
+| RG-07 Isolated build/test execution | Implement disposable workers isolated from the trusted API and other projects. Enforce CPU, memory, disk, time, process, network and output limits; cancellation; cleanup; secret isolation; safe artifact handling. | Isolation/security tests, resource-limit tests, cleanup verification, reproducible logs/reports and penetration review. | Open — critical blocker; do not execute untrusted template code inside the API process. |
+| RG-08 Project export and hand-off | Produce complete ZIP exports with path traversal protection, secret/cache exclusion, manifest, provenance and checksum. Add remote Git provisioning/push only with scoped credentials, destination/content preview and explicit approval. | Export integrity and authorization tests; checksum verification; safe extraction test; audited Git hand-off. | Partial — local Git foundation exists; ZIP export and remote provisioning/push remain open. |
+| RG-09 Accessibility and usability | Verify critical employee workflows against WCAG 2.2 AA, keyboard-only use, focus, semantics, contrast, responsive breakpoints and actionable error/empty states. | Automated accessibility report plus manual keyboard/screen-reader review and resolved critical findings. | Open — baseline requirement exists; release evidence not established. |
+| RG-10 Release approval | Define internal rollout checklist, owner sign-off, supported environment, access provisioning, incident contact, backup/restore proof, rollback and post-release smoke test. | Signed release checklist and successful controlled rollout rehearsal. | Open — no production deployment topology or release authorization is established. |
+
+### P1 — maturity after the internal-release gates
+
+1. Complete the online source workspace: safe editing, diff/history, autosave/conflict handling, branch operations and IDE hand-off.
+2. Deliver a governed connector framework and optional GitHub/Jenkins/CI, storage, database and deployment adapters with scoped credentials, health, version compatibility, revocation and audit.
+3. Add reusable component/design-system/asset composition with dependency, license, compatibility and version resolution.
+4. Complete delivery operations: environment profiles, CI/CD, artifact promotion, release approvals, deployment verification, rollback and maintenance history.
+5. Automate protected backups and perform restore drills for database, template packages and generated outputs; define owner-approved RPO/RTO.
+6. Add production-grade observability: structured metrics, job queue health, latency/error/resource dashboards, alert ownership, redaction and incident workflows.
+7. Expand sector and technology coverage based on real reuse demand; certify each added package/version rather than counting taxonomy entries as coverage.
+
+### P2 — explicitly deferred
+
+Advanced collaboration/presence, notification channels, semantic search and command orchestration, configurable workflow/form builder, advanced BI, optional AI/JARVIS assistance, offline/native clients, multi-organization tenancy and business-operation modules remain deferred until P0/P1 foundations justify them. Public marketplace, external customer onboarding, client deployment and paid infrastructure remain outside current authorization.
+
+### Release decision rule
+
+The initial internal release is blocked until RG-01 through RG-10 have objective evidence, all critical/high security findings are resolved or explicitly risk-accepted by the owner, the required CI/E2E/accessibility checks pass on the candidate commit, all released templates are certified, and backup/restore plus operational ownership are demonstrated. A passing build or merged PR alone is insufficient.
