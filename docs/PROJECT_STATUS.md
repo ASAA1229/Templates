@@ -133,3 +133,8 @@ The read-only CI workflow and Playwright API request-context change are now pres
 - The template-batch E2E helper now uses Playwright's shared request context and resolves relative endpoints against the page origin. This awaits test verification; it is not marked fixed.
 - Run #705 remains the latest completed result: 19 passed, 3 failed. Blueprint selection and template-batch failures remain unverified.
 - Scores remain unchanged at 5.0/10. Release remains **NO-GO**. Complete branch-head/history inventory is still partial; do not infer branch synchronization.
+
+
+### Documentation synchronization commit boundary — 2026-11-13
+
+The documentation synchronization commits advanced PR #1's current head to `511e95ec9f0d2d35b2a6f271eb19c09b7f7e24f4`. The previously observed CI run #738 (`43419669158`) was associated with the earlier code/test candidate `15fdfe1b016d2f7997008dc68701b99e4220ce26`, not this latest documentation-only head. No workflow run or status check was returned for `511e95ec9f0d2d35b2a6f271eb19c09b7f7e24f4` at the time of this verification. Therefore the code/test candidate's run #738 remains in progress as last observed, but the latest PR head itself has **no observed CI result**. Do not treat either as a completed pass. The documentation-only commits did not change application source or the E2E helper. PR #1 remains open and unmerged.
