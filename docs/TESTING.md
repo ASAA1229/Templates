@@ -71,3 +71,8 @@ The report artifact was uploaded by the workflow and is retained only for a limi
 ## Traceability
 
 For each release-blocking story record its gap/story ID, acceptance criterion, test identifier/layer, exact commit SHA/environment, command/procedure, expected/actual result, report artifact, defect/retest, reviewer and owner acceptance. Never mark ACCEPTED based only on source inspection or build success.
+
+
+## 2026-11-13 — test harness change awaiting verification
+
+The template batch review helper was changed to use Playwright's shared API request context rather than executing fetch inside the page. This preserves the browser context's authentication state while avoiding a page-origin fetch dependency. The change is a hypothesis-driven hardening step; it is not considered fixed until the browser suite is rerun and the template batch review passes. The blueprint selection assertion failure remains open. No post-change CI result was available at the time of this update.
