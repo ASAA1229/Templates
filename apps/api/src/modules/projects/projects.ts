@@ -7,6 +7,7 @@ import {
 } from "@asaa/contracts";
 import type { Prisma, Project } from "@prisma/client";
 import { Router } from "express";
+import { z } from "zod";
 import type { AppContext } from "../../context.js";
 import { conflict, notFound } from "../../lib/errors.js";
 import { audit } from "../audit/audit.service.js";
@@ -37,6 +38,28 @@ export async function loadOwnedProject(ctx: AppContext, ownerId: string, id: str
   return project;
 }
 
+
+/** Resolve project membership with an explicit read/write boundary. */
+export async function loadProjectAccess(
+  ctx: AppContext,
+  actorId: string,
+  id: string,
+  access: "read" | "write" = "read",
+): Promise<Project> {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) throw notFound("Project");
+  const project = await ctx.prisma.project.findFirst({
+    where: {
+      id,
+      OR: [
+        { ownerId: actorId },
+        { members: { some: { memberId: actorId, ...(access === "write" ? { role: "EDITOR" } : {}) } } },
+      ],
+    },
+  });
+  if (!project) throw notFound("Project");
+  return project;
+}
+
 export function projectsRouter(ctx: AppContext): Router {
   const router = Router();
 
@@ -44,7 +67,7 @@ export function projectsRouter(ctx: AppContext): Router {
     try {
       const query = projectListQuerySchema.parse(req.query);
       const where: Prisma.ProjectWhereInput = {
-        ownerId: req.owner!.id,
+        OR: [{ ownerId: req.owner!.id }, { members: { some: { memberId: req.owner!.id } } }],
         ...(query.status ? { status: query.status } : {}),
         ...(query.archived === "exclude"
           ? { archivedAt: null }
@@ -92,7 +115,7 @@ export function projectsRouter(ctx: AppContext): Router {
 
   router.get("/:id", authorize(ctx, "project:read"), async (req, res, next) => {
     try {
-      const project = await loadOwnedProject(ctx, req.owner!.id, String(req.params.id));
+      const project = await loadProjectAccess(ctx, req.owner!.id, String(req.params.id), "read");
       const history = await ctx.prisma.auditEvent.findMany({
         where: { targetType: "project", targetId: project.id },
         orderBy: { id: "desc" },
@@ -169,6 +192,51 @@ export function projectsRouter(ctx: AppContext): Router {
       }
     });
   }
+
+
+  // Project sharing is controlled only by the project owner; shared members cannot re-share.
+  router.get("/:id/members", authorize(ctx, "project:write"), async (req, res, next) => {
+    try {
+      const project = await loadOwnedProject(ctx, req.owner!.id, String(req.params.id));
+      const members = await ctx.prisma.projectMember.findMany({
+        where: { projectId: project.id },
+        include: { member: { select: { id: true, email: true, displayName: true, role: true, isActive: true } } },
+        orderBy: { createdAt: "asc" },
+      });
+      res.json({ members: members.map(({ id, role, createdAt, member }) => ({ id, role, createdAt: createdAt.toISOString(), member })) });
+    } catch (error) { next(error); }
+  });
+
+  router.post("/:id/members", authorize(ctx, "project:write"), async (req, res, next) => {
+    try {
+      const project = await loadOwnedProject(ctx, req.owner!.id, String(req.params.id));
+      const input = z.object({
+        email: z.string().trim().toLowerCase().email().max(254),
+        role: z.enum(["VIEWER", "EDITOR"]).default("VIEWER"),
+      }).parse(req.body);
+      const member = await ctx.prisma.owner.findUnique({ where: { email: input.email }, select: { id: true, email: true, displayName: true, role: true, isActive: true } });
+      if (!member || !member.isActive) throw notFound("Active team member");
+      if (member.id === project.ownerId) throw conflict("The project owner already has full access.");
+      const sharing = await ctx.prisma.projectMember.upsert({
+        where: { projectId_memberId: { projectId: project.id, memberId: member.id } },
+        create: { projectId: project.id, memberId: member.id, role: input.role },
+        update: { role: input.role },
+      });
+      await audit(ctx, req, { action: "project.member.upsert", outcome: "SUCCESS", targetType: "project", targetId: project.id, metadata: { memberId: member.id, role: input.role } });
+      res.status(200).json({ membership: { id: sharing.id, role: sharing.role, member } });
+    } catch (error) { next(error); }
+  });
+
+  router.delete("/:id/members/:memberId", authorize(ctx, "project:write"), async (req, res, next) => {
+    try {
+      const project = await loadOwnedProject(ctx, req.owner!.id, String(req.params.id));
+      const memberId = String(req.params.memberId);
+      const removed = await ctx.prisma.projectMember.deleteMany({ where: { projectId: project.id, memberId } });
+      if (!removed.count) throw notFound("Project member");
+      await audit(ctx, req, { action: "project.member.remove", outcome: "SUCCESS", targetType: "project", targetId: project.id, metadata: { memberId } });
+      res.status(204).end();
+    } catch (error) { next(error); }
+  });
 
   return router;
 }
