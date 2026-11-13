@@ -66,7 +66,7 @@ describe("project-level sharing and isolation", () => {
   });
 
   it("allows an editor to update shared project data but not manage membership", async () => {
-    const { agent: ownerAgent, project: item } = await project(await h.createOwner());
+    const { agent: ownerAgent, project: item } = await project();
     const editor = await member("editor@asaa.test");
     expect((await ownerAgent.post(`/api/projects/${item.id}/members`, {
       email: editor.email,
@@ -85,7 +85,7 @@ describe("project-level sharing and isolation", () => {
   });
 
   it("removes access immediately when membership is revoked", async () => {
-    const { agent: ownerAgent, project: item } = await project(await h.createOwner());
+    const { agent: ownerAgent, project: item } = await project();
     const viewer = await member("revoked@asaa.test");
     await ownerAgent.post(`/api/projects/${item.id}/members`, { email: viewer.email, role: "VIEWER" });
     const viewerAgent = await login(viewer.email);
@@ -96,7 +96,7 @@ describe("project-level sharing and isolation", () => {
   });
 
   it("does not expose unshared projects to another employee", async () => {
-    const { project: item } = await project(await h.createOwner());
+    const { project: item } = await project();
     const stranger = await member("stranger@asaa.test");
     const strangerAgent = await login(stranger.email);
     expect((await strangerAgent.get(`/api/projects/${item.id}`)).status).toBe(404);
