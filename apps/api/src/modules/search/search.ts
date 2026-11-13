@@ -96,8 +96,8 @@ export function searchRouter(ctx: AppContext): Router {
           filters.types.includes("PROJECT")
             ? ctx.prisma.project.findMany({
                 where: {
-                  ownerId,
                   archivedAt: null,
+                  OR: [{ ownerId }, { members: { some: { memberId: ownerId } } }],
                   ...(filters.projectStatus ? { status: filters.projectStatus } : {}),
                   OR: [
                     { name: { contains: query, mode: "insensitive" } },
@@ -113,7 +113,7 @@ export function searchRouter(ctx: AppContext): Router {
           filters.types.includes("REQUIREMENT")
             ? ctx.prisma.requirement.findMany({
                 where: {
-                  project: { ownerId, archivedAt: null },
+                  project: { archivedAt: null, OR: [{ ownerId }, { members: { some: { memberId: ownerId } } }] },
                   ...(filters.requirementStatus ? { status: filters.requirementStatus } : {}),
                   OR: [
                     { title: { contains: query, mode: "insensitive" } },
