@@ -1,4 +1,5 @@
 import supertest from "supertest";
+import { hashPassword } from "../src/lib/password.js";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { createHarness, OWNER_EMAIL, OWNER_PASSWORD } from "./helpers.js";
 
