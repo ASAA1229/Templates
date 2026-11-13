@@ -121,7 +121,8 @@ export class WorkspaceService {
             where: { projectId_memberId: { projectId: project.id, memberId: req.owner!.id } },
             select: { role: true },
           });
-    const access = project.ownerId === req.owner!.id ? "OWNER" : (membership?.role ?? "VIEWER");
+    const access: WorkspaceView["project"]["access"] =
+      project.ownerId === req.owner!.id ? "OWNER" : (membership?.role ?? "VIEWER");
     const generation = await this.ctx.prisma.projectGeneration.findUnique({ where: { projectId: project.id } });
     let dir: string | null = null;
     let reason: string | null = null;
