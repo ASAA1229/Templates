@@ -67,22 +67,21 @@ export function projectsRouter(ctx: AppContext): Router {
     try {
       const query = projectListQuerySchema.parse(req.query);
       const where: Prisma.ProjectWhereInput = {
-        OR: [{ ownerId: req.owner!.id }, { members: { some: { memberId: req.owner!.id } } }],
+        AND: [
+          { OR: [{ ownerId: req.owner!.id }, { members: { some: { memberId: req.owner!.id } } }] },
+          ...(query.q ? [{ OR: [
+            { name: { contains: query.q, mode: "insensitive" as const } },
+            { key: { contains: query.q, mode: "insensitive" as const } },
+            { purpose: { contains: query.q, mode: "insensitive" as const } },
+          ] }] : []),
+        ],
         ...(query.status ? { status: query.status } : {}),
         ...(query.archived === "exclude"
           ? { archivedAt: null }
           : query.archived === "only"
             ? { archivedAt: { not: null } }
             : {}),
-        ...(query.q
-          ? {
-              OR: [
-                { name: { contains: query.q, mode: "insensitive" } },
-                { key: { contains: query.q, mode: "insensitive" } },
-                { purpose: { contains: query.q, mode: "insensitive" } },
-              ],
-            }
-          : {}),
+
       };
       const projects = await ctx.prisma.project.findMany({
         where,
