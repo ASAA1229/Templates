@@ -195,14 +195,16 @@ export function TeamMembersPage() {
                   <span className="text-sm">{member.isActive ? "Active" : "Deactivated"}</span>
                   {member.role !== "OWNER" && (
                     <>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={!member.isActive || resettingMemberId !== null}
-                        onClick={() => void issuePasswordReset(member)}
-                      >
-                        {resettingMemberId === member.id ? "Issuing…" : "Issue reset link"}
-                      </Button>
+                      {(owner?.role === "OWNER" || member.role !== "ADMIN") && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={!member.isActive || resettingMemberId !== null}
+                          onClick={() => void issuePasswordReset(member)}
+                        >
+                          {resettingMemberId === member.id ? "Issuing…" : "Issue reset link"}
+                        </Button>
+                      )}
                       <Button size="sm" variant="outline" onClick={() => void setActive(member)}>
                         {member.isActive ? "Deactivate" : "Reactivate"}
                       </Button>
