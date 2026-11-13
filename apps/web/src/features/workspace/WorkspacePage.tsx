@@ -74,7 +74,7 @@ export function WorkspacePage() {
   }
   const workspace = resource.data.workspace;
   const { project } = workspace;
-  const readOnly = project.archived;
+  const readOnly = project.archived || project.access === "VIEWER";
   const base = `/projects/${project.id}/workspace`;
 
   return (
