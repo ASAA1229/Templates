@@ -321,3 +321,9 @@ Current implementation, evidence, maturity scores, gap status and release decisi
 The Owner/Admin password-reset implementation already exists on branch new (hashed, expiring, single-use tokens, rate limiting, audit and active-session revocation). Its API/UI/E2E behavior remains NEEDS TESTING; do not describe the feature as unimplemented. Activation foundations also exist and require verification. MFA policy remains an open owner/security decision. The latest observed CI run #705 failed in the Playwright stage (19 passed, 3 failed); earlier successful unit/integration/build/smoke steps do not make the overall workflow green.
 
 Use PROJECT_STATUS.md for the canonical status vocabulary: PLANNED, NOT STARTED, IN DEVELOPMENT, IMPLEMENTED, NEEDS TESTING, TEST FAILED, TEST PASSED, CI VERIFIED, DEVICE VERIFIED, OWNER ACCEPTANCE PENDING, ACCEPTED.
+
+
+## Current verification addendum — 2026-11-13
+
+Current evidence and status are authoritative in [PROJECT_STATUS.md](PROJECT_STATUS.md). Latest candidate: `15fdfe1b016d2f7997008dc68701b99e4220ce26` on `new`, PR #1 open/unmerged. CI #738 (`43419669158`) was still in progress at inspection; only checkout, dependency installation, dependency audit and migrations had completed successfully. Do not represent the candidate as CI verified. The template-batch Playwright request helper change is awaiting execution; the earlier blueprint-selection failure remains open. All P0 requirements remain release-blocking until their evidence and acceptance criteria are met.
+
