@@ -26,7 +26,7 @@ import { ProcessOutputLimitError, ProcessTimeoutError, ProcessUnavailableError }
 import { audit } from "../audit/audit.service.js";
 import { authorize } from "../auth/policy.js";
 import { resolveOutputDir } from "../generation/writer.js";
-import { loadOwnedProject } from "../projects/projects.js";
+import { loadProjectAccess } from "../projects/projects.js";
 import { BranchPlanError, planBranch, stateWarnings } from "./branch-policy.js";
 import { checkEnvironment, inferEnvironment } from "./environment.js";
 import {
@@ -113,7 +113,7 @@ export class WorkspaceService {
   }
 
   private async resolve(req: Request, projectId: string) {
-    const project = await loadOwnedProject(this.ctx, req.owner!.id, projectId);
+    const project = await loadProjectAccess(this.ctx, req.owner!.id, projectId, "read");
     const generation = await this.ctx.prisma.projectGeneration.findUnique({ where: { projectId: project.id } });
     let dir: string | null = null;
     let reason: string | null = null;
@@ -129,7 +129,8 @@ export class WorkspaceService {
     return { project, generation, dir, reason, record };
   }
 
-  private requireWritable(project: Project) {
+  private async requireWritable(req: Request, project: Project) {
+    await loadProjectAccess(this.ctx, req.owner!.id, project.id, "write");
     if (project.archivedAt) throw conflict("Restore the project before changing its repository.");
   }
 
@@ -227,7 +228,7 @@ export class WorkspaceService {
   async initialize(req: Request, projectId: string, raw: unknown) {
     const input = initRepositorySchema.parse(raw);
     const { project, generation, dir: maybeDir, reason, record } = await this.resolve(req, projectId);
-    this.requireWritable(project);
+    await this.requireWritable(req, project);
     const dir = this.requireDir(maybeDir, reason);
     if (record) throw conflict("This project's repository is already registered.");
     return this.serialize(dir, async () => {
@@ -281,7 +282,7 @@ export class WorkspaceService {
 
   private async requireRepository(req: Request, projectId: string) {
     const resolved = await this.resolve(req, projectId);
-    this.requireWritable(resolved.project);
+    await this.requireWritable(req, resolved.project);
     const dir = this.requireDir(resolved.dir, resolved.reason);
     if (!resolved.record) throw conflict("Initialize the repository first.");
     if ((await detectGitDir(dir)) !== "directory") throw conflict("The registered repository is missing or unsafe.");
@@ -427,7 +428,7 @@ export class WorkspaceService {
   async saveEnvironment(req: Request, projectId: string, raw: unknown): Promise<EnvironmentView> {
     const { spec, expectedVersion } = updateEnvironmentSchema.parse(raw);
     const { project, dir } = await this.resolve(req, projectId);
-    this.requireWritable(project);
+    await this.requireWritable(req, project);
     let saved;
     if (expectedVersion === 0) {
       saved = await this.ctx.prisma.projectEnvironment
@@ -467,7 +468,7 @@ export class WorkspaceService {
   }
 
   async checkEnvironment(req: Request, projectId: string) {
-    const project = await loadOwnedProject(this.ctx, req.owner!.id, projectId);
+    const project = await loadProjectAccess(this.ctx, req.owner!.id, projectId, "read");
     const view = await this.environment(req, projectId);
     const result = await checkEnvironment(view.spec, this.git);
     await audit(this.ctx, req, {
