@@ -123,6 +123,18 @@ npm run test:e2e
 
 Run tests against disposable/test data. Never point destructive test suites at production data. Record the exact commit, commands, results and known failures. A successful build or smoke test is not a substitute for full acceptance, security or production-readiness review.
 
+
+## 7.1 Employee access request flow
+
+The public UI exposes `/request-access` and `/activate`.
+
+- A visitor submits a work email, name and optional reason. The API applies in-memory per-IP and per-email rate limits and returns a generic response to avoid account enumeration.
+- Owner/Admin reviews pending requests under `/access-requests`. Administrators may approve employee/developer/tester roles but only the Owner may approve an ADMIN role.
+- Approval creates a one-time activation URL that is shown once to the reviewer for secure manual delivery. The URL expires after 24 hours; no email provider is configured by default.
+- The activation token is stored as a SHA-256 hash and consumed atomically. The employee chooses their own password and then signs in.
+- API routes: `POST /api/auth/access-requests`, `GET /api/auth/access-requests`, `POST /api/auth/access-requests/:id/approve`, `POST /api/auth/access-requests/:id/reject`, and `POST /api/auth/access-requests/activate`.
+- Apply the committed Prisma migration before using these routes. The flow is not a substitute for password recovery, MFA or project-level authorization.
+
 ## 8. Repository conventions and branch workflow
 
 Standard branches:
