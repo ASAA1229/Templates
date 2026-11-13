@@ -54,6 +54,11 @@ describe("project-level sharing and isolation", () => {
 
     const viewerAgent = await login(viewer.email);
     expect((await viewerAgent.get("/api/projects")).body.projects.map((p: { id: string }) => p.id)).toContain(item.id);
+    const stranger = await member("private.owner@asaa.test");
+    const strangerAgent = await login(stranger.email);
+    await strangerAgent.post("/api/projects", { key: "PRIVATE", name: "Shared project private" });
+    const search = await viewerAgent.get("/api/projects?q=Shared");
+    expect(search.body.projects.map((p: { id: string }) => p.id)).toEqual([item.id]);
     expect((await viewerAgent.get(`/api/projects/${item.id}`)).status).toBe(200);
     expect((await viewerAgent.patch(`/api/projects/${item.id}`, {
       expectedVersion: 1,
