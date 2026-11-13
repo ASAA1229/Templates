@@ -53,6 +53,16 @@ jobs:
         run: npm run validate
       - name: Smoke test built application
         run: npm run smoke
+      - name: Template certification (manifest, license, dependencies, secrets, dry-run, integrity)
+        run: npm run certify:templates -w @asaa/api
+      - name: Upload certification report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: template-certification-${{ github.sha }}
+          path: .local/certification/report.json
+          retention-days: 14
+          if-no-files-found: ignore
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
         working-directory: apps/web
