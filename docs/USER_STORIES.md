@@ -181,3 +181,8 @@ This file is the authoritative detailed user-story and acceptance-criteria backl
 
 Use [PROJECT_STATUS.md](PROJECT_STATUS.md) for the current story/gap state, evidence, maturity and release decision. PR #1 remains open and unmerged at `15fdfe1b016d2f7997008dc68701b99e4220ce26` on branch `new`. CI #738 (`43419669158`) was in progress at the latest inspection and has no final result. The Playwright template-batch helper adjustment is awaiting test execution; do not close its linked story or acceptance criteria based on the code change alone.
 
+
+
+## Current candidate and verification note — 2026-11-13
+
+Use [PROJECT_STATUS.md](PROJECT_STATUS.md) for current story/gap state, evidence, maturity and release decision. PR #1 remains open/unmerged at `15fdfe1b016d2f7997008dc68701b99e4220ce26` on `new`. CI #738 (`43419669158`) was in progress and has no final result. The Playwright template-batch helper adjustment awaits test execution; do not close linked stories based on source changes alone.
