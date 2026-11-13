@@ -29,6 +29,7 @@ import { ApiError, api } from "@/lib/api";
 import { useResource } from "@/lib/hooks";
 import { formatDateTime, humanize } from "@/lib/utils";
 import { EnvironmentPanel } from "./EnvironmentPanel";
+import { FilesPanel } from "./FilesPanel";
 
 const short = (sha: string | null) => (sha ? sha.slice(0, 10) : "—");
 const STATE_TONES = {
@@ -147,6 +148,7 @@ export function WorkspacePage() {
               <ProvidersCard workspace={workspace} />
             </div>
           </div>
+          <FilesPanel projectId={project.id} readOnly={readOnly} />
           <EnvironmentPanel projectId={project.id} readOnly={readOnly} onSaved={resource.reload} />
           <ActivityCard workspace={workspace} />
         </div>

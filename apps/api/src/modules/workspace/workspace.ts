@@ -27,6 +27,7 @@ import { audit } from "../audit/audit.service.js";
 import { authorize } from "../auth/policy.js";
 import { resolveOutputDir } from "../generation/writer.js";
 import { loadProjectAccess, requireProjectAccess } from "../projects/projects.js";
+import { WorkspaceFiles } from "./files.js";
 import { BranchPlanError, planBranch, stateWarnings } from "./branch-policy.js";
 import { checkEnvironment, inferEnvironment } from "./environment.js";
 import {
@@ -99,8 +100,12 @@ export class WorkspaceService {
     this.provider = options.provider ?? new LocalGitProvider(this.git);
   }
 
+  get appContext(): AppContext {
+    return this.ctx;
+  }
+
   /** Serialise repository operations per project folder (Git's own locks would otherwise surface as errors). */
-  private serialize<T>(key: string, task: () => Promise<T>): Promise<T> {
+  serialize<T>(key: string, task: () => Promise<T>): Promise<T> {
     const previous = this.queues.get(key) ?? Promise.resolve();
     const next = previous.catch(() => undefined).then(task);
     this.queues.set(key, next);
@@ -112,7 +117,7 @@ export class WorkspaceService {
     return next;
   }
 
-  private async resolve(req: Request, projectId: string) {
+  async resolve(req: Request, projectId: string) {
     const project = await loadProjectAccess(this.ctx, req.owner!.id, projectId, "read");
     const membership =
       project.ownerId === req.owner!.id
@@ -138,12 +143,12 @@ export class WorkspaceService {
     return { project, access, generation, dir, reason, record };
   }
 
-  private async requireWritable(req: Request, project: Project) {
+  async requireWritable(req: Request, project: Project) {
     await loadProjectAccess(this.ctx, req.owner!.id, project.id, "write");
     if (project.archivedAt) throw conflict("Restore the project before changing its repository.");
   }
 
-  private requireDir(dir: string | null, reason: string | null): string {
+  requireDir(dir: string | null, reason: string | null): string {
     if (!dir) throw conflict(reason ?? "The project folder is not available.");
     return dir;
   }
@@ -494,6 +499,8 @@ export class WorkspaceService {
 export function workspaceRouter(ctx: AppContext, service = new WorkspaceService(ctx)): Router {
   const router = Router({ mergeParams: true });
   const projectId = (req: Request) => String(req.params.projectId);
+  const files = new WorkspaceFiles(service);
+  const queryPath = (req: Request) => (typeof req.query.path === "string" ? req.query.path : undefined);
   const handle = (
     permission: "workspace:read" | "workspace:write",
     run: (req: Request) => Promise<unknown>,
@@ -545,6 +552,19 @@ export function workspaceRouter(ctx: AppContext, service = new WorkspaceService(
     "/branches",
     ...handle("workspace:write", async (req) => service.createBranch(req, projectId(req), req.body), 201),
   );
+  router.get("/files/tree", ...handle("workspace:read", (req) => files.tree(req, projectId(req), queryPath(req))));
+  router.get("/files/content", ...handle("workspace:read", (req) => files.read(req, projectId(req), queryPath(req))));
+  router.put("/files/content", ...handle("workspace:write", (req) => files.write(req, projectId(req), req.body)));
+  router.get("/diff", ...handle("workspace:read", (req) => files.diff(req, projectId(req), queryPath(req))));
+  router.get(
+    "/history",
+    ...handle("workspace:read", (req) => files.history(req, projectId(req), queryPath(req), req.query.limit)),
+  );
+  router.get(
+    "/commits/:sha",
+    ...handle("workspace:read", (req) => files.commitDetail(req, projectId(req), String(req.params.sha))),
+  );
+  router.post("/commits", ...handle("workspace:write", (req) => files.commit(req, projectId(req), req.body), 201));
   router.get(
     "/environment",
     ...handle("workspace:read", async (req) => ({ environment: await service.environment(req, projectId(req)) })),

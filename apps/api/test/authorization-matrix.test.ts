@@ -242,6 +242,40 @@ const ENDPOINTS: Endpoint[] = [
     min: "write",
   },
   {
+    name: "workspace file tree",
+    method: "get",
+    url: (w) => `${P(w)}/workspace/files/tree`,
+    min: "read",
+  },
+  {
+    name: "workspace file content",
+    method: "get",
+    url: (w) => `${P(w)}/workspace/files/content?path=package.json`,
+    min: "read",
+  },
+  {
+    name: "workspace file save (invalid)",
+    method: "put",
+    url: (w) => `${P(w)}/workspace/files/content`,
+    body: () => ({}),
+    min: "write",
+  },
+  { name: "workspace diff", method: "get", url: (w) => `${P(w)}/workspace/diff`, min: "read" },
+  { name: "workspace history", method: "get", url: (w) => `${P(w)}/workspace/history`, min: "read" },
+  {
+    name: "workspace commit detail",
+    method: "get",
+    url: (w) => `${P(w)}/workspace/commits/${"a".repeat(40)}`,
+    min: "read",
+  },
+  {
+    name: "workspace commit (invalid)",
+    method: "post",
+    url: (w) => `${P(w)}/workspace/commits`,
+    body: () => ({}),
+    min: "write",
+  },
+  {
     name: "template submission (invalid)",
     method: "post",
     url: (w) => `${P(w)}/template-submissions`,
@@ -443,7 +477,7 @@ describe("RG-01 route inventory", () => {
     const found = await sourceRoutes();
     // Updating this count is a deliberate review point: every new route needs a matrix entry
     // (or an explicit PUBLIC entry) and a permission via authorize()/requireOwner().
-    expect(found.length).toBeGreaterThanOrEqual(60);
+    expect(found.length).toBeGreaterThanOrEqual(70);
     for (const route of found) expect(route).toMatch(/^[\w.-]+ (GET|POST|PUT|PATCH|DELETE) \//);
   });
 
