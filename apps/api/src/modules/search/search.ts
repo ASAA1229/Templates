@@ -97,13 +97,16 @@ export function searchRouter(ctx: AppContext): Router {
             ? ctx.prisma.project.findMany({
                 where: {
                   archivedAt: null,
-                  OR: [{ ownerId }, { members: { some: { memberId: ownerId } } }],
-                  ...(filters.projectStatus ? { status: filters.projectStatus } : {}),
-                  OR: [
-                    { name: { contains: query, mode: "insensitive" } },
-                    { key: { contains: query, mode: "insensitive" } },
-                    { purpose: { contains: query, mode: "insensitive" } },
+                  AND: [
+                    { OR: [{ ownerId }, { members: { some: { memberId: ownerId } } }] },
+                    { OR: [
+                      { name: { contains: query, mode: "insensitive" as const } },
+                      { key: { contains: query, mode: "insensitive" as const } },
+                      { purpose: { contains: query, mode: "insensitive" as const } },
+                    ] },
                   ],
+                  ...(filters.projectStatus ? { status: filters.projectStatus } : {}),
+
                 },
                 select: { id: true, key: true, name: true, status: true, updatedAt: true },
                 orderBy: { updatedAt: "desc" },
