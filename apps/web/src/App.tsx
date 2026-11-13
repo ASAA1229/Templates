@@ -5,6 +5,9 @@ import { EmptyState, LoadingState } from "@/components/common";
 import { Button } from "@/components/ui";
 import { AuditPage } from "@/features/audit/AuditPage";
 import { LoginPage } from "@/features/auth/LoginPage";
+import { AccessRequestPage } from "@/features/auth/AccessRequestPage";
+import { ActivateAccountPage } from "@/features/auth/ActivateAccountPage";
+import { AccessRequestsPage } from "@/features/security/AccessRequestsPage";
 import { CatalogPage } from "@/features/catalog/CatalogPage";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
 import { ProjectDetailPage } from "@/features/projects/ProjectDetailPage";
@@ -96,6 +99,14 @@ function Root({ children }: { children: ReactNode }) {
 
 export const routes: RouteObject[] = [
   {
+    path: "/request-access",
+    element: <Root><AccessRequestPage /></Root>,
+  },
+  {
+    path: "/activate",
+    element: <Root><ActivateAccountPage /></Root>,
+  },
+  {
     path: "/login",
     element: (
       <Root>
@@ -136,6 +147,7 @@ export const routes: RouteObject[] = [
       { path: "audit", element: <AuditPage /> },
       { path: "security", element: <SecurityPage /> },
       { path: "team", element: <TeamMembersPage /> },
+      { path: "access-requests", element: <AccessRequestsPage /> },
       { path: "template-submissions", element: <TemplateSubmissionsPage /> },
       { path: "*", element: <NotFound /> },
     ],
