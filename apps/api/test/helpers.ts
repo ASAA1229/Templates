@@ -75,7 +75,7 @@ export function createHarness(overrides: Record<string, string> = {}): TestHarne
       await prisma.$transaction([
         prisma.$executeRawUnsafe("SET LOCAL session_replication_role = replica"),
         prisma.$executeRawUnsafe(
-          'TRUNCATE "AuditEvent", "ProjectRepository", "ProjectEnvironment", "ProjectGeneration", "TraceLink", "RequirementVersion", "RequirementDependency", "Requirement", "Project", "Session", "Owner", "CatalogItem" RESTART IDENTITY CASCADE',
+          'TRUNCATE "AuditEvent", "AccessRequest", "ProjectRepository", "ProjectEnvironment", "ProjectGeneration", "TraceLink", "RequirementVersion", "RequirementDependency", "Requirement", "Project", "Session", "Owner", "CatalogItem" RESTART IDENTITY CASCADE',
         ),
       ]);
     },
