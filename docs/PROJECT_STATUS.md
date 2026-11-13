@@ -48,7 +48,7 @@ Scores are provisional engineering assessments based on inspected documentation/
 | Monitoring, backup and disaster recovery | 3.5 | Structured logs, request IDs and health endpoint; no restore drill, alerting or approved RPO/RTO. |
 | Release readiness and operational support | 3.0 | Open PR, failing E2E, uncertified templates and unproven operations. |
 
-**Overall provisional project maturity: 5.3/10.** Separate from the ASAA organization-level score of 6.2/10; do not compare without a common rubric.
+**Overall provisional project maturity: 5.0/10 (arithmetic mean of the 11 dimension scores).** Separate from the ASAA organization-level score of 6.2/10; do not compare without a common rubric.
 
 ## Status vocabulary
 
