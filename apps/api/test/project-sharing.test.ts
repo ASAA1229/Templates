@@ -140,6 +140,40 @@ describe("project-level sharing and isolation", () => {
     expect(updated.body.requirement.title).toBe("Edited by project editor");
   });
 
+  it("applies shared project roles to the engineering workspace", async () => {
+    const { agent: ownerAgent, project: item } = await project();
+    const environmentUrl = `/api/projects/${item.id}/workspace/environment`;
+    const spec = {
+      spec: {
+        schemaVersion: 1,
+        tools: [],
+        packageManager: { name: "none", version: "*" },
+        commands: { install: [], dev: [], build: [], test: [] },
+        variables: [],
+        database: { engine: "none", version: "*" },
+        notes: "Shared workspace access test",
+      },
+      expectedVersion: 0,
+    };
+
+    const viewer = await member("workspace.viewer@asaa.test");
+    await ownerAgent.post(`/api/projects/${item.id}/members`, { email: viewer.email, role: "VIEWER" });
+    const viewerAgent = await login(viewer.email);
+    const viewerWorkspace = await viewerAgent.get(`/api/projects/${item.id}/workspace`);
+    expect(viewerWorkspace.status).toBe(200);
+    expect(viewerWorkspace.body.workspace.project.access).toBe("VIEWER");
+    expect((await viewerAgent.put(environmentUrl, spec)).status).toBe(404);
+
+    const editor = await member("workspace.editor@asaa.test");
+    await ownerAgent.post(`/api/projects/${item.id}/members`, { email: editor.email, role: "EDITOR" });
+    const editorAgent = await login(editor.email);
+    const editorWorkspace = await editorAgent.get(`/api/projects/${item.id}/workspace`);
+    expect(editorWorkspace.status).toBe(200);
+    expect(editorWorkspace.body.workspace.project.access).toBe("EDITOR");
+    const saved = await editorAgent.put(environmentUrl, spec);
+    expect(saved.status).toBe(200);
+    expect(saved.body.environment.version).toBe(1);
+  });
   it("removes access immediately when membership is revoked", async () => {
     const { agent: ownerAgent, project: item } = await project();
     const viewer = await member("revoked@asaa.test");
