@@ -135,6 +135,21 @@ The public UI exposes `/request-access` and `/activate`.
 - API routes: `POST /api/auth/access-requests`, `GET /api/auth/access-requests`, `POST /api/auth/access-requests/:id/approve`, `POST /api/auth/access-requests/:id/reject`, and `POST /api/auth/access-requests/activate`.
 - Apply the committed Prisma migration before using these routes. The flow is not a substitute for password recovery, MFA or project-level authorization.
 
+## 7.2 Project sharing and resource authorization
+
+Project membership is stored in `ProjectMember` and is separate from organization account roles.
+
+- The project owner retains full control and is the only principal who can add, change or revoke project membership.
+- `VIEWER` can read a shared project and its requirements, generation record and workspace overview. Mutations must be denied server-side.
+- `EDITOR` can update project metadata, requirements and workspace/environment configuration, subject to the member's organization-level permissions.
+- A project owner can share with an existing active team account by email. Sharing does not create accounts or bypass employee onboarding.
+- Membership is checked on each API request; revocation therefore takes effect without waiting for a session refresh.
+- Project lists, search and dashboard metrics must include only owned or explicitly shared projects. Search filters must combine membership scope and text filters with logical AND; never overwrite one OR clause with another.
+- Keep destructive/administrative actions owner-only unless a future approved policy explicitly delegates them.
+- New project-linked endpoints must use the centralized access helper and add direct-API tests for owner, editor, viewer, revoked member and unrelated account. Do not rely on hidden UI controls as authorization.
+
+The current implementation adds a Prisma migration and project sharing UI/API. Full endpoint-by-endpoint isolation and CI/E2E verification remain release gates.
+
 ## 8. Repository conventions and branch workflow
 
 Standard branches:
