@@ -11,7 +11,7 @@ import type { AppContext } from "../../context.js";
 import { conflict, notFound, validationFailed } from "../../lib/errors.js";
 import { audit } from "../audit/audit.service.js";
 import { authorize } from "../auth/policy.js";
-import { loadOwnedProject } from "../projects/projects.js";
+import { loadProjectAccess } from "../projects/projects.js";
 
 type RequirementWithRelations = Requirement & {
   links: TraceLink[];
@@ -108,8 +108,8 @@ async function validateDependencies(
 export function requirementsRouter(ctx: AppContext): Router {
   const router = Router({ mergeParams: true });
 
-  async function loadRequirement(ownerId: string, projectId: string, id: string) {
-    await loadOwnedProject(ctx, ownerId, projectId);
+  async function loadRequirement(ownerId: string, projectId: string, id: string, access: "read" | "write" = "read") {
+    await loadProjectAccess(ctx, ownerId, projectId, access);
     if (!/^[0-9a-f-]{36}$/i.test(id)) throw notFound("Requirement");
     const requirement = await ctx.prisma.requirement.findFirst({ where: { id, projectId }, include });
     if (!requirement) throw notFound("Requirement");
@@ -119,7 +119,7 @@ export function requirementsRouter(ctx: AppContext): Router {
   router.get("/", authorize(ctx, "requirement:read"), async (req, res, next) => {
     try {
       const projectId = String(req.params.projectId);
-      await loadOwnedProject(ctx, req.owner!.id, projectId);
+      await loadProjectAccess(ctx, req.owner!.id, projectId, "read");
       const requirements = await ctx.prisma.requirement.findMany({
         where: { projectId },
         include,
@@ -135,7 +135,7 @@ export function requirementsRouter(ctx: AppContext): Router {
     try {
       const projectId = String(req.params.projectId);
       const input = createRequirementSchema.parse(req.body);
-      const project = await loadOwnedProject(ctx, req.owner!.id, projectId);
+      const project = await loadProjectAccess(ctx, req.owner!.id, projectId, "write");
       if (project.archivedAt) throw conflict("Restore the project before adding requirements.");
       const created = await ctx.prisma.$transaction(async (tx) => {
         const dependencyIds = await validateDependencies(tx, projectId, null, input.dependencyIds);
@@ -179,7 +179,7 @@ export function requirementsRouter(ctx: AppContext): Router {
 
   router.get("/:id", authorize(ctx, "requirement:read"), async (req, res, next) => {
     try {
-      const requirement = await loadRequirement(req.owner!.id, String(req.params.projectId), String(req.params.id));
+      const requirement = await loadRequirement(req.owner!.id, String(req.params.projectId), String(req.params.id), "read");
       const versions = await ctx.prisma.requirementVersion.findMany({
         where: { requirementId: requirement.id },
         orderBy: { version: "desc" },
@@ -202,7 +202,7 @@ export function requirementsRouter(ctx: AppContext): Router {
     try {
       const projectId = String(req.params.projectId);
       const { expectedVersion, changeNote, dependencyIds, ...changes } = updateRequirementSchema.parse(req.body);
-      const current = await loadRequirement(req.owner!.id, projectId, String(req.params.id));
+      const current = await loadRequirement(req.owner!.id, projectId, String(req.params.id), "write");
       const updated = await ctx.prisma.$transaction(async (tx) => {
         const result = await tx.requirement.updateMany({
           where: { id: current.id, version: expectedVersion },
@@ -249,7 +249,7 @@ export function requirementsRouter(ctx: AppContext): Router {
     try {
       const input = flagRequirementSchema.parse(req.body);
       if (input.flagged && !input.reason) throw validationFailed({ reason: "Explain what needs review." });
-      const current = await loadRequirement(req.owner!.id, String(req.params.projectId), String(req.params.id));
+      const current = await loadRequirement(req.owner!.id, String(req.params.projectId), String(req.params.id), "write");
       const requirement = await ctx.prisma.requirement.update({
         where: { id: current.id },
         data: { flaggedForReview: input.flagged, flagReason: input.flagged ? input.reason! : null },
