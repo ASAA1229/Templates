@@ -80,7 +80,6 @@ jobs:
             apps/api/src/modules/dashboard/dashboard.ts \
             apps/api/src/modules/search/search.ts \
             apps/api/test/project-sharing.test.ts \
-            apps/api/prisma/schema.prisma
           if ! git diff --quiet; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
