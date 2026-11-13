@@ -327,3 +327,8 @@ Use PROJECT_STATUS.md for the canonical status vocabulary: PLANNED, NOT STARTED,
 
 Current evidence and status are authoritative in [PROJECT_STATUS.md](PROJECT_STATUS.md). Latest candidate: `15fdfe1b016d2f7997008dc68701b99e4220ce26` on `new`, PR #1 open/unmerged. CI #738 (`43419669158`) was still in progress at inspection; only checkout, dependency installation, dependency audit and migrations had completed successfully. Do not represent the candidate as CI verified. The template-batch Playwright request helper change is awaiting execution; the earlier blueprint-selection failure remains open. All P0 requirements remain release-blocking until their evidence and acceptance criteria are met.
 
+
+
+## Current verification addendum — 2026-11-13
+
+Current evidence and status are authoritative in [PROJECT_STATUS.md](PROJECT_STATUS.md). Latest candidate: `15fdfe1b016d2f7997008dc68701b99e4220ce26` on `new`, PR #1 open/unmerged. CI #738 (`43419669158`) was in progress; only checkout, dependency installation, dependency audit and migrations had completed successfully. The Playwright template-batch helper change awaits execution; the earlier blueprint-selection failure remains open. All P0 requirements remain release-blocking until verified.
