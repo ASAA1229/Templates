@@ -104,7 +104,6 @@ describe("project-level sharing and isolation", () => {
     expect((await editorAgent.delete(`/api/projects/${item.id}/members/${editor.id}`)).status).toBe(404);
   });
 
-
   it("enforces viewer/editor permissions on nested requirements", async () => {
     const { agent: ownerAgent, project: item } = await project();
     const base = `/api/projects/${item.id}/requirements`;
@@ -122,8 +121,7 @@ describe("project-level sharing and isolation", () => {
     expect((await viewerAgent.get(`${base}/${requirementId}`)).status).toBe(200);
     expect((await viewerAgent.post(base, { title: "Viewer cannot create" })).status).toBe(404);
     expect(
-      (await viewerAgent.patch(`${base}/${requirementId}`, { title: "Viewer cannot edit", expectedVersion: 1 }))
-        .status,
+      (await viewerAgent.patch(`${base}/${requirementId}`, { title: "Viewer cannot edit", expectedVersion: 1 })).status,
     ).toBe(404);
     expect(
       (await viewerAgent.post(`${base}/${requirementId}/flag`, { flagged: true, reason: "No permission" })).status,
