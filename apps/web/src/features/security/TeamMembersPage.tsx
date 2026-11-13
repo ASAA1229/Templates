@@ -21,6 +21,8 @@ export function TeamMembersPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [resetLink, setResetLink] = useState<{ email: string; url: string; expiresAt: string } | null>(null);
+  const [resettingMemberId, setResettingMemberId] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -78,6 +80,23 @@ export function TeamMembersPage() {
     }
   }
 
+  async function issuePasswordReset(member: Member) {
+    setError("");
+    setMessage("");
+    setResettingMemberId(member.id);
+    try {
+      const result = await api<{ resetUrl: string; expiresAt: string }>("/auth/password-reset/issue", {
+        method: "POST",
+        body: { email: member.email },
+      });
+      setResetLink({ email: member.email, url: result.resetUrl, expiresAt: result.expiresAt });
+      setMessage("A one-time password reset link has been issued. Share it with the employee through a secure channel.");
+    } catch (cause) {
+      setError(cause instanceof ApiError ? cause.message : "Unable to issue a password reset link.");
+    } finally {
+      setResettingMemberId(null);
+    }
+  }
   if (owner?.role !== "OWNER" && owner?.role !== "ADMIN") {
     return (
       <EmptyState title="Access restricted" description="Only owners and administrators can manage team accounts." />
