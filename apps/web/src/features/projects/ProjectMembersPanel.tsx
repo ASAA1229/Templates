@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Alert, Button, Card, CardContent, CardHeader, CardTitle, Input, Select } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
 
@@ -33,7 +33,7 @@ export function ProjectMembersPanel({ projectId }: { projectId: string }) {
 
   useEffect(() => { void reload(); }, [reload]);
 
-  async function addMember(event: React.FormEvent) {
+  async function addMember(event: FormEvent) {
     event.preventDefault();
     setBusy(true);
     setError("");
