@@ -42,7 +42,7 @@ Before accepting a candidate commit:
 8. Review security/dependency/license findings and known risks.
 9. Record failures and evidence; do not promote while mandatory gates fail.
 
-The CI workflow currently validates pushes to `new`, `dev`, `fix`, `test`, and pull requests targeting `dev` or `main`. It uses an ephemeral PostgreSQL service and a GitHub-hosted runner. Its current workflow includes a temporary formatting-repair step on eligible pushes to `new`; remove that workaround after all affected files are formatted and CI is stable. Check the actual workflow result for the exact commit—do not infer success from a started run.
+The CI workflow currently validates pushes to `new`, `dev`, `fix`, `test`, and pull requests targeting `dev` or `main`. It uses an ephemeral PostgreSQL service and a GitHub-hosted runner. The workflow previously included a temporary formatting-repair-and-push step on eligible pushes to `new`; this was removed in the 2026-11-13 hardening increment. The validation workflow now uses contents: read and does not commit or push source changes. Check the actual workflow result for the exact commit—do not infer success from a started run.
 
 A release must distinguish code committed, build verified, tests passed, template certified, approved, deployed and post-deployment verified. Production deployment requires explicit owner authorization and an approved deployment/recovery plan.
 
