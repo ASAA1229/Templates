@@ -101,3 +101,8 @@ The hardened candidate is 7268eae2ace8d037c1797a4a306b3968ad9d3a42. GitHub Actio
 - PR #1 head: `15fdfe1b016d2f7997008dc68701b99e4220ce26`; base: `7989af5e858a4221d71183636e0cf5c285d10180`.
 - [Run #738](https://github.com/ASAA1229/Templates/actions/runs/43419669158) was **in progress** when inspected. Checkout, Node setup, `npm ci`, dependency audit and migrations had passed. Combined format/lint/typecheck/unit+integration/build was running. Smoke, Playwright installation, E2E/accessibility and report upload had not started.
 - No final result is available. Do not mark CI VERIFIED. The template-batch request-helper change awaits E2E execution; the blueprint selection issue remains open pending evidence.
+
+
+## Documentation-only head update — 2026-11-13
+
+The documentation synchronization advanced PR #1 to `511e95ec9f0d2d35b2a6f271eb19c09b7f7e24f4`. Run #738 (`43419669158`) was observed against the prior code/test candidate `15fdfe1b016d2f7997008dc68701b99e4220ce26`, not this latest documentation-only head. No workflow run or status check was returned for `511e95ec9f0d2d35b2a6f271eb19c09b7f7e24f4` at the latest inspection. The earlier run's in-progress state is not evidence of a pass for the current PR head. Re-run/confirm CI on the exact current PR head before claiming CI VERIFIED.
