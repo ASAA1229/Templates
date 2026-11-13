@@ -123,3 +123,13 @@ The read-only CI workflow and Playwright API request-context change are now pres
 - Maturity dimension scores and the overall 5.0/10 baseline remain unchanged pending completed evidence. Release remains **NO-GO**.
 - Branch-head/history inventory remains partial; do not infer that all five standard branches are synchronized.
 
+
+
+### 2026-11-13 — latest candidate and live CI state
+
+- Open PR #1 (new → dev) remains open and unmerged. Latest PR head: `15fdfe1b016d2f7997008dc68701b99e4220ce26`; base: `7989af5e858a4221d71183636e0cf5c285d10180`.
+- [CI #738](https://github.com/ASAA1229/Templates/actions/runs/43419669158) (`43419669158`) was **in progress** at inspection. Checkout, Node setup, `npm ci`, dependency audit and migrations passed; format/lint/typecheck/unit+integration/build was still running; smoke and Playwright/E2E had not started.
+- The workflow on `new` uses `contents: read` and no longer contains the temporary formatting repair/push step.
+- The template-batch E2E helper now uses Playwright's shared request context and resolves relative endpoints against the page origin. This awaits test verification; it is not marked fixed.
+- Run #705 remains the latest completed result: 19 passed, 3 failed. Blueprint selection and template-batch failures remain unverified.
+- Scores remain unchanged at 5.0/10. Release remains **NO-GO**. Complete branch-head/history inventory is still partial; do not infer branch synchronization.
