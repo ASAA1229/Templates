@@ -194,12 +194,16 @@ Use distinct states: Not started, In development, Development complete, Build ve
 
 The current `new` branch includes a React/Vite and Express/Prisma foundation; multi-role account and session foundations; projects, requirements, dashboard, catalog, search, template library and generation; project blueprints; local Git/environment workspace; 25 demo website packages; project-to-template submission/review; shared contracts and CI/test foundations.
 
+Current access implementation on `new`: public employee access request, Owner/Admin review, one-time 24-hour activation link, hashed/consumed activation token, multi-role accounts, and project-level VIEWER/EDITOR membership with owner-controlled sharing. Project, requirement, workspace and generation reads/writes are being scoped to membership; project lists, dashboard and search include shared projects. Automated isolation tests have been added, but remain unverified until CI completes.
+
 Known remaining or unverified areas include:
 - Final CI/E2E/accessibility evidence and full certification of the 25 packages.
+- Secure password recovery/reset, MFA, invitation delivery automation and lifecycle edge cases.
+- Complete isolation coverage for every project-linked endpoint, dashboard/search/analytics and background operation.
+- Specialist roles, team/project group sharing, organization-level policy and access expiry.
 - Broader project-family adapters and complete multi-stack generation.
 - Full in-platform authoring/configuration/visual preview.
 - Isolated build/test runner and complete ZIP/remote repository delivery.
-- Invitation/activation/password reset, resource-level sharing, specialist roles and end-to-end identity isolation.
 - Connector registry, reusable asset composition and complete online source workspace.
 - Product-level CI/CD, deployment, monitoring, incident handling and tested backup/restore.
 - Expanded template coverage beyond the initial 25 website demos.
