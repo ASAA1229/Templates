@@ -76,3 +76,8 @@ For each release-blocking story record its gap/story ID, acceptance criterion, t
 ## 2026-11-13 — test harness change awaiting verification
 
 The template batch review helper was changed to use Playwright's shared API request context rather than executing fetch inside the page. This preserves the browser context's authentication state while avoiding a page-origin fetch dependency. The change is a hypothesis-driven hardening step; it is not considered fixed until the browser suite is rerun and the template batch review passes. The blueprint selection assertion failure remains open. No post-change CI result was available at the time of this update.
+
+
+## Latest candidate validation status — 2026-11-13
+
+The hardened candidate is 7268eae2ace8d037c1797a4a306b3968ad9d3a42. GitHub Actions CI run #731 (43419462644) is pending and has not exposed job results yet. Do not call it a pass. The last completed evidence remains run #705 with 19 passed and 3 failed browser tests.
