@@ -1093,7 +1093,7 @@ export interface RepositoryStateView {
 }
 
 export interface WorkspaceView {
-  project: { id: string; key: string; name: string; archived: boolean };
+  project: { id: string; key: string; name: string; archived: boolean; access: "OWNER" | "VIEWER" | "EDITOR" };
   output: { available: boolean; outputDir: string | null; reason: string | null };
   git: { available: boolean; version: string | null; message: string | null };
   providers: RepositoryCapabilitiesView[];
