@@ -30,7 +30,7 @@ async function login(email: string) {
   return agent;
 }
 
-async function project(owner: Awaited<ReturnType<typeof h.createOwner>>) {
+async function project() {
   const agent = await h.signedIn();
   const response = await agent.post("/api/projects", {
     key: "SHARED",
@@ -43,7 +43,7 @@ async function project(owner: Awaited<ReturnType<typeof h.createOwner>>) {
 
 describe("project-level sharing and isolation", () => {
   it("allows a viewer to discover and read only a shared project, never mutate it", async () => {
-    const { agent: ownerAgent, project: item } = await project(await h.createOwner());
+    const { agent: ownerAgent, project: item } = await project();
     const viewer = await member("viewer@asaa.test");
     const added = await ownerAgent.post(`/api/projects/${item.id}/members`, {
       email: viewer.email,
