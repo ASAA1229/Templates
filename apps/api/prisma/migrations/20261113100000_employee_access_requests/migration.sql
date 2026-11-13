@@ -6,6 +6,7 @@ CREATE TABLE "AccessRequest" (
   "displayName" VARCHAR(120) NOT NULL,
   "reason" VARCHAR(1000) NOT NULL DEFAULT '',
   "status" "AccessRequestStatus" NOT NULL DEFAULT 'PENDING',
+  "approvedRole" "OwnerRole" NOT NULL DEFAULT 'EMPLOYEE',
   "tokenHash" CHAR(64),
   "tokenExpiresAt" TIMESTAMPTZ(3),
   "activatedAt" TIMESTAMPTZ(3),
