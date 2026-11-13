@@ -16,6 +16,8 @@ async function member(email: string) {
       displayName: email.split("@")[0]!,
       role: "EMPLOYEE",
       passwordHash: await hashPassword("a sufficiently long test password"),
+      passwordChangedAt: new Date(h.clock.now.getTime() - 1000),
+      createdAt: new Date(h.clock.now.getTime() - 1000),
     },
   });
 }
