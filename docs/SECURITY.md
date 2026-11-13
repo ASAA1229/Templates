@@ -18,7 +18,7 @@ The repository remains private. No public marketplace or external-organization a
 - Add specialist design, DevOps, security and project-management roles only with explicit permission definitions and tests.
 - Test horizontal and vertical privilege escalation, cross-project access, direct API calls, search result leakage, export leakage and stale-session access.
 
-The current branch contains the initial multi-role and member-management foundation. It does not yet satisfy all invitation, recovery, resource-sharing and end-to-end isolation gates. Keep general employee rollout blocked until those gates pass.
+The current branch contains multi-role and member-management foundations. Employee access-request/activation and Owner/Admin-issued password reset implementations exist; reset tokens are hashed, expiring and single-use, with rate limiting, audit and session revocation. These flows remain NEEDS TESTING, and exhaustive resource isolation is not yet proven. Keep general employee rollout blocked until the relevant gates pass.
 
 ## 3. Authentication and session protections
 
@@ -106,3 +106,8 @@ Before enabling employee access or deploying beyond local development:
 9. Obtain explicit owner approval for the target environment and any non-zero cost.
 
 A green build alone is not a security sign-off.
+
+
+## CI workflow least privilege — 2026-11-13
+
+The inspected CI workflow currently grants contents: write and contains a temporary formatting repair step capable of committing and pushing to branch new. This is not required for validation. Replace it with committed formatting changes and reduce pull-request validation permissions to contents: read (and only other explicitly required read permissions). Any artifact publication or release write operation must be a separate, explicitly scoped job with protected approval. See [PROJECT_STATUS.md](PROJECT_STATUS.md) for current evidence and release status.
