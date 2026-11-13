@@ -34,6 +34,8 @@ model Owner {
   savedSearches     SavedSearch[]
   reviewedAccessRequests AccessRequest[] @relation("AccessRequestReviewer")
   projectMemberships ProjectMember[]
+  passwordResetTokens PasswordResetToken[] @relation("PasswordResetOwner")
+  issuedPasswordResetTokens PasswordResetToken[] @relation("PasswordResetIssuer")
 }
 
 /// Server-side session. Only a SHA-256 of the opaque cookie token is stored.
@@ -49,6 +51,21 @@ model Session {
   userAgent  String?   @db.VarChar(200)
 
   @@index([ownerId, revokedAt])
+}
+
+/// Single-use password recovery token. Only its SHA-256 hash is stored.
+model PasswordResetToken {
+  id         String    @id @default(uuid()) @db.Uuid
+  ownerId    String    @db.Uuid
+  owner      Owner     @relation("PasswordResetOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  issuedById String    @db.Uuid
+  issuedBy   Owner     @relation("PasswordResetIssuer", fields: [issuedById], references: [id], onDelete: Restrict)
+  tokenHash  String    @unique @db.Char(64)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+  expiresAt  DateTime  @db.Timestamptz(3)
+  consumedAt DateTime? @db.Timestamptz(3)
+
+  @@index([ownerId, consumedAt, expiresAt])
 }
 
 enum AuditActorType {
