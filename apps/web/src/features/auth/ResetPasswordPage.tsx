@@ -46,22 +46,42 @@ export function ResetPasswordPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Reset your password</CardTitle>
-          <CardDescription>This one-time link expires after 30 minutes. Resetting your password ends all active sessions.</CardDescription>
+          <CardDescription>
+            This one-time link expires after 30 minutes. Resetting your password ends all active sessions.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {complete ? (
             <div className="space-y-4">
               <Alert tone="success">Your password has been changed. All previous sessions have been revoked.</Alert>
-              <Link className="block text-center text-sm underline" to="/login">Continue to sign in</Link>
+              <Link className="block text-center text-sm underline" to="/login">
+                Continue to sign in
+              </Link>
             </div>
           ) : (
             <form onSubmit={(event) => void submit(event)} className="space-y-4">
               {error && <Alert tone="danger">{error}</Alert>}
               <Field label="New password">
-                <Input type="password" autoComplete="new-password" minLength={12} maxLength={256} required value={password} onChange={(event) => setPassword(event.target.value)} />
+                <Input
+                  type="password"
+                  autoComplete="new-password"
+                  minLength={12}
+                  maxLength={256}
+                  required
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
               </Field>
               <Field label="Confirm new password">
-                <Input type="password" autoComplete="new-password" minLength={12} maxLength={256} required value={confirm} onChange={(event) => setConfirm(event.target.value)} />
+                <Input
+                  type="password"
+                  autoComplete="new-password"
+                  minLength={12}
+                  maxLength={256}
+                  required
+                  value={confirm}
+                  onChange={(event) => setConfirm(event.target.value)}
+                />
               </Field>
               <Button type="submit" className="w-full" disabled={pending}>
                 {pending ? "Resetting…" : "Reset password"}
