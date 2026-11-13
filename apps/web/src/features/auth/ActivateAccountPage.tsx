@@ -1,16 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link, Navigate, useSearchParams } from "react-router";
 import { Field } from "@/components/common";
-import {
-  Alert,
-  Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Input,
-} from "@/components/ui";
+import { Alert, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
 
 export function ActivateAccountPage() {
@@ -55,9 +46,7 @@ export function ActivateAccountPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Activate your account</CardTitle>
-          <CardDescription>
-            Choose a strong password to finish setting up your employee account.
-          </CardDescription>
+          <CardDescription>Choose a strong password to finish setting up your employee account.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={(event) => void submit(event)} className="space-y-4">

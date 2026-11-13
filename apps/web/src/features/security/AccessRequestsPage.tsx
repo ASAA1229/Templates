@@ -69,11 +69,7 @@ export function AccessRequestsPage() {
           <div className="space-y-2">
             <p>Activation link created. Share it securely with the requester; it is shown only once.</p>
             <div className="break-all font-mono text-xs">{activationUrl}</div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => void navigator.clipboard.writeText(activationUrl)}
-            >
+            <Button size="sm" variant="outline" onClick={() => void navigator.clipboard.writeText(activationUrl)}>
               Copy activation link
             </Button>
           </div>
@@ -96,19 +92,10 @@ export function AccessRequestsPage() {
                   {item.reason && <p className="mt-2 text-sm">{item.reason}</p>}
                 </div>
                 <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    disabled={!!busyId}
-                    onClick={() => void review(item, "approve")}
-                  >
+                  <Button size="sm" disabled={!!busyId} onClick={() => void review(item, "approve")}>
                     {busyId === item.id ? "Working…" : "Approve"}
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={!!busyId}
-                    onClick={() => void review(item, "reject")}
-                  >
+                  <Button size="sm" variant="outline" disabled={!!busyId} onClick={() => void review(item, "reject")}>
                     Reject
                   </Button>
                 </div>

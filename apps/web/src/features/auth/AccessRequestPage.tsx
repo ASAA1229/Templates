@@ -1,16 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import { Field } from "@/components/common";
-import {
-  Alert,
-  Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Input,
-} from "@/components/ui";
+import { Alert, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
 
 export function AccessRequestPage() {
