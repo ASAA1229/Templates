@@ -433,3 +433,41 @@ model AccessRequest {
   @@index([status, createdAt])
   @@index([email, status])
 }
+
+enum ReleaseStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED
+  RELEASED
+  DEPRECATED
+}
+
+/// Version ledger for library templates (RG-06): draft -> review -> approved -> released (immutable) -> deprecated.
+/// Released rows can never change identity, digest or manifest; the database enforces this with a trigger.
+model TemplateRelease {
+  id                String        @id @default(uuid()) @db.Uuid
+  templateId        String        @db.VarChar(80)
+  version           String        @db.VarChar(40)
+  status            ReleaseStatus @default(DRAFT)
+  /// SHA-256 of the library content captured when the draft was created.
+  contentDigest     String        @db.Char(64)
+  /// Snapshot of the validated manifest at draft time.
+  manifest          Json
+  notes             String        @default("") @db.VarChar(500)
+  reviewNote        String        @default("") @db.VarChar(500)
+  createdById       String        @db.Uuid
+  submittedById     String?       @db.Uuid
+  approvedById      String?       @db.Uuid
+  releasedById      String?       @db.Uuid
+  createdAt         DateTime      @default(now()) @db.Timestamptz(3)
+  submittedAt       DateTime?     @db.Timestamptz(3)
+  approvedAt        DateTime?     @db.Timestamptz(3)
+  releasedAt        DateTime?     @db.Timestamptz(3)
+  deprecatedAt      DateTime?     @db.Timestamptz(3)
+  deprecationReason String?       @db.VarChar(500)
+  replacedByVersion String?       @db.VarChar(40)
+  rowVersion        Int           @default(1)
+
+  @@unique([templateId, version])
+  @@index([status])
+}

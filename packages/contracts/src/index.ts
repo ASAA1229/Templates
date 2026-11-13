@@ -147,7 +147,11 @@ export const PROJECT_PACKAGE_MANAGERS = [
 export const OPERATING_SYSTEMS = ["windows", "linux", "macos", "android", "ios", "cross-platform"] as const;
 const versionedNameSchema = z.object({ name: required(80, "Name"), version: required(40, "Version") });
 
+/** Version of the project blueprint structure below; recorded so stored blueprints can be migrated. */
+export const BLUEPRINT_SCHEMA_VERSION = 1;
+
 export const projectBlueprintSchema = z.object({
+  schemaVersion: z.number().int().min(1).max(BLUEPRINT_SCHEMA_VERSION).optional(),
   family: z.enum(PROJECT_FAMILIES),
   architecture: z.enum(ARCHITECTURE_PROFILES),
   runtimes: z.array(versionedNameSchema).max(10).default([]),
@@ -760,6 +764,8 @@ export const createGenerationSchema = z.discriminatedUnion("mode", [
   z.object({
     mode: z.literal("TEMPLATE"),
     catalogItemId: z.string().uuid("Choose a template."),
+    /** Pin an exact released version of the catalog item's template; defaults to the current release. */
+    templateVersion: semver.optional(),
     blueprint: projectBlueprintSchema.optional(),
     project: generationProjectSchema,
     inputs: inputValuesRecord,
@@ -767,6 +773,48 @@ export const createGenerationSchema = z.discriminatedUnion("mode", [
   }),
 ]);
 export type CreateGenerationInput = z.input<typeof createGenerationSchema>;
+
+// ───── Template release lifecycle (RG-06) ─────
+
+export const RELEASE_STATUSES = ["DRAFT", "IN_REVIEW", "APPROVED", "RELEASED", "DEPRECATED"] as const;
+export type ReleaseStatus = (typeof RELEASE_STATUSES)[number];
+
+export const createReleaseSchema = z.object({
+  templateId: templateIdSchema,
+  version: semver,
+  notes: trimmed(500).default(""),
+});
+export const releaseNoteSchema = z.object({ note: trimmed(500).default("") });
+export const deprecateReleaseSchema = z.object({
+  reason: required(500, "Reason"),
+  replacedByVersion: semver.optional(),
+});
+export const releaseListQuerySchema = z.object({
+  templateId: templateIdSchema.optional(),
+  status: z.enum(RELEASE_STATUSES).optional(),
+});
+
+export interface TemplateReleaseView {
+  id: string;
+  templateId: string;
+  version: string;
+  status: ReleaseStatus;
+  contentDigest: string;
+  notes: string;
+  reviewNote: string;
+  createdById: string;
+  submittedById: string | null;
+  approvedById: string | null;
+  releasedById: string | null;
+  createdAt: string;
+  submittedAt: string | null;
+  approvedAt: string | null;
+  releasedAt: string | null;
+  deprecatedAt: string | null;
+  deprecationReason: string | null;
+  replacedByVersion: string | null;
+  rowVersion: number;
+}
 
 export const generationActionSchema = z.object({ expectedVersion: z.number().int().positive() });
 

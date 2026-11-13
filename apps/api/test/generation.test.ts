@@ -289,8 +289,13 @@ describe("start from a template (US-E01)", () => {
 
   it("rejects version mismatches, unsupported generators and non-template records", async () => {
     const item = await approveLanding();
-    const bumped = await agent.patch(`/api/catalog/${item.id}`, { version: "2.0.0", expectedVersion: item.rowVersion });
-    expect(bumped.status).toBe(200);
+    // Released metadata is immutable through the API (RG-06); simulate drift directly in the database.
+    const renumber = await agent.patch(`/api/catalog/${item.id}`, {
+      version: "2.0.0",
+      expectedVersion: item.rowVersion,
+    });
+    expect(renumber.status).toBe(400);
+    await h.ctx.prisma.catalogItem.update({ where: { id: item.id }, data: { version: "2.0.0" } });
     expect((await agent.post("/api/generations", landing(item.id))).body.error.message).toMatch(
       /not in the local template library/,
     );

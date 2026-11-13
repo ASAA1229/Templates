@@ -70,6 +70,12 @@ export function generationView(generation: GenerationWithProject): GenerationVie
   };
 }
 
+function withoutSchemaVersion(blueprint: ProjectBlueprint | null | undefined) {
+  if (!blueprint) return null;
+  const { schemaVersion: _version, ...rest } = blueprint;
+  return rest;
+}
+
 /** Canonical JSON (sorted keys) so the inputs hash is stable across runs. */
 function canonical(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
@@ -225,29 +231,100 @@ export class GenerationService {
       trustStatus: "TRUSTED" as const,
       lifecycle: "ACTIVE" as const,
     };
-    const existing = await this.prisma.catalogItem.findUnique({ where: { slug: id } });
-    if (existing && existing.sourceType === "IMPORTED") {
-      throw conflict("A catalog item with this slug was imported from elsewhere; resolve the clash first.");
-    }
-    const item = existing
-      ? await this.prisma.catalogItem.update({
-          where: { id: existing.id },
-          data: { ...data, rowVersion: { increment: 1 } },
-        })
-      : await this.prisma.catalogItem.create({ data: { slug: id, ...data } });
+    const { item, existing } = await this.publish(req, template, data);
+    return { item, created: !existing };
+  }
+
+  /** Library accessor for the release lifecycle. */
+  get library(): TemplateLibrary {
+    return this.options.library;
+  }
+
+  /**
+   * Release a library version and move the catalog record to it, atomically. Released versions are
+   * immutable: the same version with different content is refused, and deprecated versions stay deprecated.
+   * `releaseId` continues an approved ledger entry; without it the owner fast-track creates one in one step.
+   */
+  async publish(
+    req: Request,
+    template: UsableTemplate,
+    data: Omit<Prisma.CatalogItemUncheckedCreateInput, "slug">,
+    releaseId?: string,
+  ): Promise<{ item: CatalogItem; existing: CatalogItem | null }> {
+    const id = template.id;
+    const version = template.version;
+    const actor = req.owner!.id;
+    const now = this.ctx.now();
+    const result = await this.prisma.$transaction(async (tx) => {
+      const ledger = await tx.templateRelease.findUnique({
+        where: { templateId_version: { templateId: id, version } },
+      });
+      if (ledger && (ledger.status === "RELEASED" || ledger.status === "DEPRECATED")) {
+        if (ledger.contentDigest !== template.digest) {
+          throw conflict(
+            `${id}@${version} was already released with different content and is immutable. Publish a new version instead.`,
+          );
+        }
+        if (ledger.status === "DEPRECATED") throw conflict(`${id}@${version} is deprecated. Publish a new version.`);
+      } else if (ledger) {
+        if (ledger.contentDigest !== template.digest) {
+          throw conflict("The template content changed since this release draft was created. Create a new draft.");
+        }
+        if (releaseId && ledger.id !== releaseId) throw conflict("Release reference mismatch.");
+        await tx.templateRelease.update({
+          where: { id: ledger.id },
+          data: {
+            status: "RELEASED",
+            releasedAt: now,
+            releasedById: actor,
+            approvedAt: ledger.approvedAt ?? now,
+            approvedById: ledger.approvedById ?? actor,
+            submittedAt: ledger.submittedAt ?? now,
+            submittedById: ledger.submittedById ?? actor,
+            rowVersion: { increment: 1 },
+          },
+        });
+      } else {
+        await tx.templateRelease.create({
+          data: {
+            templateId: id,
+            version,
+            status: "RELEASED",
+            contentDigest: template.digest,
+            manifest: template.rawManifest as Prisma.InputJsonValue,
+            notes: "Owner fast-track release",
+            createdById: actor,
+            submittedById: actor,
+            approvedById: actor,
+            releasedById: actor,
+            submittedAt: now,
+            approvedAt: now,
+            releasedAt: now,
+          },
+        });
+      }
+      const existing = await tx.catalogItem.findUnique({ where: { slug: id } });
+      if (existing && existing.sourceType === "IMPORTED") {
+        throw conflict("A catalog item with this slug was imported from elsewhere; resolve the clash first.");
+      }
+      const item = existing
+        ? await tx.catalogItem.update({ where: { id: existing.id }, data: { ...data, rowVersion: { increment: 1 } } })
+        : await tx.catalogItem.create({ data: { slug: id, ...data } });
+      return { item, existing };
+    });
     await audit(this.ctx, req, {
       action: "catalog.content_approve",
       outcome: "SUCCESS",
       targetType: "catalog_item",
-      targetId: item.id,
+      targetId: result.item.id,
       metadata: {
         templateId: id,
         version,
         digest: template.digest,
-        previousDigest: existing?.contentDigest ?? null,
+        previousDigest: result.existing?.contentDigest ?? null,
       },
     });
-    return { item, created: !existing };
+    return result;
   }
 
   // ───── Resolution and validation ─────
@@ -276,10 +353,31 @@ export class GenerationService {
     }
     const catalogItem = await this.prisma.catalogItem.findUnique({ where: { id: input.catalogItemId } });
     if (!catalogItem) throw notFound("Template");
-    const template = catalogItem.contentRef
-      ? await this.options.library.get(catalogItem.contentRef, catalogItem.version)
+    let candidate: CatalogItem = catalogItem;
+    if (input.templateVersion && input.templateVersion !== catalogItem.version && catalogItem.contentRef) {
+      // Version pinning: an exact earlier release resolved through the immutable ledger.
+      const release = await this.prisma.templateRelease.findUnique({
+        where: { templateId_version: { templateId: catalogItem.contentRef, version: input.templateVersion } },
+      });
+      if (!release || release.status === "DRAFT" || release.status === "IN_REVIEW" || release.status === "APPROVED") {
+        throw notEligible(`${catalogItem.contentRef}@${input.templateVersion} has not been released.`, {
+          templateVersion: "This version has not been released.",
+        });
+      }
+      if (release.status === "DEPRECATED") {
+        throw notEligible(`${catalogItem.contentRef}@${input.templateVersion} is deprecated.`, {
+          templateVersion: "This version is deprecated.",
+        });
+      }
+      const platformOpen = catalogItem.trustStatus === "TRUSTED" && catalogItem.lifecycle !== "RETIRED";
+      candidate = platformOpen
+        ? { ...catalogItem, version: release.version, contentDigest: release.contentDigest, lifecycle: "ACTIVE" }
+        : catalogItem;
+    }
+    const template = candidate.contentRef
+      ? await this.options.library.get(candidate.contentRef, candidate.version)
       : null;
-    const reasons = eligibilityProblems(catalogItem, template);
+    const reasons = eligibilityProblems(candidate, template);
     if (reasons.length > 0 || !template || !isUsable(template)) {
       throw notEligible(`This template cannot be used: ${reasons.join(" ")}`, { catalogItemId: reasons.join(" ") });
     }
@@ -325,7 +423,10 @@ export class GenerationService {
     const { template, catalogItem } = await this.resolve(input);
     const values = this.values(template.manifest, input.inputs);
     const blueprint = template.manifest.blueprint ?? null;
-    if (input.blueprint && canonical(input.blueprint) !== canonical(blueprint)) {
+    if (
+      input.blueprint &&
+      canonical(withoutSchemaVersion(input.blueprint)) !== canonical(withoutSchemaVersion(blueprint))
+    ) {
       throw validationFailed(
         { blueprint: "The selected project blueprint does not match the approved starter/template." },
         "The selected project blueprint is not compatible with this source.",

@@ -12,6 +12,7 @@ import { catalogRouter } from "./modules/catalog/catalog.js";
 import { dashboardRouter } from "./modules/dashboard/dashboard.js";
 import { createGenerationService, generationsRouter, templatesRouter } from "./modules/generation/generation.js";
 import { projectsRouter } from "./modules/projects/projects.js";
+import { releasesRouter } from "./modules/generation/releases.js";
 import { projectTemplateSubmissionsRouter } from "./modules/generation/project-template-submissions.js";
 import { requirementsRouter } from "./modules/requirements/requirements.js";
 import { searchRouter } from "./modules/search/search.js";
@@ -119,6 +120,7 @@ export function createApp(ctx: AppContext): Express {
   api.use("/projects", projectsRouter(ctx));
   api.use("/catalog", catalogRouter(ctx));
   api.use("/search", searchRouter(ctx));
+  api.use("/templates/releases", releasesRouter(ctx, generation));
   api.use("/templates", templatesRouter(ctx, generation));
   api.use("/generations", generationsRouter(ctx, generation));
   api.use("/", dashboardRouter(ctx));

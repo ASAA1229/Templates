@@ -124,6 +124,21 @@ export function catalogRouter(ctx: AppContext): Router {
       const { expectedVersion, ...changes } = updateCatalogItemSchema.parse(req.body);
       const current = await ctx.prisma.catalogItem.findUnique({ where: { id } });
       if (!current) throw notFound("Catalog item");
+      if (current.contentDigest) {
+        // Released template metadata is immutable (RG-06); publish a new version instead.
+        const locked: Record<string, string> = {};
+        if (changes.version !== undefined && changes.version !== current.version)
+          locked.version = "Released versions cannot be renumbered.";
+        if (changes.license !== undefined && changes.license !== current.license)
+          locked.license = "The license of a released version is immutable.";
+        if (
+          changes.dependencies !== undefined &&
+          JSON.stringify(changes.dependencies) !== JSON.stringify(current.dependencies)
+        ) {
+          locked.dependencies = "Dependencies of a released version are immutable.";
+        }
+        if (Object.keys(locked).length > 0) throw validationFailed(locked, "Released template versions are immutable.");
+      }
       const trust = changes.trustStatus ?? current.trustStatus;
       const lifecycle = changes.lifecycle ?? current.lifecycle;
       if (lifecycle === "ACTIVE" && trust !== "TRUSTED") {
