@@ -24,7 +24,7 @@ export function ProjectMembersPanel({ projectId }: { projectId: string }) {
       setMembers(result.members);
       setVisible(true);
     } catch (cause) {
-      if (cause instanceof ApiError && cause.status === 404) setVisible(false);
+      if (cause instanceof ApiError && (cause.status === 404 || cause.status === 403)) setVisible(false);
       else setError(cause instanceof ApiError ? cause.message : "Unable to load project members.");
     } finally {
       setLoading(false);
