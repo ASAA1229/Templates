@@ -8,21 +8,12 @@ const VARIANTS = ["essential", "editorial", "catalog", "booking", "multisite"];
 const OUTPUT_ROOT = process.env.E2E_GENERATION_DIR;
 
 async function apiRequest(page: Page, url: string, method: "GET" | "POST", data?: unknown) {
-  return page.evaluate(
-    async ({ requestUrl, requestMethod, requestData }) => {
-      const response = await fetch(requestUrl, {
-        method: requestMethod,
-        headers: {
-          "x-requested-with": "asaa-templates",
-          ...(requestData === undefined ? {} : { "content-type": "application/json" }),
-        },
-        credentials: "same-origin",
-        ...(requestData === undefined ? {} : { body: JSON.stringify(requestData) }),
-      });
-      return { status: response.status, body: await response.json() };
-    },
-    { requestUrl: url, requestMethod: method, requestData: data },
-  );
+  const headers = { "x-requested-with": "asaa-templates" };
+  const response =
+    method === "GET"
+      ? await page.request.get(url, { headers })
+      : await page.request.post(url, { headers, data });
+  return { status: response.status(), body: await response.json() };
 }
 
 test.describe("template library batch 001 browser review", () => {
