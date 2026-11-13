@@ -109,3 +109,17 @@ A passing build, source presence, merged PR or documentation update alone is ins
 ### 2026-11-13 — post-hardening CI queue
 
 The read-only CI workflow and Playwright API request-context change are now present on the latest PR candidate. GitHub reports CI run #731 (43419462644) as pending, with no jobs returned yet. This is not a pass and no score is increased. The latest completed run remains #705 and its three E2E failures remain the last verified test outcome until run #731 completes.
+
+
+### 2026-11-13 — latest candidate and live CI state
+
+- Open PR: [#1 — new → dev](https://github.com/ASAA1229/Templates/pull/1); still open and unmerged.
+- Latest PR head inspected: `15fdfe1b016d2f7997008dc68701b99e4220ce26`; base: `7989af5e858a4221d71183636e0cf5c285d10180`.
+- Latest GitHub Actions run observed: [CI #738](https://github.com/ASAA1229/Templates/actions/runs/43419669158), run ID `43419669158`, status **in progress**.
+- At the time of inspection, checkout, Node setup, `npm ci`, dependency audit and database migrations had passed. The combined format/lint/typecheck/unit+integration/build step was still running; smoke, Playwright installation and E2E/accessibility had not started. Therefore this candidate has no completed CI result yet.
+- The CI workflow was verified on `new` to use `contents: read` and no longer contain the temporary formatting repair/push step.
+- The template batch E2E helper now uses Playwright's shared API request context and resolves relative endpoints against the page origin. This change is **awaiting test verification**; it is not marked fixed.
+- The earlier completed run #705 remains the latest completed failure evidence: 19 passed, 3 failed. The blueprint selection failure and template-batch fetch failure are not yet confirmed resolved.
+- Maturity dimension scores and the overall 5.0/10 baseline remain unchanged pending completed evidence. Release remains **NO-GO**.
+- Branch-head/history inventory remains partial; do not infer that all five standard branches are synchronized.
+
