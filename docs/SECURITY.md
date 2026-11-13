@@ -111,3 +111,9 @@ A green build alone is not a security sign-off.
 ## CI workflow least privilege — 2026-11-13
 
 The inspected CI workflow currently grants contents: write and contains a temporary formatting repair step capable of committing and pushing to branch new. This is not required for validation. Replace it with committed formatting changes and reduce pull-request validation permissions to contents: read (and only other explicitly required read permissions). Any artifact publication or release write operation must be a separate, explicitly scoped job with protected approval. See [PROJECT_STATUS.md](PROJECT_STATUS.md) for current evidence and release status.
+
+
+## Current security verification checkpoint — 2026-11-13
+
+The CI validation workflow on branch `new` was inspected and confirmed to use `contents: read`; the temporary formatting repair/commit/push step is absent. This verifies the workflow file configuration only, not the complete security posture. Authorization isolation, authentication lifecycle/MFA policy, safe execution isolation and security testing remain open P0 gates. Candidate `15fdfe1b016d2f7997008dc68701b99e4220ce26` has CI #738 (`43419669158`) in progress, not passed. See [PROJECT_STATUS.md](PROJECT_STATUS.md).
+
