@@ -78,6 +78,39 @@ test.describe("engineering workspace (US-F01, US-F02, US-F03)", () => {
     await expectAccessible(page);
   });
 
+  test("browse, edit and compare project files with conflict protection (RG-11)", async ({ page }) => {
+    await signIn(page, "/projects");
+    await expect(page.getByRole("heading", { level: 1, name: "Projects" })).toBeVisible();
+    const { projectId } = await generateProject(page, unique("FL"));
+    await page.goto(`/projects/${projectId}/workspace`);
+    await expect(page.getByRole("heading", { level: 1, name: "Engineering workspace" })).toBeVisible();
+
+    const files = page.getByRole("navigation", { name: "Project files" });
+    await expect(files.getByRole("button", { name: "package.json" })).toBeVisible();
+    await files.getByRole("button", { name: "README.txt" }).click();
+    const editor = page.getByLabel(/Editing README.txt/);
+    await expect(editor).toBeVisible();
+    await editor.fill("Edited in the browser.");
+    await page.getByRole("button", { name: "Save file" }).click();
+    await expect(page.getByText("Saved README.txt.")).toBeVisible();
+    await expectAccessible(page);
+
+    // A concurrent change made through the API is detected as a conflict, not overwritten.
+    const current = await (
+      await page.request.get(`/api/projects/${projectId}/workspace/files/content?path=README.txt`)
+    ).json();
+    const other = await page.request.put(`/api/projects/${projectId}/workspace/files/content`, {
+      headers: { "x-requested-with": "asaa-templates" },
+      data: { path: "README.txt", content: "Changed by someone else", expectedSha256: current.sha256 },
+    });
+    expect(other.status()).toBe(200);
+    await editor.fill("My competing edit");
+    await page.getByRole("button", { name: "Save file" }).click();
+    await expect(page.getByText(/changed since you opened it/)).toBeVisible();
+    await page.getByRole("button", { name: "Reload" }).click();
+    await expect(editor).toHaveValue("Changed by someone else");
+  });
+
   test("projects without a generated folder explain why there is no workspace", async ({ page }) => {
     await signIn(page, "/projects");
     await expect(page.getByRole("heading", { level: 1, name: "Projects" })).toBeVisible();

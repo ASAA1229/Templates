@@ -77,7 +77,13 @@ export function verifyTotp(secretBase32: string, code: string, atMs: number, win
 
 export function otpauthUri(issuer: string, account: string, secretBase32: string): string {
   const label = `${encodeURIComponent(issuer)}:${encodeURIComponent(account)}`;
-  const query = new URLSearchParams({ secret: secretBase32, issuer, algorithm: "SHA1", digits: String(TOTP_DIGITS), period: String(TOTP_PERIOD_SECONDS) });
+  const query = new URLSearchParams({
+    secret: secretBase32,
+    issuer,
+    algorithm: "SHA1",
+    digits: String(TOTP_DIGITS),
+    period: String(TOTP_PERIOD_SECONDS),
+  });
   return `otpauth://totp/${label}?${query.toString()}`;
 }
 
@@ -93,7 +99,9 @@ export function encryptSecret(secret: string, key: Buffer): string {
   const iv = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", key, iv);
   const body = Buffer.concat([cipher.update(secret, "utf8"), cipher.final()]);
-  return ["v1", iv.toString("base64url"), cipher.getAuthTag().toString("base64url"), body.toString("base64url")].join(".");
+  return ["v1", iv.toString("base64url"), cipher.getAuthTag().toString("base64url"), body.toString("base64url")].join(
+    ".",
+  );
 }
 
 export function decryptSecret(stored: string, key: Buffer): string {
