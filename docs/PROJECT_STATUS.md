@@ -96,3 +96,11 @@ Inspected README, requirements, stories, architecture, security, development, op
 **NO-GO** until RG-01 through RG-10 have objective evidence, critical/high security findings are resolved or explicitly risk-accepted, required CI/E2E/accessibility checks pass on the candidate SHA, released templates are certified, backup/restore and operational ownership are demonstrated, and the owner approves release.
 
 A passing build, source presence, merged PR or documentation update alone is insufficient.
+
+
+### 2026-11-13 — CI hardening increment
+
+- Updated .github/workflows/ci.yml on new: validation token permission reduced from contents: write to contents: read; removed the temporary formatter-and-commit/push step.
+- Updated apps/web/e2e/template-batch.spec.ts to use Playwright's shared API request context instead of browser page.evaluate(fetch(...)) for its authenticated library API calls.
+- These are code/test-harness changes, not verified fixes yet. No CI run has been observed for the new commits at this log entry. The prior run #705 remains the latest confirmed result: 19 passed, 3 failed. The blueprint-selection E2E failure remains unresolved.
+- No project maturity score is increased until a new CI run and relevant review evidence pass.
