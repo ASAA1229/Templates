@@ -72,7 +72,15 @@ jobs:
             apps/api/test/policy.test.ts \
             apps/web/src/features/auth/AccessRequestPage.tsx \
             apps/web/src/features/auth/ActivateAccountPage.tsx \
-            apps/web/src/features/security/AccessRequestsPage.tsx
+            apps/web/src/features/security/AccessRequestsPage.tsx \
+            apps/web/src/features/projects/ProjectMembersPanel.tsx \
+            apps/api/src/modules/projects/projects.ts \
+            apps/api/src/modules/requirements/requirements.ts \
+            apps/api/src/modules/workspace/workspace.ts \
+            apps/api/src/modules/dashboard/dashboard.ts \
+            apps/api/src/modules/search/search.ts \
+            apps/api/test/project-sharing.test.ts \
+            apps/api/prisma/schema.prisma
           if ! git diff --quiet; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
