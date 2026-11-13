@@ -82,7 +82,10 @@ export function LoginPage() {
               <LogIn aria-hidden="true" /> {pending ? "Signing in…" : "Sign in"}
             </Button>
             <p className="text-center text-sm text-muted-foreground">
-              Need an account? <Link className="underline" to="/request-access">Request employee access</Link>
+              Need an account?{" "}
+              <Link className="underline" to="/request-access">
+                Request employee access
+              </Link>
             </p>
             <p className="text-xs text-muted-foreground">
               Forgot your password? Run{" "}
