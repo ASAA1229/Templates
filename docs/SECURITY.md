@@ -14,7 +14,7 @@ The repository remains private. No public marketplace or external-organization a
 - Scope project, requirement, template, file, generated output, integration and audit access to the actor's permitted resources.
 - ADMIN must not be able to grant OWNER authority; only OWNER may appoint another administrator/owner-level authority according to the account lifecycle rules.
 - Deactivation must revoke active sessions. Session creation, expiry, rotation, revocation and recovery must be controlled.
-- Secure invitation/activation, verified password reset and recovery are required before general employee rollout.
+- Secure invitation/activation and verified password reset are required before general employee rollout. Current `new` branch includes Owner/Admin-issued one-time reset links (30-minute expiry), hashed token storage, atomic consumption, rate limiting, audit events and revocation of all active sessions. The link is manually delivered through a separately verified secure channel; email delivery is not configured.
 - Add specialist design, DevOps, security and project-management roles only with explicit permission definitions and tests.
 - Test horizontal and vertical privilege escalation, cross-project access, direct API calls, search result leakage, export leakage and stale-session access.
 
@@ -29,7 +29,7 @@ The current branch contains the initial multi-role and member-management foundat
 - Apply absolute and idle session expiry. Current API defaults are 720 minutes absolute and 30 minutes idle.
 - Require `COOKIE_SECURE=true` behind HTTPS; the API refuses staging/production configuration when secure cookies are disabled.
 - Rate-limit and monitor authentication and recovery endpoints before exposing beyond a trusted local environment.
-- Revoke sessions on account deactivation, credential compromise and authorized security response.
+- Revoke sessions on account deactivation, credential compromise, password reset and authorized security response.
 - MFA/passkeys are future hardening options; their absence must be reflected in the deployment risk assessment.
 
 ## 4. Application and API security
