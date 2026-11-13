@@ -104,6 +104,42 @@ describe("project-level sharing and isolation", () => {
     expect((await editorAgent.delete(`/api/projects/${item.id}/members/${editor.id}`)).status).toBe(404);
   });
 
+
+  it("enforces viewer/editor permissions on nested requirements", async () => {
+    const { agent: ownerAgent, project: item } = await project();
+    const base = `/api/projects/${item.id}/requirements`;
+    const created = await ownerAgent.post(base, {
+      title: "Protect project data",
+      acceptanceCriteria: ["Only authorized members can edit requirements"],
+    });
+    expect(created.status).toBe(201);
+    const requirementId = created.body.requirement.id;
+
+    const viewer = await member("nested.viewer@asaa.test");
+    await ownerAgent.post(`/api/projects/${item.id}/members`, { email: viewer.email, role: "VIEWER" });
+    const viewerAgent = await login(viewer.email);
+    expect((await viewerAgent.get(base)).status).toBe(200);
+    expect((await viewerAgent.get(`${base}/${requirementId}`)).status).toBe(200);
+    expect((await viewerAgent.post(base, { title: "Viewer cannot create" })).status).toBe(404);
+    expect(
+      (await viewerAgent.patch(`${base}/${requirementId}`, { title: "Viewer cannot edit", expectedVersion: 1 }))
+        .status,
+    ).toBe(404);
+    expect(
+      (await viewerAgent.post(`${base}/${requirementId}/flag`, { flagged: true, reason: "No permission" })).status,
+    ).toBe(404);
+
+    const editor = await member("nested.editor@asaa.test");
+    await ownerAgent.post(`/api/projects/${item.id}/members`, { email: editor.email, role: "EDITOR" });
+    const editorAgent = await login(editor.email);
+    const updated = await editorAgent.patch(`${base}/${requirementId}`, {
+      title: "Edited by project editor",
+      expectedVersion: 1,
+    });
+    expect(updated.status).toBe(200);
+    expect(updated.body.requirement.title).toBe("Edited by project editor");
+  });
+
   it("removes access immediately when membership is revoked", async () => {
     const { agent: ownerAgent, project: item } = await project();
     const viewer = await member("revoked@asaa.test");
