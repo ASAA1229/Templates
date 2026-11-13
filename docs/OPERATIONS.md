@@ -114,3 +114,8 @@ Perform dependency updates, security review, backup restore drills and recovery 
 ## 8. Authoritative status and current CI limitation — 2026-11-13
 
 Current maturity scores, gap status, CI evidence and release decision are maintained in [PROJECT_STATUS.md](PROJECT_STATUS.md); do not maintain a competing status table here. The latest observed CI run #705 failed in Playwright (19 passed, 3 failed) after dependency audit, migrations, format/lint/typecheck/unit+integration/build and smoke passed. The workflow currently has a temporary formatting repair/push step and contents: write; remove that behavior and use least-privilege read-only validation. No production deployment, Jenkins agent execution, Nexus publishing/retrieval or restore drill is evidenced. Configuration or written procedures alone do not establish these operations.
+
+
+## Current CI and release checkpoint — 2026-11-13
+
+PR #1 is open and unmerged. Candidate `15fdfe1b016d2f7997008dc68701b99e4220ce26` on `new` has CI #738 (`43419669158`) in progress at last inspection; no completed result is available. The validation workflow uses `contents: read` and no longer includes the temporary formatting-and-push behavior. This is a configuration-level improvement only. No production deployment, Jenkins agent execution, Nexus publishing/retrieval, backup restore drill or production rollback is evidenced. Current release decision remains NO-GO; see [PROJECT_STATUS.md](PROJECT_STATUS.md).
