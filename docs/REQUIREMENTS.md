@@ -33,7 +33,7 @@ The initial product is an internal engineering platform, not a public template m
 - **EMPLOYEE:** authorized internal user with scoped access.
 - Future profiles may include project/product manager, designer, QA/security specialist, DevOps engineer, domain specialist and requester.
 
-The current `new` branch implements the initial five account roles, account creation/deactivation, public employee access requests, Owner/Admin review, one-time 24-hour activation links and server-side permission foundations. Activation tokens are stored only as hashes and consumed atomically. The activation link is displayed once to the approver for secure manual delivery; no email provider is assumed. Project-level VIEWER/EDITOR sharing and owner-managed membership are now implemented, but full endpoint isolation remains under verification. General employee rollout remains blocked until secure password recovery, MFA policy, complete resource-level authorization tests and lifecycle edge cases are addressed. Never infer access from UI navigation alone.
+The current `new` branch implements the initial five account roles, account creation/deactivation, public employee access requests, Owner/Admin review, one-time 24-hour activation links and server-side permission foundations. Activation tokens are stored only as hashes and consumed atomically. The activation link is displayed once to the approver for secure manual delivery; no email provider is assumed. Project-level VIEWER/EDITOR sharing and owner-managed membership are now implemented, but full endpoint isolation remains under verification. Owner/Admin-issued password recovery is now implemented on `new`: reset tokens are hashed, expire after 30 minutes, are consumed atomically, are rate-limited, and revoke all active sessions. The reset link is manually delivered; no email provider is configured. General employee rollout remains blocked until CI/E2E evidence, MFA policy, complete resource-level authorization tests and lifecycle edge cases are addressed. Never infer access from UI navigation alone.
 
 Future external organizations require independently isolated identity, data, configuration, storage, audit and administration. Multi-tenant SaaS is not part of the initial release.
 
@@ -211,6 +211,7 @@ Known remaining or unverified areas include:
 - Final CI/E2E/accessibility evidence and full certification of the 25 packages.
 - Secure password recovery/reset, MFA, invitation delivery automation and lifecycle edge cases.
 - Complete isolation coverage for every project-linked endpoint, dashboard/search/analytics, file/export route and background operation.
+- Verify password reset issuance, expiry, single-use behavior, privileged-account protections, session revocation and frontend flow in CI/E2E.
 - Specialist roles, team/project group sharing, organization-level policy and access expiry.
 - Broader project-family adapters and complete multi-stack generation.
 - Full in-platform authoring/configuration/visual preview.
