@@ -179,7 +179,12 @@ export function requirementsRouter(ctx: AppContext): Router {
 
   router.get("/:id", authorize(ctx, "requirement:read"), async (req, res, next) => {
     try {
-      const requirement = await loadRequirement(req.owner!.id, String(req.params.projectId), String(req.params.id), "read");
+      const requirement = await loadRequirement(
+        req.owner!.id,
+        String(req.params.projectId),
+        String(req.params.id),
+        "read",
+      );
       const versions = await ctx.prisma.requirementVersion.findMany({
         where: { requirementId: requirement.id },
         orderBy: { version: "desc" },
@@ -249,7 +254,12 @@ export function requirementsRouter(ctx: AppContext): Router {
     try {
       const input = flagRequirementSchema.parse(req.body);
       if (input.flagged && !input.reason) throw validationFailed({ reason: "Explain what needs review." });
-      const current = await loadRequirement(req.owner!.id, String(req.params.projectId), String(req.params.id), "write");
+      const current = await loadRequirement(
+        req.owner!.id,
+        String(req.params.projectId),
+        String(req.params.id),
+        "write",
+      );
       const requirement = await ctx.prisma.requirement.update({
         where: { id: current.id },
         data: { flaggedForReview: input.flagged, flagReason: input.flagged ? input.reason! : null },
@@ -270,7 +280,12 @@ export function requirementsRouter(ctx: AppContext): Router {
   router.post("/:id/links", authorize(ctx, "requirement:write"), async (req, res, next) => {
     try {
       const input = createTraceLinkSchema.parse(req.body);
-      const current = await loadRequirement(req.owner!.id, String(req.params.projectId), String(req.params.id), "write");
+      const current = await loadRequirement(
+        req.owner!.id,
+        String(req.params.projectId),
+        String(req.params.id),
+        "write",
+      );
       if (current.links.length >= 100) throw conflict("A requirement can have at most 100 trace links.");
       await ctx.prisma.traceLink.create({ data: { ...input, title: input.title || null, requirementId: current.id } });
       const requirement = await ctx.prisma.requirement.findUniqueOrThrow({ where: { id: current.id }, include });
@@ -289,7 +304,12 @@ export function requirementsRouter(ctx: AppContext): Router {
 
   router.delete("/:id/links/:linkId", authorize(ctx, "requirement:write"), async (req, res, next) => {
     try {
-      const current = await loadRequirement(req.owner!.id, String(req.params.projectId), String(req.params.id), "write");
+      const current = await loadRequirement(
+        req.owner!.id,
+        String(req.params.projectId),
+        String(req.params.id),
+        "write",
+      );
       const linkId = String(req.params.linkId);
       if (!/^[0-9a-f-]{36}$/i.test(linkId)) throw notFound("Trace link");
       const result = await ctx.prisma.traceLink.deleteMany({ where: { id: linkId, requirementId: current.id } });

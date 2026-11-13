@@ -99,14 +99,15 @@ export function searchRouter(ctx: AppContext): Router {
                   archivedAt: null,
                   AND: [
                     { OR: [{ ownerId }, { members: { some: { memberId: ownerId } } }] },
-                    { OR: [
-                      { name: { contains: query, mode: "insensitive" as const } },
-                      { key: { contains: query, mode: "insensitive" as const } },
-                      { purpose: { contains: query, mode: "insensitive" as const } },
-                    ] },
+                    {
+                      OR: [
+                        { name: { contains: query, mode: "insensitive" as const } },
+                        { key: { contains: query, mode: "insensitive" as const } },
+                        { purpose: { contains: query, mode: "insensitive" as const } },
+                      ],
+                    },
                   ],
                   ...(filters.projectStatus ? { status: filters.projectStatus } : {}),
-
                 },
                 select: { id: true, key: true, name: true, status: true, updatedAt: true },
                 orderBy: { updatedAt: "desc" },

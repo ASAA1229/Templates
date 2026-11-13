@@ -81,10 +81,12 @@ export function ProjectDetailPage() {
                 <Pencil aria-hidden="true" /> Edit
               </Button>
             )}
-            {isOwner && <Button variant="outline" onClick={() => void toggleArchive()}>
-              {archived ? <ArchiveRestore aria-hidden="true" /> : <Archive aria-hidden="true" />}
-              {archived ? "Restore" : "Archive"}
-            </Button>}
+            {isOwner && (
+              <Button variant="outline" onClick={() => void toggleArchive()}>
+                {archived ? <ArchiveRestore aria-hidden="true" /> : <Archive aria-hidden="true" />}
+                {archived ? "Restore" : "Archive"}
+              </Button>
+            )}
           </>
         }
       />
@@ -168,9 +170,10 @@ export function ProjectDetailPage() {
             </Card>
           )}
 
-          {generations.state === "ready" && generations.data.generations[0]?.status === "SUCCEEDED" && isOwner && !archived && (
-            <ProjectTemplateContribution projectId={project.id} onSubmitted={generations.reload} />
-          )}
+          {generations.state === "ready" &&
+            generations.data.generations[0]?.status === "SUCCEEDED" &&
+            isOwner &&
+            !archived && <ProjectTemplateContribution projectId={project.id} onSubmitted={generations.reload} />}
 
           {generations.state === "ready" && generations.data.generations[0] && (
             <GenerationCard
@@ -241,22 +244,22 @@ export function ProjectDetailPage() {
         </div>
 
         <div className="space-y-6">
-        <ProjectMembersPanel projectId={project.id} />
-        <Card className="h-fit">
-          <CardHeader>
-            <CardTitle>History</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ol className="space-y-2 text-sm">
-              {history.map((event) => (
-                <li key={event.id}>
-                  <span className="font-medium">{humanize(event.action.replace("project.", ""))}</span>
-                  <span className="block text-xs text-muted-foreground">{formatDateTime(event.at)}</span>
-                </li>
-              ))}
-            </ol>
-          </CardContent>
-        </Card>
+          <ProjectMembersPanel projectId={project.id} />
+          <Card className="h-fit">
+            <CardHeader>
+              <CardTitle>History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ol className="space-y-2 text-sm">
+                {history.map((event) => (
+                  <li key={event.id}>
+                    <span className="font-medium">{humanize(event.action.replace("project.", ""))}</span>
+                    <span className="block text-xs text-muted-foreground">{formatDateTime(event.at)}</span>
+                  </li>
+                ))}
+              </ol>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </>

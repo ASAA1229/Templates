@@ -62,23 +62,35 @@ describe("project-level sharing and isolation", () => {
     const viewerRead = await viewerAgent.get(`/api/projects/${item.id}`);
     expect(viewerRead.status).toBe(200);
     expect(viewerRead.body.access).toBe("VIEWER");
-    expect((await viewerAgent.patch(`/api/projects/${item.id}`, {
-      expectedVersion: 1,
-      name: "Unauthorized edit",
-    })).status).toBe(404);
-    expect((await viewerAgent.post(`/api/projects/${item.id}/members`, {
-      email: OWNER_EMAIL,
-      role: "EDITOR",
-    })).status).toBe(404);
+    expect(
+      (
+        await viewerAgent.patch(`/api/projects/${item.id}`, {
+          expectedVersion: 1,
+          name: "Unauthorized edit",
+        })
+      ).status,
+    ).toBe(404);
+    expect(
+      (
+        await viewerAgent.post(`/api/projects/${item.id}/members`, {
+          email: OWNER_EMAIL,
+          role: "EDITOR",
+        })
+      ).status,
+    ).toBe(404);
   });
 
   it("allows an editor to update shared project data but not manage membership", async () => {
     const { agent: ownerAgent, project: item } = await project();
     const editor = await member("editor@asaa.test");
-    expect((await ownerAgent.post(`/api/projects/${item.id}/members`, {
-      email: editor.email,
-      role: "EDITOR",
-    })).status).toBe(200);
+    expect(
+      (
+        await ownerAgent.post(`/api/projects/${item.id}/members`, {
+          email: editor.email,
+          role: "EDITOR",
+        })
+      ).status,
+    ).toBe(200);
 
     const editorAgent = await login(editor.email);
     const updated = await editorAgent.patch(`/api/projects/${item.id}`, {

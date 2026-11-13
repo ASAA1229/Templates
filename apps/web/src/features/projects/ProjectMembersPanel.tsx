@@ -31,7 +31,9 @@ export function ProjectMembersPanel({ projectId }: { projectId: string }) {
     }
   }, [projectId]);
 
-  useEffect(() => { void reload(); }, [reload]);
+  useEffect(() => {
+    void reload();
+  }, [reload]);
 
   async function addMember(event: FormEvent) {
     event.preventDefault();
@@ -43,7 +45,9 @@ export function ProjectMembersPanel({ projectId }: { projectId: string }) {
       await reload();
     } catch (cause) {
       setError(cause instanceof ApiError ? cause.message : "Unable to share this project.");
-    } finally { setBusy(false); }
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function remove(memberId: string) {
@@ -54,35 +58,69 @@ export function ProjectMembersPanel({ projectId }: { projectId: string }) {
       await reload();
     } catch (cause) {
       setError(cause instanceof ApiError ? cause.message : "Unable to revoke project access.");
-    } finally { setBusy(false); }
+    } finally {
+      setBusy(false);
+    }
   }
 
   if (loading || !visible) return null;
 
   return (
     <Card className="h-fit">
-      <CardHeader><CardTitle>Project access</CardTitle></CardHeader>
+      <CardHeader>
+        <CardTitle>Project access</CardTitle>
+      </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm text-muted-foreground">Share this project with active ASAA team members. Viewers can read; editors can change project content.</p>
+        <p className="text-sm text-muted-foreground">
+          Share this project with active ASAA team members. Viewers can read; editors can change project content.
+        </p>
         {error && <Alert tone="danger">{error}</Alert>}
         <form onSubmit={(event) => void addMember(event)} className="space-y-2">
-          <Input type="email" required maxLength={254} placeholder="team.member@asaa.com" value={email} onChange={(event) => setEmail(event.target.value)} aria-label="Team member email" />
-          <Select value={role} onChange={(event) => setRole(event.target.value as "VIEWER" | "EDITOR")} aria-label="Project access role">
+          <Input
+            type="email"
+            required
+            maxLength={254}
+            placeholder="team.member@asaa.com"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            aria-label="Team member email"
+          />
+          <Select
+            value={role}
+            onChange={(event) => setRole(event.target.value as "VIEWER" | "EDITOR")}
+            aria-label="Project access role"
+          >
             <option value="VIEWER">Viewer</option>
             <option value="EDITOR">Editor</option>
           </Select>
-          <Button type="submit" size="sm" disabled={busy || !email.trim()} className="w-full">Share project</Button>
+          <Button type="submit" size="sm" disabled={busy || !email.trim()} className="w-full">
+            Share project
+          </Button>
         </form>
         <div className="space-y-2">
-          {members.length === 0 ? <p className="text-sm text-muted-foreground">No team members have access yet.</p> : members.map((item) => (
-            <div key={item.id} className="flex items-center justify-between gap-3 rounded-md border p-2">
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium">{item.member.displayName}</p>
-                <p className="truncate text-xs text-muted-foreground">{item.member.email} · {item.role.toLowerCase()}</p>
+          {members.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No team members have access yet.</p>
+          ) : (
+            members.map((item) => (
+              <div key={item.id} className="flex items-center justify-between gap-3 rounded-md border p-2">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">{item.member.displayName}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {item.member.email} · {item.role.toLowerCase()}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={busy}
+                  onClick={() => void remove(item.member.id)}
+                  aria-label={`Remove ${item.member.email}`}
+                >
+                  Remove
+                </Button>
               </div>
-              <Button size="sm" variant="ghost" disabled={busy} onClick={() => void remove(item.member.id)} aria-label={`Remove ${item.member.email}`}>Remove</Button>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </CardContent>
     </Card>
