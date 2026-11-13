@@ -109,3 +109,8 @@ Before production, define:
 - Log retention, redaction, access and correlation.
 
 Perform dependency updates, security review, backup restore drills and recovery exercises on a documented cadence. Keep monitoring and backup tools local/free unless spending is approved.
+
+
+## 8. Authoritative status and current CI limitation — 2026-11-13
+
+Current maturity scores, gap status, CI evidence and release decision are maintained in [PROJECT_STATUS.md](PROJECT_STATUS.md); do not maintain a competing status table here. The latest observed CI run #705 failed in Playwright (19 passed, 3 failed) after dependency audit, migrations, format/lint/typecheck/unit+integration/build and smoke passed. The workflow currently has a temporary formatting repair/push step and contents: write; remove that behavior and use least-privilege read-only validation. No production deployment, Jenkins agent execution, Nexus publishing/retrieval or restore drill is evidenced. Configuration or written procedures alone do not establish these operations.
