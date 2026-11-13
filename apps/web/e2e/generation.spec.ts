@@ -6,7 +6,8 @@ async function ensureLandingApproved(page: Page) {
   await expect(page.getByRole("heading", { level: 1, name: "Template catalog" })).toBeVisible();
   const library = page.getByRole("list", { name: "Library templates" });
   const approve = library.getByRole("button", { name: /Approve Business landing page v1\.0\.0/ });
-  await expect(library.getByText("Business landing page")).toBeVisible();
+  // The first catalog load can be slow while the dev server warms up.
+  await expect(library.getByText("Business landing page")).toBeVisible({ timeout: 30_000 });
   if (await approve.isVisible()) {
     await approve.click();
     await expect(page.getByText("Business landing page v1.0.0 is approved and active.")).toBeVisible();

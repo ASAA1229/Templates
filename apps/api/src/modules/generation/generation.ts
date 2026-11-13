@@ -86,6 +86,7 @@ export function generationsRouter(ctx: AppContext, service = createGenerationSer
 
   router.post("/:id/retry", authorize(ctx, "generation:write"), async (req, res, next) => {
     try {
+      await service.load(req, String(req.params.id), "write");
       const { expectedVersion } = generationActionSchema.parse(req.body);
       const generation = await service.retry(req, String(req.params.id), expectedVersion);
       res.json({ generation: generationView(generation) });

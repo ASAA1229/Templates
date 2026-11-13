@@ -26,7 +26,7 @@ import { ProcessOutputLimitError, ProcessTimeoutError, ProcessUnavailableError }
 import { audit } from "../audit/audit.service.js";
 import { authorize } from "../auth/policy.js";
 import { resolveOutputDir } from "../generation/writer.js";
-import { loadProjectAccess } from "../projects/projects.js";
+import { loadProjectAccess, requireProjectAccess } from "../projects/projects.js";
 import { BranchPlanError, planBranch, stateWarnings } from "./branch-policy.js";
 import { checkEnvironment, inferEnvironment } from "./environment.js";
 import {
@@ -501,6 +501,7 @@ export function workspaceRouter(ctx: AppContext, service = new WorkspaceService(
   ) =>
     [
       authorize(ctx, permission),
+      requireProjectAccess(ctx, permission === "workspace:write" ? "write" : "read"),
       async (req: Request, res: import("express").Response, next: import("express").NextFunction) => {
         try {
           res.status(status).json(await run(req));

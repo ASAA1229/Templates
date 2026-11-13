@@ -215,8 +215,8 @@ export function projectTemplateSubmissionsRouter(ctx: AppContext, generation: Ge
 
   router.post("/:projectId/template-submissions", authorize(ctx, "template:submit"), async (req, res, next) => {
     try {
-      const input = parseInput(req.body);
       const project = await loadOwnedProject(ctx, req.owner!.id, String(req.params.projectId));
+      const input = parseInput(req.body);
       if (project.archivedAt) throw conflict("Restore the project before submitting it as a template.");
       const generated = await ctx.prisma.projectGeneration.findUnique({ where: { projectId: project.id } });
       if (!generated || generated.status !== "SUCCEEDED")

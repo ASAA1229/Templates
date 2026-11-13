@@ -14,6 +14,7 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:status": "prisma migrate status",
+    "certify:templates": "tsx src/cli/certify-templates.ts",
     "owner:init": "tsx --env-file-if-exists=.env src/cli/owner.ts init",
     "owner:recover": "tsx --env-file-if-exists=.env src/cli/owner.ts recover"
   },

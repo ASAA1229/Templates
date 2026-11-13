@@ -13,16 +13,19 @@ export async function signIn(page: Page, path = "/") {
 }
 
 /** Automated WCAG 2.2 A/AA scan (US-B04). Manual assistive-technology testing is still required. */
-export async function expectAccessible(page: Page) {
+export async function accessibilityViolations(page: Page) {
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
     .analyze();
-  const summary = results.violations.map((violation) => ({
+  return results.violations.map((violation) => ({
     id: violation.id,
     impact: violation.impact,
     targets: violation.nodes.slice(0, 3).map((node) => node.target.join(" ")),
   }));
-  expect(summary).toEqual([]);
+}
+
+export async function expectAccessible(page: Page) {
+  expect(await accessibilityViolations(page)).toEqual([]);
 }
 
 export function unique(prefix: string) {

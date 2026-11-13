@@ -59,6 +59,25 @@ export async function loadProjectAccess(
   return project;
 }
 
+/**
+ * Authorization boundary first: resolve project access before any body parsing so callers without
+ * access learn nothing from validation behaviour. Params are read from the matched route.
+ */
+export function requireProjectAccess(ctx: AppContext, access: "read" | "write", param = "projectId") {
+  return async (
+    req: import("express").Request,
+    _res: import("express").Response,
+    next: import("express").NextFunction,
+  ) => {
+    try {
+      await loadProjectAccess(ctx, req.owner!.id, String(req.params[param]), access);
+      next();
+    } catch (error) {
+      next(error);
+    }
+  };
+}
+
 export function projectsRouter(ctx: AppContext): Router {
   const router = Router();
 
@@ -147,38 +166,43 @@ export function projectsRouter(ctx: AppContext): Router {
     }
   });
 
-  router.patch("/:id", authorize(ctx, "project:write"), async (req, res, next) => {
-    try {
-      const { expectedVersion, ...changes } = updateProjectSchema.parse(req.body);
-      const project = await loadProjectAccess(ctx, req.owner!.id, String(req.params.id), "write");
-      if (project.archivedAt) throw conflict("Restore the project before editing it.");
-      const result = await ctx.prisma.project.updateMany({
-        where: { id: project.id, version: expectedVersion },
-        data: { ...changes, version: { increment: 1 } },
-      });
-      if (result.count === 0) throw conflict("This project was changed elsewhere. Reload and try again.");
-      const updated = await ctx.prisma.project.findUniqueOrThrow({ where: { id: project.id } });
-      const changed = Object.fromEntries(
-        Object.entries(changes).filter(
-          ([key, value]) => value !== undefined && project[key as keyof Project] !== value,
-        ),
-      );
-      await audit(ctx, req, {
-        action: "project.update",
-        outcome: "SUCCESS",
-        targetType: "project",
-        targetId: project.id,
-        metadata: {
-          changed: Object.keys(changed),
-          before: Object.fromEntries(Object.keys(changed).map((key) => [key, project[key as keyof Project]])),
-          after: changed,
-        },
-      });
-      res.json({ project: projectView(updated) });
-    } catch (error) {
-      next(error);
-    }
-  });
+  router.patch(
+    "/:id",
+    authorize(ctx, "project:write"),
+    requireProjectAccess(ctx, "write", "id"),
+    async (req, res, next) => {
+      try {
+        const { expectedVersion, ...changes } = updateProjectSchema.parse(req.body);
+        const project = await loadProjectAccess(ctx, req.owner!.id, String(req.params.id), "write");
+        if (project.archivedAt) throw conflict("Restore the project before editing it.");
+        const result = await ctx.prisma.project.updateMany({
+          where: { id: project.id, version: expectedVersion },
+          data: { ...changes, version: { increment: 1 } },
+        });
+        if (result.count === 0) throw conflict("This project was changed elsewhere. Reload and try again.");
+        const updated = await ctx.prisma.project.findUniqueOrThrow({ where: { id: project.id } });
+        const changed = Object.fromEntries(
+          Object.entries(changes).filter(
+            ([key, value]) => value !== undefined && project[key as keyof Project] !== value,
+          ),
+        );
+        await audit(ctx, req, {
+          action: "project.update",
+          outcome: "SUCCESS",
+          targetType: "project",
+          targetId: project.id,
+          metadata: {
+            changed: Object.keys(changed),
+            before: Object.fromEntries(Object.keys(changed).map((key) => [key, project[key as keyof Project]])),
+            after: changed,
+          },
+        });
+        res.json({ project: projectView(updated) });
+      } catch (error) {
+        next(error);
+      }
+    },
+  );
 
   for (const action of ["archive", "restore"] as const) {
     router.post(`/:id/${action}`, authorize(ctx, "project:write"), async (req, res, next) => {

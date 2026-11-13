@@ -123,6 +123,18 @@
     {
       "name": "typescript",
       "version": "5.9.3"
+    },
+    {
+      "name": "@types/express",
+      "version": "5.0.6"
+    },
+    {
+      "name": "@types/node",
+      "version": "24.19.2"
+    },
+    {
+      "name": "tsx",
+      "version": "4.23.15"
     }
   ],
   "compatibility": {

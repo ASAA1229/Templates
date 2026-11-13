@@ -11,7 +11,7 @@ import type { AppContext } from "../../context.js";
 import { conflict, notFound, validationFailed } from "../../lib/errors.js";
 import { audit } from "../audit/audit.service.js";
 import { authorize } from "../auth/policy.js";
-import { loadProjectAccess } from "../projects/projects.js";
+import { loadProjectAccess, requireProjectAccess } from "../projects/projects.js";
 
 type RequirementWithRelations = Requirement & {
   links: TraceLink[];
@@ -131,7 +131,7 @@ export function requirementsRouter(ctx: AppContext): Router {
     }
   });
 
-  router.post("/", authorize(ctx, "requirement:write"), async (req, res, next) => {
+  router.post("/", authorize(ctx, "requirement:write"), requireProjectAccess(ctx, "write"), async (req, res, next) => {
     try {
       const projectId = String(req.params.projectId);
       const input = createRequirementSchema.parse(req.body);
@@ -203,104 +203,121 @@ export function requirementsRouter(ctx: AppContext): Router {
     }
   });
 
-  router.patch("/:id", authorize(ctx, "requirement:write"), async (req, res, next) => {
-    try {
-      const projectId = String(req.params.projectId);
-      const { expectedVersion, changeNote, dependencyIds, ...changes } = updateRequirementSchema.parse(req.body);
-      const current = await loadRequirement(req.owner!.id, projectId, String(req.params.id), "write");
-      const updated = await ctx.prisma.$transaction(async (tx) => {
-        const result = await tx.requirement.updateMany({
-          where: { id: current.id, version: expectedVersion },
-          data: { ...changes, version: { increment: 1 } },
-        });
-        if (result.count === 0) throw conflict("This requirement was changed elsewhere. Reload and try again.");
-        let deps = current.dependsOn.map((dependency) => dependency.dependsOnId);
-        if (dependencyIds) {
-          deps = await validateDependencies(tx, projectId, current.id, dependencyIds);
-          await tx.requirementDependency.deleteMany({ where: { requirementId: current.id } });
-          await tx.requirementDependency.createMany({
-            data: deps.map((dependsOnId) => ({ requirementId: current.id, dependsOnId })),
+  router.patch(
+    "/:id",
+    authorize(ctx, "requirement:write"),
+    requireProjectAccess(ctx, "write"),
+    async (req, res, next) => {
+      try {
+        const projectId = String(req.params.projectId);
+        const { expectedVersion, changeNote, dependencyIds, ...changes } = updateRequirementSchema.parse(req.body);
+        const current = await loadRequirement(req.owner!.id, projectId, String(req.params.id), "write");
+        const updated = await ctx.prisma.$transaction(async (tx) => {
+          const result = await tx.requirement.updateMany({
+            where: { id: current.id, version: expectedVersion },
+            data: { ...changes, version: { increment: 1 } },
           });
-        }
-        const requirement = await tx.requirement.findUniqueOrThrow({ where: { id: current.id }, include });
-        await tx.requirementVersion.create({
-          data: {
-            requirementId: current.id,
-            version: requirement.version,
-            snapshot: snapshot(requirement, deps),
-            changeNote: changeNote || null,
+          if (result.count === 0) throw conflict("This requirement was changed elsewhere. Reload and try again.");
+          let deps = current.dependsOn.map((dependency) => dependency.dependsOnId);
+          if (dependencyIds) {
+            deps = await validateDependencies(tx, projectId, current.id, dependencyIds);
+            await tx.requirementDependency.deleteMany({ where: { requirementId: current.id } });
+            await tx.requirementDependency.createMany({
+              data: deps.map((dependsOnId) => ({ requirementId: current.id, dependsOnId })),
+            });
+          }
+          const requirement = await tx.requirement.findUniqueOrThrow({ where: { id: current.id }, include });
+          await tx.requirementVersion.create({
+            data: {
+              requirementId: current.id,
+              version: requirement.version,
+              snapshot: snapshot(requirement, deps),
+              changeNote: changeNote || null,
+            },
+          });
+          return requirement;
+        });
+        await audit(ctx, req, {
+          action: "requirement.update",
+          outcome: "SUCCESS",
+          targetType: "requirement",
+          targetId: current.id,
+          metadata: {
+            projectId,
+            version: updated.version,
+            fields: [...Object.keys(changes), ...(dependencyIds ? ["dependencyIds"] : [])],
           },
         });
-        return requirement;
-      });
-      await audit(ctx, req, {
-        action: "requirement.update",
-        outcome: "SUCCESS",
-        targetType: "requirement",
-        targetId: current.id,
-        metadata: {
-          projectId,
-          version: updated.version,
-          fields: [...Object.keys(changes), ...(dependencyIds ? ["dependencyIds"] : [])],
-        },
-      });
-      res.json({ requirement: requirementView(updated) });
-    } catch (error) {
-      next(error);
-    }
-  });
+        res.json({ requirement: requirementView(updated) });
+      } catch (error) {
+        next(error);
+      }
+    },
+  );
 
-  router.post("/:id/flag", authorize(ctx, "requirement:write"), async (req, res, next) => {
-    try {
-      const input = flagRequirementSchema.parse(req.body);
-      if (input.flagged && !input.reason) throw validationFailed({ reason: "Explain what needs review." });
-      const current = await loadRequirement(
-        req.owner!.id,
-        String(req.params.projectId),
-        String(req.params.id),
-        "write",
-      );
-      const requirement = await ctx.prisma.requirement.update({
-        where: { id: current.id },
-        data: { flaggedForReview: input.flagged, flagReason: input.flagged ? input.reason! : null },
-        include,
-      });
-      await audit(ctx, req, {
-        action: input.flagged ? "requirement.flag" : "requirement.unflag",
-        outcome: "SUCCESS",
-        targetType: "requirement",
-        targetId: current.id,
-      });
-      res.json({ requirement: requirementView(requirement) });
-    } catch (error) {
-      next(error);
-    }
-  });
+  router.post(
+    "/:id/flag",
+    authorize(ctx, "requirement:write"),
+    requireProjectAccess(ctx, "write"),
+    async (req, res, next) => {
+      try {
+        const input = flagRequirementSchema.parse(req.body);
+        if (input.flagged && !input.reason) throw validationFailed({ reason: "Explain what needs review." });
+        const current = await loadRequirement(
+          req.owner!.id,
+          String(req.params.projectId),
+          String(req.params.id),
+          "write",
+        );
+        const requirement = await ctx.prisma.requirement.update({
+          where: { id: current.id },
+          data: { flaggedForReview: input.flagged, flagReason: input.flagged ? input.reason! : null },
+          include,
+        });
+        await audit(ctx, req, {
+          action: input.flagged ? "requirement.flag" : "requirement.unflag",
+          outcome: "SUCCESS",
+          targetType: "requirement",
+          targetId: current.id,
+        });
+        res.json({ requirement: requirementView(requirement) });
+      } catch (error) {
+        next(error);
+      }
+    },
+  );
 
-  router.post("/:id/links", authorize(ctx, "requirement:write"), async (req, res, next) => {
-    try {
-      const input = createTraceLinkSchema.parse(req.body);
-      const current = await loadRequirement(
-        req.owner!.id,
-        String(req.params.projectId),
-        String(req.params.id),
-        "write",
-      );
-      if (current.links.length >= 100) throw conflict("A requirement can have at most 100 trace links.");
-      await ctx.prisma.traceLink.create({ data: { ...input, title: input.title || null, requirementId: current.id } });
-      const requirement = await ctx.prisma.requirement.findUniqueOrThrow({ where: { id: current.id }, include });
-      await audit(ctx, req, {
-        action: "requirement.link.add",
-        outcome: "SUCCESS",
-        targetType: "requirement",
-        targetId: current.id,
-        metadata: { kind: input.kind, evidenceStatus: input.evidenceStatus },
-      });
-      res.status(201).json({ requirement: requirementView(requirement) });
-    } catch (error) {
-      next(error);
-    }
-  });
+  router.post(
+    "/:id/links",
+    authorize(ctx, "requirement:write"),
+    requireProjectAccess(ctx, "write"),
+    async (req, res, next) => {
+      try {
+        const input = createTraceLinkSchema.parse(req.body);
+        const current = await loadRequirement(
+          req.owner!.id,
+          String(req.params.projectId),
+          String(req.params.id),
+          "write",
+        );
+        if (current.links.length >= 100) throw conflict("A requirement can have at most 100 trace links.");
+        await ctx.prisma.traceLink.create({
+          data: { ...input, title: input.title || null, requirementId: current.id },
+        });
+        const requirement = await ctx.prisma.requirement.findUniqueOrThrow({ where: { id: current.id }, include });
+        await audit(ctx, req, {
+          action: "requirement.link.add",
+          outcome: "SUCCESS",
+          targetType: "requirement",
+          targetId: current.id,
+          metadata: { kind: input.kind, evidenceStatus: input.evidenceStatus },
+        });
+        res.status(201).json({ requirement: requirementView(requirement) });
+      } catch (error) {
+        next(error);
+      }
+    },
+  );
 
   router.delete("/:id/links/:linkId", authorize(ctx, "requirement:write"), async (req, res, next) => {
     try {

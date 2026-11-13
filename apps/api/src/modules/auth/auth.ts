@@ -80,6 +80,7 @@ export function authRouter(ctx: AppContext): Router {
 
   const accessRequestIpLimiter = new RateLimiter(5, 60 * 60_000, () => ctx.now().getTime());
   const passwordResetIpLimiter = new RateLimiter(10, 15 * 60_000, () => ctx.now().getTime());
+  const activationIpLimiter = new RateLimiter(10, 15 * 60_000, () => ctx.now().getTime());
   const accessRequestEmailLimiter = new RateLimiter(2, 24 * 60 * 60_000, () => ctx.now().getTime());
 
   // Public access request: account existence and duplicate submissions are not disclosed.
@@ -127,6 +128,11 @@ export function authRouter(ctx: AppContext): Router {
 
   router.post("/access-requests/activate", async (req, res, next) => {
     try {
+      const retryAfter = activationIpLimiter.consume(req.ip ?? "unknown");
+      if (retryAfter > 0) {
+        res.setHeader("retry-after", String(retryAfter));
+        throw new AppError(429, "RATE_LIMITED", "Too many activation attempts. Try again later.");
+      }
       const input = z.object({ token: z.string().min(32).max(200), password: passwordSchema }).parse(req.body);
       const tokenHash = hashToken(input.token);
       const now = ctx.now();

@@ -141,6 +141,26 @@
     {
       "name": "typescript",
       "version": "5.9.3"
+    },
+    {
+      "name": "react-dom",
+      "version": "19.1.1"
+    },
+    {
+      "name": "@types/react",
+      "version": "19.1.10"
+    },
+    {
+      "name": "@types/react-dom",
+      "version": "19.1.7"
+    },
+    {
+      "name": "@vitejs/plugin-react",
+      "version": "5.0.0"
+    },
+    {
+      "name": "vitest",
+      "version": "4.1.12"
     }
   ],
   "compatibility": {

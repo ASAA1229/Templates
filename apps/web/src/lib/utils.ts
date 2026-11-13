@@ -10,6 +10,6 @@ export function formatDateTime(value: string): string {
 }
 
 export function humanize(value: string): string {
-  const text = value.toLowerCase().replace(/_/g, " ");
+  const text = value.toLowerCase().replace(/[_-]+/g, " ");
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
