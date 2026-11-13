@@ -81,3 +81,16 @@ The template batch review helper was changed to use Playwright's shared API requ
 ## Latest candidate validation status — 2026-11-13
 
 The hardened candidate is 7268eae2ace8d037c1797a4a306b3968ad9d3a42. GitHub Actions CI run #731 (43419462644) is pending and has not exposed job results yet. Do not call it a pass. The last completed evidence remains run #705 with 19 passed and 3 failed browser tests.
+
+
+## Latest candidate — live CI run #738 (2026-11-13)
+
+- PR #1 head: `15fdfe1b016d2f7997008dc68701b99e4220ce26`; base: `7989af5e858a4221d71183636e0cf5c285d10180`.
+- Run: [CI #738](https://github.com/ASAA1229/Templates/actions/runs/43419669158), ID `43419669158`.
+- State when inspected: **in progress**.
+- Completed successfully at inspection: checkout, Node setup, `npm ci`, dependency audit and database migrations.
+- Still running: combined format/lint/typecheck/unit+integration/build validation.
+- Not yet started: smoke, Playwright Chromium installation, E2E/accessibility tests and report upload.
+- No final result is available. Do not mark CI VERIFIED or infer a pass from the completed setup steps.
+- The template-batch request helper change is present in the candidate and is awaiting this run's E2E execution. The blueprint selection issue remains unresolved until evidence demonstrates otherwise.
+
