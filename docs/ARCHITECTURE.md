@@ -82,7 +82,7 @@ The current identity foundation supports OWNER, ADMIN, DEVELOPER, TESTER and EMP
 
 Project sharing is implemented on `new`: owners manage membership; VIEWER is read-only; EDITOR can write within the member's organization permissions. Project, requirement, workspace and generation access paths have been integrated with the centralized project-access helper, and list/search/dashboard scoping has been updated. This implementation is not yet fully verified: every project-linked route, background job, export, audit view and indirect lookup still requires endpoint-by-endpoint isolation tests. UI visibility is not a security boundary.
 
-Employee access request, approval and one-time activation foundations exist. Secure password reset/recovery, MFA, lifecycle edge cases, specialist roles and full cross-user/project isolation evidence remain required before general employee rollout.
+Employee access request, approval and one-time activation foundations exist. Owner/Admin-issued password reset is implemented with hashed, expiring, single-use tokens, rate limiting, audit and session revocation; its end-to-end behavior remains NEEDS TESTING. MFA policy, lifecycle edge cases, specialist roles and full cross-user/project isolation evidence remain open before general employee rollout.
 
 ## 9. Integration and AI boundaries
 
@@ -107,3 +107,8 @@ JARVIS remains a separate product. Only explicitly approved chatbot, agent, moni
 The approved technology baseline above supersedes earlier exploratory/pending stack notes. Supporting technology decisions remain open until explicitly evaluated. A material architecture change records context, options, rationale, cost, security/privacy impact, migration/rollback plan and review trigger in this document or an ADR retained in the canonical architecture record.
 
 Do not introduce a separate Markdown ADR collection. Keep the decision record concise and current here.
+
+
+## Current status authority — 2026-11-13
+
+Current implementation status, evidence, maturity scores, gap register and release decision are maintained in [PROJECT_STATUS.md](PROJECT_STATUS.md). This architecture record describes design boundaries and decisions, not acceptance status.
