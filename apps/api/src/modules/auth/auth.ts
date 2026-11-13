@@ -79,6 +79,7 @@ export function authRouter(ctx: AppContext): Router {
   const emailLimiter = new RateLimiter(8, 15 * 60_000, () => ctx.now().getTime());
 
   const accessRequestIpLimiter = new RateLimiter(5, 60 * 60_000, () => ctx.now().getTime());
+  const passwordResetIpLimiter = new RateLimiter(10, 15 * 60_000, () => ctx.now().getTime());
   const accessRequestEmailLimiter = new RateLimiter(2, 24 * 60 * 60_000, () => ctx.now().getTime());
 
   // Public access request: account existence and duplicate submissions are not disclosed.
@@ -257,6 +258,91 @@ export function authRouter(ctx: AppContext): Router {
       }
     },
   );
+
+
+  router.post(
+    "/password-reset/issue",
+    requireOwner(),
+    authorize(ctx, "identity:manage"),
+    async (req, res, next) => {
+      try {
+        const input = z.object({ email: z.string().trim().toLowerCase().email().max(254) }).parse(req.body);
+        const owner = await ctx.prisma.owner.findUnique({ where: { email: input.email } });
+        if (!owner || !owner.isActive) throw new AppError(404, "NOT_FOUND", "Active account not found.");
+        const { token, tokenHash } = newSessionToken();
+        const now = ctx.now();
+        const expiresAt = new Date(now.getTime() + 30 * 60_000);
+        await ctx.prisma.$transaction(async (tx) => {
+          await tx.passwordResetToken.updateMany({
+            where: { ownerId: owner.id, consumedAt: null },
+            data: { consumedAt: now },
+          });
+          await tx.passwordResetToken.create({
+            data: { ownerId: owner.id, issuedById: req.owner!.id, tokenHash, expiresAt, createdAt: now },
+          });
+        });
+        await audit(ctx, req, {
+          action: "auth.password_reset.issue",
+          outcome: "SUCCESS",
+          targetType: "owner",
+          targetId: owner.id,
+          metadata: { expiresAt: expiresAt.toISOString() },
+        });
+        res.status(200).json({
+          resetUrl: ctx.config.WEB_ORIGIN + "/reset-password?token=" + encodeURIComponent(token),
+          expiresAt: expiresAt.toISOString(),
+        });
+      } catch (error) {
+        next(error);
+      }
+    },
+  );
+
+  router.post("/password-reset/consume", async (req, res, next) => {
+    try {
+      const retryAfter = passwordResetIpLimiter.consume(req.ip ?? "unknown");
+      if (retryAfter > 0) {
+        res.setHeader("retry-after", String(retryAfter));
+        throw new AppError(429, "RATE_LIMITED", "Too many password reset attempts. Try again later.");
+      }
+      const input = z.object({ token: z.string().min(32).max(200), password: passwordSchema }).parse(req.body);
+      const tokenHash = hashToken(input.token);
+      const now = ctx.now();
+      const reset = await ctx.prisma.passwordResetToken.findFirst({
+        where: { tokenHash, consumedAt: null, expiresAt: { gt: now }, owner: { isActive: true } },
+        select: { id: true, ownerId: true },
+      });
+      if (!reset) throw new AppError(400, "VALIDATION_FAILED", "This password reset link is invalid or has expired.");
+      const passwordHash = await hashPassword(input.password);
+      await ctx.prisma.$transaction(async (tx) => {
+        const claimed = await tx.passwordResetToken.updateMany({
+          where: { id: reset.id, tokenHash, consumedAt: null, expiresAt: { gt: now } },
+          data: { consumedAt: now },
+        });
+        if (claimed.count !== 1) {
+          throw new AppError(400, "VALIDATION_FAILED", "This password reset link is invalid or has expired.");
+        }
+        await tx.owner.update({ where: { id: reset.ownerId }, data: { passwordHash, passwordChangedAt: now } });
+        await tx.session.updateMany({
+          where: { ownerId: reset.ownerId, revokedAt: null },
+          data: { revokedAt: now },
+        });
+        await tx.passwordResetToken.updateMany({
+          where: { ownerId: reset.ownerId, consumedAt: null },
+          data: { consumedAt: now },
+        });
+      });
+      await audit(ctx, req, {
+        action: "auth.password_reset.consume",
+        outcome: "SUCCESS",
+        targetType: "owner",
+        targetId: reset.ownerId,
+      });
+      res.status(204).end();
+    } catch (error) {
+      next(error);
+    }
+  });
 
   router.post("/login", async (req, res, next) => {
     try {
