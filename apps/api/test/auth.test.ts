@@ -204,6 +204,97 @@ describe("workspace member identity and access control", () => {
   });
 });
 
+
+describe("employee access requests and activation", () => {
+  it("lets an employee request access, requires review, and consumes a one-time activation link", async () => {
+    const visitor = h.agent();
+    const submitted = await visitor.post("/api/auth/access-requests", {
+      email: "new.employee@asaa.test",
+      displayName: "New Employee",
+      reason: "I need access to contribute to projects.",
+    });
+    expect(submitted.status).toBe(202);
+    expect(submitted.body.message).toContain("reviewed");
+
+    const owner = await h.signedIn();
+    const pending = await owner.get("/api/auth/access-requests");
+    expect(pending.status).toBe(200);
+    expect(pending.body.requests).toHaveLength(1);
+    expect(pending.body.requests[0]).toMatchObject({ email: "new.employee@asaa.test", status: "PENDING" });
+
+    const approved = await owner.post(`/api/auth/access-requests/${pending.body.requests[0].id}/approve`, {
+      role: "EMPLOYEE",
+    });
+    expect(approved.status).toBe(200);
+    const activationUrl = new URL(approved.body.activationUrl);
+    const token = activationUrl.searchParams.get("token");
+    expect(token).toBeTruthy();
+    expect(approved.body.expiresAt).toBeDefined();
+
+    const activated = await visitor.post("/api/auth/access-requests/activate", {
+      token,
+      password: "a strong employee password",
+    });
+    expect(activated.status).toBe(201);
+    expect(activated.body.member).toMatchObject({
+      email: "new.employee@asaa.test",
+      displayName: "New Employee",
+      role: "EMPLOYEE",
+    });
+    expect((await visitor.post("/api/auth/access-requests/activate", {
+      token,
+      password: "another strong password",
+    })).status).toBe(400);
+
+    const login = await visitor.post("/api/auth/login", {
+      email: "new.employee@asaa.test",
+      password: "a strong employee password",
+    });
+    expect(login.status).toBe(200);
+  });
+
+  it("does not disclose duplicate or already-registered email addresses", async () => {
+    const visitor = h.agent();
+    const first = await visitor.post("/api/auth/access-requests", {
+      email: OWNER_EMAIL,
+      displayName: "Existing Owner",
+    });
+    const second = await visitor.post("/api/auth/access-requests", {
+      email: OWNER_EMAIL,
+      displayName: "Existing Owner",
+    });
+    expect(first.status).toBe(202);
+    expect(second.status).toBe(202);
+    expect(first.body).toEqual(second.body);
+    expect(await h.ctx.prisma.accessRequest.count()).toBe(0);
+  });
+
+  it("allows an administrator to approve employee access but not administrator access", async () => {
+    const owner = await h.signedIn();
+    const created = await owner.post("/api/auth/members", {
+      email: "admin.access@asaa.test",
+      displayName: "Workspace Admin",
+      role: "ADMIN",
+      password: "a secure administrator password",
+    });
+    expect(created.status).toBe(201);
+    const admin = h.agent();
+    expect((await admin.post("/api/auth/login", {
+      email: "admin.access@asaa.test",
+      password: "a secure administrator password",
+    })).status).toBe(200);
+    await h.agent().post("/api/auth/access-requests", {
+      email: "another.admin@asaa.test",
+      displayName: "Another Admin",
+    });
+    const pending = await admin.get("/api/auth/access-requests");
+    const denied = await admin.post(`/api/auth/access-requests/${pending.body.requests[0].id}/approve`, {
+      role: "ADMIN",
+    });
+    expect(denied.status).toBe(403);
+  });
+});
+
 describe("cross-site request protection and hardening", () => {
   it("rejects writes without the CSRF header or from a foreign origin", async () => {
     const agent = await h.signedIn();
