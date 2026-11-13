@@ -40,6 +40,10 @@ async function check(base) {
   const body = await health.json().catch(() => ({}));
   record("health endpoint reports database ok", health.ok && body.database === "ok", JSON.stringify(body));
 
+  const ready = await fetch(`${base}/api/health/ready`);
+  const readyBody = await ready.json().catch(() => ({}));
+  record("readiness endpoint reports ready", ready.ok && readyBody.status === "ready", JSON.stringify(readyBody));
+
   const spa = await fetch(`${base}/projects`);
   const html = await spa.text();
   record("SPA served with history fallback", spa.ok && html.includes('<div id="root">'), String(spa.status));

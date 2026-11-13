@@ -25,6 +25,9 @@
     "test": "npm run build:contracts && npm run test --workspaces --if-present",
     "test:e2e": "npm run test:e2e -w @asaa/web",
     "validate": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build",
+    "backup:db": "node scripts/db-backup.mjs backup",
+    "backup:verify": "node scripts/db-backup.mjs verify",
+    "backup:restore-check": "node scripts/db-backup.mjs restore-check",
     "smoke": "node scripts/smoke.mjs",
     "audit:deps": "npm audit --audit-level=high",
     "db:deploy": "npm run db:deploy -w @asaa/api"
