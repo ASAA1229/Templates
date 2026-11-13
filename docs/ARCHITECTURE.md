@@ -118,3 +118,8 @@ Current implementation status, evidence, maturity scores, gap register and relea
 
 This document records architecture, not verification status. The active candidate is `15fdfe1b016d2f7997008dc68701b99e4220ce26` on `new`; PR #1 remains open/unmerged. CI #738 (`43419669158`) was in progress at last inspection and does not yet verify this candidate. Current implementation/testing distinctions and release gates are maintained in [PROJECT_STATUS.md](PROJECT_STATUS.md).
 
+
+
+## Current candidate status — 2026-11-13
+
+This document records architecture, not verification status. The active candidate is `15fdfe1b016d2f7997008dc68701b99e4220ce26` on `new`; PR #1 remains open/unmerged. CI #738 (`43419669158`) was in progress at last inspection and does not verify this candidate yet. Current implementation/testing distinctions and release gates are maintained in [PROJECT_STATUS.md](PROJECT_STATUS.md).
