@@ -380,6 +380,7 @@ model AccessRequest {
   displayName       String             @db.VarChar(120)
   reason            String             @default("") @db.VarChar(1000)
   status            AccessRequestStatus @default(PENDING)
+  approvedRole      OwnerRole          @default(EMPLOYEE)
   tokenHash         String?            @unique @db.Char(64)
   tokenExpiresAt    DateTime?          @db.Timestamptz(3)
   activatedAt       DateTime?          @db.Timestamptz(3)
