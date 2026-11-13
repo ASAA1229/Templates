@@ -69,7 +69,6 @@ describe("owner sign-in (US-A01)", () => {
   });
 });
 
-
 describe("password recovery (US-A03)", () => {
   it("issues a hashed one-time reset link and revokes all existing sessions", async () => {
     const ownerAgent = await h.signedIn();
@@ -158,13 +157,9 @@ describe("password recovery (US-A03)", () => {
       email: employee.email,
       password: "a temporary employee password",
     });
-    expect(
-      (await employeeAgent.post("/api/auth/password-reset/issue", { email: OWNER_EMAIL })).status,
-    ).toBe(403);
+    expect((await employeeAgent.post("/api/auth/password-reset/issue", { email: OWNER_EMAIL })).status).toBe(403);
     const owner = await h.signedIn();
-    expect(
-      (await owner.post("/api/auth/password-reset/issue", { email: "missing@asaa.test" })).status,
-    ).toBe(404);
+    expect((await owner.post("/api/auth/password-reset/issue", { email: "missing@asaa.test" })).status).toBe(404);
   });
 });
 

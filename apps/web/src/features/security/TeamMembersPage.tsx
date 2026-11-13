@@ -90,7 +90,9 @@ export function TeamMembersPage() {
         body: { email: member.email },
       });
       setResetLink({ email: member.email, url: result.resetUrl, expiresAt: result.expiresAt });
-      setMessage("A one-time password reset link has been issued. Share it with the employee through a secure channel.");
+      setMessage(
+        "A one-time password reset link has been issued. Share it with the employee through a secure channel.",
+      );
     } catch (cause) {
       setError(cause instanceof ApiError ? cause.message : "Unable to issue a password reset link.");
     } finally {
@@ -113,11 +115,19 @@ export function TeamMembersPage() {
       {message && <Alert tone="success">{message}</Alert>}
       {resetLink && (
         <Card>
-          <CardHeader><CardTitle>One-time password reset link</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>One-time password reset link</CardTitle>
+          </CardHeader>
           <CardContent className="space-y-2">
-            <p className="text-sm">{resetLink.email} · Expires {new Date(resetLink.expiresAt).toLocaleString()}</p>
-            <a className="break-all text-sm underline" href={resetLink.url}>{resetLink.url}</a>
-            <p className="text-xs text-muted-foreground">This link is shown here once. Deliver it only to the verified account holder using a secure channel.</p>
+            <p className="text-sm">
+              {resetLink.email} · Expires {new Date(resetLink.expiresAt).toLocaleString()}
+            </p>
+            <a className="break-all text-sm underline" href={resetLink.url}>
+              {resetLink.url}
+            </a>
+            <p className="text-xs text-muted-foreground">
+              This link is shown here once. Deliver it only to the verified account holder using a secure channel.
+            </p>
           </CardContent>
         </Card>
       )}
