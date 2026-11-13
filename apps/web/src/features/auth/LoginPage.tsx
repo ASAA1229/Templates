@@ -88,8 +88,7 @@ export function LoginPage() {
               </Link>
             </p>
             <p className="text-xs text-muted-foreground">
-              Forgot your password? Run{" "}
-              <code className="rounded bg-muted px-1">npm run owner:recover -w @asaa/api</code> on the host.
+              Forgot your password? Ask an ASAA owner or administrator for a one-time reset link.
             </p>
           </form>
         </CardContent>
