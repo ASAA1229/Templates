@@ -33,7 +33,7 @@ The initial product is an internal engineering platform, not a public template m
 - **EMPLOYEE:** authorized internal user with scoped access.
 - Future profiles may include project/product manager, designer, QA/security specialist, DevOps engineer, domain specialist and requester.
 
-The current branch implements the initial five account roles, account creation/deactivation and server-side permission foundations. General employee rollout remains blocked until secure invitation/activation and password-reset flows, resource-level project sharing, specialized roles where needed and end-to-end access-isolation tests are complete. Never infer access from UI navigation alone.
+The current branch implements the initial five account roles, account creation/deactivation, public employee access requests, Owner/Admin review, one-time 24-hour activation links and server-side permission foundations. Activation tokens are stored only as hashes and consumed atomically. The activation link is displayed once to the approver for secure manual delivery; no email provider is assumed. General employee rollout remains blocked until password recovery, resource-level project sharing, specialized roles where needed and end-to-end access-isolation tests are complete. Never infer access from UI navigation alone.
 
 Future external organizations require independently isolated identity, data, configuration, storage, audit and administration. Multi-tenant SaaS is not part of the initial release.
 
@@ -45,7 +45,7 @@ Future external organizations require independently isolated identity, data, con
 - Role- and resource-scoped authorization enforced server-side.
 - Auditable administration, access changes, approvals, exports, integrations and sensitive actions.
 - Protected audit evidence with actor, time, action, target and outcome.
-- MFA/passkeys/SSO are future capabilities subject to architecture and cost review.
+- Target authentication roadmap: configurable MFA, supported SSO and role/organization authentication policies. Passkeys may be added where supported. External identity providers remain optional and must preserve the ₹0 operating constraint.
 
 ### 4.2 Workspace and experience
 - Unified workspace, dashboard, navigation, application launcher and contextual actions.
@@ -99,7 +99,7 @@ Future external organizations require independently isolated identity, data, con
 - Build/test evidence is distinct from production-readiness approval.
 
 ### 4.8 Integrations, collaboration and workflow
-- Governed connector registry for Git/GitHub, CI systems (including possible Jenkins), storage, databases, toolchains and deployment providers.
+- Governed connector registry for Git/GitHub, CI systems (including possible Jenkins), storage, databases, toolchains and deployment providers. Target connector governance includes scoped permissions, version compatibility, health monitoring, documented APIs/webhooks/SDKs and auditable revocation.
 - Connector contracts cover authentication, capabilities, configuration, health, version, error handling, audit and revocation.
 - Realtime collaboration, comments, annotations, assignments, presence, review/approval and controlled file sharing.
 - Notifications with priority, preferences, grouping, escalation, delivery tracking and audit.
@@ -109,7 +109,7 @@ Future external organizations require independently isolated identity, data, con
 ### 4.9 Search, analytics, knowledge and assistance
 - Permission-aware global search with filters/facets, saved searches, semantic/natural-language discovery and command palette over time.
 - Search index is not the authorization source of truth; access is rechecked at query and action time.
-- Dashboards for personal, role, team, project, executive and operational use, with governed data access.
+- Dashboards for personal, role, team, project, executive and operational use, with governed data access. Target analytics include usage trends, project health, security insights and operational reporting.
 - Reports/BI with definitions, lineage, freshness, privacy, export and audit.
 - Central documents/assets/knowledge with versioning, checksums, retention, malware scanning and access-controlled preview.
 - Onboarding, contextual help, tutorials, knowledge center and optional support assistant.
@@ -175,7 +175,7 @@ Use distinct states: Not started, In development, Development complete, Build ve
 4. **Complete project configuration and preview:** guided, low-code and advanced options with validated schemas and responsive preview.
 5. **Build isolated execution:** safe build/test jobs, limits, cancellation, logs, reports and artifact evidence.
 6. **Complete project hand-off:** verified ZIP export and explicitly authorized remote repository provisioning.
-7. **Complete internal identity gates:** secure invitations/activation/recovery, resource-level sharing, least-privilege roles and end-to-end isolation tests before employee rollout.
+7. **Complete internal identity gates:** employee access request/review/activation is implemented on the current development branch; complete password recovery, resource-level sharing, least-privilege roles and end-to-end isolation tests before employee rollout.t.
 
 ### P1 — reusable engineering platform
 8. Governed integration connector registry.
