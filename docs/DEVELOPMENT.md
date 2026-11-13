@@ -135,6 +135,14 @@ The public UI exposes `/request-access` and `/activate`.
 - API routes: `POST /api/auth/access-requests`, `GET /api/auth/access-requests`, `POST /api/auth/access-requests/:id/approve`, `POST /api/auth/access-requests/:id/reject`, and `POST /api/auth/access-requests/activate`.
 - Apply the committed Prisma migration before using these routes. The flow is not a substitute for password recovery, MFA or project-level authorization.
 
+## 7.3 Password recovery
+
+- Owner/Admin issues a reset link from Team Members; the API returns the raw token only in that one response for manual secure delivery.
+- Only a SHA-256 token hash is stored. A new issuance invalidates prior outstanding links; links expire after 30 minutes.
+- Consumption is rate-limited and atomic; successful reset updates the password timestamp, revokes every active session and invalidates other reset links.
+- The reset UI is public only for possession of the token. No email delivery provider is configured; the administrator must verify the recipient and use a secure out-of-band channel.
+- Test invalid, expired, reused, superseded and concurrent tokens; test privileged account issuance policy and session revocation.
+
 ## 7.2 Project sharing and resource authorization
 
 Project membership is stored in `ProjectMember` and is separate from organization account roles.
