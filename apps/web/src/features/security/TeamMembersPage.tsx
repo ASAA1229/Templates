@@ -111,6 +111,16 @@ export function TeamMembersPage() {
       />
       {error && <Alert tone="danger">{error}</Alert>}
       {message && <Alert tone="success">{message}</Alert>}
+      {resetLink && (
+        <Card>
+          <CardHeader><CardTitle>One-time password reset link</CardTitle></CardHeader>
+          <CardContent className="space-y-2">
+            <p className="text-sm">{resetLink.email} · Expires {new Date(resetLink.expiresAt).toLocaleString()}</p>
+            <a className="break-all text-sm underline" href={resetLink.url}>{resetLink.url}</a>
+            <p className="text-xs text-muted-foreground">This link is shown here once. Deliver it only to the verified account holder using a secure channel.</p>
+          </CardContent>
+        </Card>
+      )}
       <Card>
         <CardHeader>
           <CardTitle>Create member account</CardTitle>
@@ -184,9 +194,19 @@ export function TeamMembersPage() {
                 <div className="flex items-center gap-3">
                   <span className="text-sm">{member.isActive ? "Active" : "Deactivated"}</span>
                   {member.role !== "OWNER" && (
-                    <Button size="sm" variant="outline" onClick={() => void setActive(member)}>
-                      {member.isActive ? "Deactivate" : "Reactivate"}
-                    </Button>
+                    <>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={!member.isActive || resettingMemberId !== null}
+                        onClick={() => void issuePasswordReset(member)}
+                      >
+                        {resettingMemberId === member.id ? "Issuing…" : "Issue reset link"}
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => void setActive(member)}>
+                        {member.isActive ? "Deactivate" : "Reactivate"}
+                      </Button>
+                    </>
                   )}
                 </div>
               </CardContent>
