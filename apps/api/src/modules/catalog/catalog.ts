@@ -11,6 +11,8 @@ import type { AppContext } from "../../context.js";
 import { conflict, notFound, validationFailed } from "../../lib/errors.js";
 import { audit } from "../audit/audit.service.js";
 import { authorize } from "../auth/policy.js";
+import { resolveAssets, type AssetIndex, type AssetVersion } from "./resolver.js";
+import { z } from "zod";
 
 export function catalogView(item: CatalogItem): CatalogItemView {
   return {
@@ -100,6 +102,73 @@ export function catalogRouter(ctx: AppContext): Router {
         metadata: { slug: item.slug, sourceType: item.sourceType },
       });
       res.status(201).json({ item: catalogView(item) });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  /**
+   * Dependency, license and version resolution for reusable assets (RG-13). Read-only; resolves against the
+   * catalog and the immutable template release ledger without mutating anything.
+   */
+  router.post("/resolve", authorize(ctx, "catalog:read"), async (req, res, next) => {
+    try {
+      const input = z
+        .object({
+          roots: z
+            .array(z.object({ name: z.string().trim().min(1).max(120), range: z.string().trim().max(60).default("*") }))
+            .min(1)
+            .max(20),
+          allowedLicenses: z.array(z.string().trim().min(1).max(80)).max(50).optional(),
+        })
+        .parse(req.body);
+      const [items, releases] = await Promise.all([
+        ctx.prisma.catalogItem.findMany({ where: { kind: { not: "IMPORTED_PROJECT" } }, take: 2000 }),
+        ctx.prisma.templateRelease.findMany({ where: { status: { in: ["RELEASED", "DEPRECATED"] } }, take: 2000 }),
+      ]);
+      const versions = new Map<string, AssetVersion[]>();
+      const add = (asset: AssetVersion, override: boolean) => {
+        const list = versions.get(asset.name) ?? [];
+        const existing = list.findIndex((candidate) => candidate.version === asset.version);
+        if (existing >= 0) {
+          if (override) list[existing] = asset;
+        } else list.push(asset);
+        versions.set(asset.name, list);
+      };
+      const dependencyList = (value: unknown) =>
+        (Array.isArray(value) ? (value as { name: string; version: string }[]) : []).map((dependency) => ({
+          name: dependency.name,
+          range: dependency.version,
+        }));
+      for (const release of releases) {
+        const manifest = release.manifest as { license?: { spdx?: string }; dependencies?: unknown };
+        add(
+          {
+            name: release.templateId,
+            version: release.version,
+            license: manifest.license?.spdx ?? "UNKNOWN",
+            lifecycle: release.status === "RELEASED" ? "ACTIVE" : "DEPRECATED",
+            trusted: true,
+            dependencies: dependencyList(manifest.dependencies),
+          },
+          false,
+        );
+      }
+      for (const item of items) {
+        add(
+          {
+            name: item.slug,
+            version: item.version,
+            license: item.license,
+            lifecycle: item.lifecycle,
+            trusted: item.trustStatus === "TRUSTED",
+            dependencies: dependencyList(item.dependencies),
+          },
+          true,
+        );
+      }
+      const index: AssetIndex = { versionsOf: (name) => versions.get(name) ?? [] };
+      res.json({ resolution: resolveAssets(input.roots, index, { allowedLicenses: input.allowedLicenses }) });
     } catch (error) {
       next(error);
     }
