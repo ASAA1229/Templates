@@ -12,6 +12,7 @@ import { ProjectForm } from "./ProjectForm";
 import { RequirementCard } from "./RequirementCard";
 import { RequirementForm } from "./RequirementForm";
 import { ProjectTemplateContribution } from "@/features/templates/ProjectTemplateContribution";
+import { ProjectMembersPanel } from "./ProjectMembersPanel";
 
 interface ProjectDetail {
   project: ProjectView;
@@ -236,6 +237,8 @@ export function ProjectDetailPage() {
           </section>
         </div>
 
+        <div className="space-y-6">
+        <ProjectMembersPanel projectId={project.id} />
         <Card className="h-fit">
           <CardHeader>
             <CardTitle>History</CardTitle>
@@ -251,6 +254,7 @@ export function ProjectDetailPage() {
             </ol>
           </CardContent>
         </Card>
+        </div>
       </div>
     </>
   );
