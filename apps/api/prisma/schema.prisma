@@ -365,3 +365,30 @@ model SavedSearch {
   @@unique([ownerId, name])
   @@index([ownerId, updatedAt])
 }
+
+
+enum AccessRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+/// Public employee access request; activation secrets are stored only as hashes.
+model AccessRequest {
+  id                String             @id @default(uuid()) @db.Uuid
+  email             String             @db.VarChar(254)
+  displayName       String             @db.VarChar(120)
+  reason            String             @default("") @db.VarChar(1000)
+  status            AccessRequestStatus @default(PENDING)
+  tokenHash         String?            @unique @db.Char(64)
+  tokenExpiresAt    DateTime?          @db.Timestamptz(3)
+  activatedAt       DateTime?          @db.Timestamptz(3)
+  reviewerId        String?            @db.Uuid
+  reviewer          Owner?             @relation("AccessRequestReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  reviewedAt        DateTime?          @db.Timestamptz(3)
+  createdAt         DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime           @updatedAt @db.Timestamptz(3)
+
+  @@index([status, createdAt])
+  @@index([email, status])
+}
