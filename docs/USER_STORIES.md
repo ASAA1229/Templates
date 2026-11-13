@@ -175,3 +175,9 @@ For every RLC task, record: implementation PR/commit, acceptance-test identifier
 ## 2026-11-13 status authority
 
 This file is the authoritative detailed user-story and acceptance-criteria backlog. Current implementation state, evidence, maturity scores, gap status and release decision are maintained in [PROJECT_STATUS.md](PROJECT_STATUS.md). The release-blocking RLC task definitions below remain the execution backlog; their status must follow the canonical vocabulary and evidence in PROJECT_STATUS.md. A story is not accepted because its implementation exists or documentation has changed.
+
+
+## Current candidate and verification note — 2026-11-13
+
+Use [PROJECT_STATUS.md](PROJECT_STATUS.md) for the current story/gap state, evidence, maturity and release decision. PR #1 remains open and unmerged at `15fdfe1b016d2f7997008dc68701b99e4220ce26` on branch `new`. CI #738 (`43419669158`) was in progress at the latest inspection and has no final result. The Playwright template-batch helper adjustment is awaiting test execution; do not close its linked story or acceptance criteria based on the code change alone.
+
