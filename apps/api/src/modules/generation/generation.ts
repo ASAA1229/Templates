@@ -95,6 +95,19 @@ export function generationsRouter(ctx: AppContext, service = createGenerationSer
     }
   });
 
+  router.get("/:id/export", authorize(ctx, "generation:read"), async (req, res, next) => {
+    try {
+      const { filename, archive } = await service.exportArchive(req, String(req.params.id));
+      res.setHeader("content-type", "application/zip");
+      res.setHeader("content-disposition", `attachment; filename="${filename}"`);
+      res.setHeader("content-length", String(archive.length));
+      res.setHeader("x-content-type-options", "nosniff");
+      res.end(archive);
+    } catch (error) {
+      next(error);
+    }
+  });
+
   router.post("/:id/verify", authorize(ctx, "generation:read"), async (req, res, next) => {
     try {
       res.json({ verification: await service.verify(req, String(req.params.id)) });

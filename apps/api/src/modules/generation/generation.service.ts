@@ -19,6 +19,7 @@ import type { Request } from "express";
 import type { AppContext } from "../../context.js";
 import { AppError, conflict, notEligible, notFound, validationFailed } from "../../lib/errors.js";
 import { audit } from "../audit/audit.service.js";
+import { buildProjectArchive } from "../export/archive.js";
 import { catalogView } from "../catalog/catalog.js";
 import { snapshot } from "../requirements/requirements.js";
 import { isUsable, TemplateLibrary, type LibraryTemplate } from "./library.js";
@@ -32,6 +33,7 @@ import {
   outputExists,
   readProvenance,
   removeOutput,
+  resolveOutputDir,
   resolveOutputRoot,
   writeOutput,
   type WriterFs,
@@ -754,6 +756,43 @@ export class GenerationService {
       metadata: { generationId: generation.id, reproducible: result.reproducible, outputIntact: result.outputIntact },
     });
     return result;
+  }
+
+  /** Safe, complete ZIP hand-off of a generated project (RG-08). Requires read access to the project. */
+  async exportArchive(req: Request, id: string): Promise<{ filename: string; archive: Buffer }> {
+    const generation = await this.load(req, id);
+    if (generation.status !== "SUCCEEDED") throw conflict("Only successfully generated projects can be exported.");
+    const directory = await resolveOutputDir(this.options.outputRoot, generation.outputDir);
+    if (!directory) throw conflict("The project's output folder is unavailable.");
+    const currentDigest = await digestOutput(this.options.outputRoot, generation.outputDir);
+    const { filename, archive, manifest } = await buildProjectArchive({
+      directory,
+      project: { key: generation.project.key, name: generation.project.name },
+      generation: {
+        id: generation.id,
+        templateId: generation.templateId,
+        templateVersion: generation.templateVersion,
+        templateDigest: generation.templateDigest,
+        generatorVersion: generation.generatorVersion,
+        inputsHash: generation.inputsHash,
+        outputDigest: generation.outputDigest,
+        completedAt: generation.completedAt?.toISOString() ?? null,
+      },
+      currentDigest,
+    });
+    await audit(this.ctx, req, {
+      action: "generation.export",
+      outcome: "SUCCESS",
+      targetType: "project",
+      targetId: generation.projectId,
+      metadata: {
+        generationId: generation.id,
+        bytes: archive.length,
+        archiveSha256: createHash("sha256").update(archive).digest("hex"),
+        modifiedSinceGeneration: (manifest as { modifiedSinceGeneration: boolean }).modifiedSinceGeneration,
+      },
+    });
+    return { filename, archive };
   }
 
   // ───── Reads ─────

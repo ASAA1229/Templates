@@ -78,15 +78,18 @@ function RouteAnnouncer() {
 
 function NotFound() {
   return (
-    <EmptyState
-      title="Page not found"
-      description="The page you asked for does not exist or you do not have access to it."
-      action={
-        <Button asChild>
-          <Link to="/">Back to dashboard</Link>
-        </Button>
-      }
-    />
+    <>
+      <h1 className="sr-only">Page not found</h1>
+      <EmptyState
+        title="Page not found"
+        description="The page you asked for does not exist or you do not have access to it."
+        action={
+          <Button asChild>
+            <Link to="/">Back to dashboard</Link>
+          </Button>
+        }
+      />
+    </>
   );
 }
 

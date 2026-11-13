@@ -1,5 +1,5 @@
 import type { GenerationVerificationView, GenerationView } from "@asaa/contracts";
-import { RefreshCw, ShieldCheck } from "lucide-react";
+import { Download, RefreshCw, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { StatusBadge } from "@/components/common";
 import { Alert, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
@@ -133,6 +133,13 @@ export function GenerationDetails({
         {generation.status === "SUCCEEDED" && (
           <Button variant="outline" size="sm" disabled={busy !== null} onClick={() => void run("verify")}>
             <ShieldCheck aria-hidden="true" /> {busy === "verify" ? "Verifying…" : "Verify reproducibility"}
+          </Button>
+        )}
+        {generation.status === "SUCCEEDED" && (
+          <Button variant="outline" size="sm" asChild>
+            <a href={`/api/generations/${generation.id}/export`} download>
+              <Download aria-hidden="true" /> Export ZIP
+            </a>
           </Button>
         )}
         {generation.status === "FAILED" && (
