@@ -50,7 +50,7 @@ All P0 gates in PROJECT_STATUS.md have objective evidence; critical journeys pas
 
 ## Current decision
 
-**NO-GO.** E2E failures, incomplete authorization evidence, uncertified templates, missing isolated execution and unproven recovery prevent POC acceptance.
+**NO-GO (updated 2026-11-14: local E2E now 27/27 and RG-01 to RG-15 have local implementation evidence; the remaining blockers are the external items in PROJECT_STATUS.md and absent CI evidence; original text follows).** E2E failures, incomplete authorization evidence, uncertified templates, missing isolated execution and unproven recovery prevent POC acceptance.
 
 ## Proof scenario status — 2026-11-14
 

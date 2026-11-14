@@ -1,6 +1,6 @@
 # Testing and Quality Assurance
 
-**Date:** 2026-11-13  
+**Date:** 2026-11-14 (originally 2026-11-13; dated sections below preserved)  
 **Authoritative status:** [PROJECT_STATUS.md](PROJECT_STATUS.md)  
 **Local commands/setup:** [DEVELOPMENT.md](DEVELOPMENT.md)
 
@@ -101,3 +101,7 @@ Added in the delta increment: `execution-jobs.test.ts` (job API, container comma
 - The API suites share one PostgreSQL test database and run serially. Create it with `npm run db:local -- init` and apply migrations to **both** databases (`DATABASE_URL` and `TEST_DATABASE_URL`) with `prisma migrate deploy`; an unmigrated test database fails dozens of tests at once.
 - Run E2E against a database that API tests are not using (set `TEST_DATABASE_URL`), and do not run `prisma generate` while an E2E API server is running on Windows (the query-engine DLL is locked).
 - Remaining human steps: manual screen-reader review, a performance/load baseline, and live connector tests.
+
+### Independent rerun note — 2026-11-14
+
+The coordinator's rerun of `npm run validate` stopped at the API typecheck with a Windows `EPERM` on the Prisma engine DLL rename (a file lock from a concurrent process; it is the same hazard described above for `prisma generate`). That rerun is inconclusive. The agent-reported results (validate, smoke, E2E 27/27) remain local and unreproduced by a second party, and are not CI VERIFIED. Commit `918ffa0` hardened slow-machine behaviour (temp-directory cleanup retry, longer backup drill timeout).

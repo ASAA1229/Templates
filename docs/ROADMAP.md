@@ -7,7 +7,7 @@
 This is a dependency-ordered roadmap, not a calendar promise. A milestone closes only when acceptance evidence is tied to the candidate commit.
 
 ## Milestone 0 — Trustworthy baseline
-**Priority:** P0 · **Status:** IN DEVELOPMENT  
+**Priority:** P0 · **Status:** IMPLEMENTED locally (read-only CI workflow and certification step; no GitHub run observed)  
 Establish authoritative status vocabulary; fix observed E2E failures; remove CI source auto-format/push behavior and unnecessary write permissions; require green checks on the exact candidate SHA.  
 **Exit:** deterministic read-only validation passes.
 

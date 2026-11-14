@@ -71,14 +71,14 @@ Scores are engineering assessments from the evidence above, not measured perform
 | Division directory | Placeholder taxonomy |
 | Lifecycle and metadata expectations | Initial proposal |
 | Roadmap | Initial proposal |
-| Application implementation | Not started |
-| Template catalog and engine | Not started |
-| JARVIS integration | Not started |
+| Application implementation | IMPLEMENTED locally (RG-01 to RG-15; see gap register); not CI VERIFIED |
+| Template catalog and engine | IMPLEMENTED locally; 25 demo packages, 29/29 certified by the local certification command |
+| JARVIS integration | Not started (out of current scope) |
 | Portfolio integration | Showcase-only concept; not implemented |
-| Security/accessibility/quality gates | Requirements drafted; implementation/evidence pending |
+| Security/accessibility/quality gates | Implemented and tested locally (role matrix, MFA, axe sweep, reflow); manual screen-reader review and CI evidence pending |
 
 ## Next action
-Review and approve audience, platform targets, template scope, access model, and integration depth before implementation. Update this file whenever actual work changes status.
+Observe a GitHub Actions run on the pushed head, obtain owner decisions on topology, RPO/RTO and live connectors, and complete manual accessibility review. Update this file whenever actual work changes status.
 
 
 ---
@@ -88,3 +88,32 @@ Review and approve audience, platform targets, template scope, access model, and
 Approved planning/governance reference for ASAA, Portfolio, JARVIS, Templates and shared ecosystem capabilities. Round 6 (12 consolidation stages) is complete at framework/consolidation level. Individual requirement mapping, reconciliation of the 1,000 discovery answers, repository/runtime evidence, named owners, dependency validation, acceptance criteria, evidence-based gaps and delivery estimates remain pending. Approval does not authorize implementation, testing, deployment, paid services or merges.
 
 See `docs/ASAA_MASTER_REQUIREMENTS_BASELINE.md`, `docs/PROJECT_SCOPE.md` and `docs/EPIC_STATUS.md` for the approved baseline, project scope and epic status register.
+
+
+## Gap register (RG-01 to RG-15) — 2026-11-14
+
+Source of the gap definitions: REQUIREMENTS.md (release-gap register) and ROADMAP.md. The "Current status" column of that register in REQUIREMENTS.md is the original 2026-11-13 baseline and is preserved; this table is current. "Local" means run on one Windows 11 machine by the code agent; the coordinator's independent rerun was blocked (see below). Nothing is CI VERIFIED.
+
+| ID | Priority | Gap | Status | Evidence / blocker |
+|---|---|---|---|---|
+| RG-01 | P0 | Access and authorization | COMPLETE AND VERIFIED (locally, agent-reported) | `authorization-matrix.test.ts` role matrix and route inventory |
+| RG-02 | P0 | Authentication lifecycle and MFA | COMPLETE AND VERIFIED (locally, agent-reported) | `auth-lifecycle.test.ts`, `mfa.test.ts` (TOTP, recovery codes, reset) |
+| RG-03 | P0 | CI and regression baseline | PARTIALLY COMPLETE | Read-only workflow with certification step configured; historical CI run #705 failed; no run observed for new commits |
+| RG-04 | P0 | Template certification | COMPLETE AND VERIFIED (locally, agent-reported) | `certify:templates` 29/29 certified; `certification.test.ts` |
+| RG-05 | P0 | Blueprint-to-builder contract | COMPLETE AND VERIFIED (locally, agent-reported) | `template-lifecycle.test.ts` reproducibility |
+| RG-06 | P0 | Template authoring and release lifecycle | COMPLETE AND VERIFIED (locally, agent-reported) | Immutable releases, version pinning, release lifecycle UI E2E |
+| RG-07 | P0 | Isolated build/test execution | PARTIALLY COMPLETE | Worker with limits, tree kill, cleanup tests and job API implemented; optional Docker boundary not exercised against a live container |
+| RG-08 | P0 | Project export and hand-off | COMPLETE AND VERIFIED (locally, agent-reported) | Safe ZIP export with manifest and zip-slip protection (`export.test.ts`); remote Git push remains owner-authorized only |
+| RG-09 | P0 | Accessibility and usability | PARTIALLY COMPLETE | axe sweep, 320 px reflow, 200% text, focus, forced colors automated; manual screen-reader review not done |
+| RG-10 | P0 | Release approval | BLOCKED BY EXTERNAL DEPENDENCY | Needs owner-approved zero-cost topology, RPO/RTO, rollback and incident process and explicit release authorization; local backup/restore-check exists |
+| RG-11 | P1 | Online workspace (files, diff, history, conflicts) | COMPLETE AND VERIFIED (locally, agent-reported) | `workspace-files.test.ts` |
+| RG-12 | P1 | Governed connectors (Jenkins, Nexus, others) | PARTIALLY COMPLETE | Contracts, guarded manager and HTTP adapters verified against fake servers only; live Jenkins/Nexus need approved endpoints and credentials |
+| RG-13 | P1 | Asset dependency, license and version resolution | COMPLETE AND VERIFIED (locally, agent-reported) | `asset-resolution.test.ts` |
+| RG-14 | P1 | Delivery operations: backup, readiness, observability | PARTIALLY COMPLETE | Backup/verify/restore-check, readiness endpoint, shared rate limiter, load baseline; no alerting, no approved RPO/RTO, no deployment |
+| RG-15 | P1 | Sector and technology coverage | PARTIALLY COMPLETE | 25 packages certified; expansion is demand-driven |
+
+Tally (15): COMPLETE AND VERIFIED (locally) 8 (RG-01, 02, 04, 05, 06, 08, 11, 13); PARTIALLY COMPLETE 6 (RG-03, 07, 09, 12, 14, 15); BLOCKED BY EXTERNAL DEPENDENCY 1 (RG-10); NOT IMPLEMENTED 0.
+
+## Verification caveat — coordinator rerun, 2026-11-14
+
+The coordinator's rerun of `npm run validate` failed at the API typecheck with a Windows `EPERM` on the Prisma query-engine DLL rename (an environment file lock while another process held the engine; being fixed). It is recorded as an inconclusive rerun, not as a product failure and not as a pass. The figures in the verification table above are the code agent's local results; they were not independently reproduced. Latest commit at time of writing: `918ffa0` (test hardening: retry temp-directory cleanup, longer backup drill on loaded Windows machines). No GitHub Actions run has been observed, so nothing is CI VERIFIED. Release decision: NO-GO.
