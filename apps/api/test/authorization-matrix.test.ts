@@ -275,6 +275,26 @@ const ENDPOINTS: Endpoint[] = [
     body: () => ({}),
     min: "write",
   },
+  { name: "jobs list", method: "get", url: (w) => `${P(w)}/jobs`, min: "read" },
+  {
+    name: "job read",
+    method: "get",
+    url: (w) => `${P(w)}/jobs/${"b".repeat(8)}-bbbb-4bbb-8bbb-${"b".repeat(12)}`,
+    min: "read",
+  },
+  {
+    name: "job logs",
+    method: "get",
+    url: (w) => `${P(w)}/jobs/${"b".repeat(8)}-bbbb-4bbb-8bbb-${"b".repeat(12)}/logs`,
+    min: "read",
+  },
+  { name: "job submit (invalid)", method: "post", url: (w) => `${P(w)}/jobs`, body: () => ({}), min: "write" },
+  {
+    name: "job cancel (unknown job)",
+    method: "post",
+    url: (w) => `${P(w)}/jobs/${"b".repeat(8)}-bbbb-4bbb-8bbb-${"b".repeat(12)}/cancel`,
+    min: "write",
+  },
   {
     name: "template submission (invalid)",
     method: "post",

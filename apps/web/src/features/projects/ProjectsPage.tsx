@@ -73,7 +73,7 @@ export function ProjectsPage() {
 
       <form
         role="search"
-        className="mb-4 grid gap-3 sm:grid-cols-[1fr_12rem_12rem_auto] sm:items-end"
+        className="mb-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,12rem)_minmax(0,12rem)_auto] sm:items-end"
         onSubmit={(event) => {
           event.preventDefault();
           update("q", query.trim());

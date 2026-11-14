@@ -52,6 +52,14 @@ const envSchema = z.object({
     .enum(["true", "false"])
     .default("false")
     .transform((value) => value === "true"),
+  /** Build/test job isolation: auto uses a Docker container when usable (daemon up, image present), else a process. */
+  JOB_ISOLATION: z.enum(["auto", "process", "container"]).default("auto"),
+  /** Image for container jobs. It must already exist locally; images are never pulled. */
+  JOB_CONTAINER_IMAGE: z
+    .string()
+    .trim()
+    .regex(/^[A-Za-z0-9][A-Za-z0-9._/:@-]{0,199}$/, "Invalid image reference.")
+    .default("node:24-alpine"),
   /** Where independent project outputs are written; never inside the platform source. */
   GENERATION_OUTPUT_DIR: z
     .string()

@@ -16,6 +16,7 @@ import { releasesRouter } from "./modules/generation/releases.js";
 import { projectTemplateSubmissionsRouter } from "./modules/generation/project-template-submissions.js";
 import { requirementsRouter } from "./modules/requirements/requirements.js";
 import { searchRouter } from "./modules/search/search.js";
+import { jobsRouter } from "./modules/execution/jobs.js";
 import { workspaceRouter } from "./modules/workspace/workspace.js";
 
 type CheckResult = "ok" | "fail";
@@ -117,6 +118,7 @@ export function createApp(ctx: AppContext): Express {
   const generation = createGenerationService(ctx);
   api.use("/projects", projectTemplateSubmissionsRouter(ctx, generation));
   api.use("/projects/:projectId/workspace", workspaceRouter(ctx));
+  api.use("/projects/:projectId/jobs", jobsRouter(ctx));
   api.use("/projects", projectsRouter(ctx));
   api.use("/catalog", catalogRouter(ctx));
   api.use("/search", searchRouter(ctx));

@@ -29,6 +29,7 @@
     "backup:verify": "node scripts/db-backup.mjs verify",
     "backup:restore-check": "node scripts/db-backup.mjs restore-check",
     "smoke": "node scripts/smoke.mjs",
+    "perf:baseline": "node scripts/perf-baseline.mjs",
     "audit:deps": "npm audit --audit-level=high",
     "db:deploy": "npm run db:deploy -w @asaa/api"
   },

@@ -91,7 +91,7 @@ export function FilesPanel({ projectId, readOnly }: { projectId: string; readOnl
           Browse and edit project files. {readOnly ? "You have read-only access." : "Commit from a work branch."}
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-4 lg:grid-cols-[18rem_1fr]">
+      <CardContent className="grid gap-4 lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]">
         <nav aria-label="Project files" className="space-y-1 text-sm">
           {tree.state === "loading" && <LoadingState label="Loading files…" />}
           {tree.state === "error" && <ErrorState error={tree.error} onRetry={tree.reload} />}

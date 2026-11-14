@@ -2,11 +2,16 @@ import { PrismaClient } from "@prisma/client";
 import { createApp } from "./app.js";
 import { loadConfig } from "./config/env.js";
 import { createLogger } from "./lib/logger.js";
+import { recoverInterruptedJobs } from "./modules/execution/jobs.js";
 
 const config = loadConfig();
 const logger = createLogger(config.LOG_LEVEL);
 const prisma = new PrismaClient();
-const app = createApp({ config, prisma, logger, now: () => new Date() });
+const ctx = { config, prisma, logger, now: () => new Date() };
+const app = createApp(ctx);
+void recoverInterruptedJobs(ctx).catch((error: unknown) =>
+  logger.error("job recovery failed", { error: String(error) }),
+);
 
 const server = app.listen(config.PORT, "127.0.0.1", () => {
   logger.info("api listening", { port: config.PORT, env: config.NODE_ENV });

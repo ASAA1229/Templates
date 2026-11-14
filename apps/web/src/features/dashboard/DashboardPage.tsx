@@ -107,7 +107,10 @@ export function DashboardPage() {
               <CardContent>
                 <dl className="grid grid-cols-2 gap-3">
                   {Object.entries(dashboard.data.projects.byStatus).map(([status, count]) => (
-                    <div key={status} className="flex items-center justify-between rounded-md border p-3">
+                    <div
+                      key={status}
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3"
+                    >
                       <dt>
                         <StatusBadge value={status} />
                       </dt>

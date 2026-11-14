@@ -84,7 +84,7 @@ export function CatalogPage() {
 
       <form
         role="search"
-        className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_10rem_10rem_10rem_auto] lg:items-end"
+        className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,10rem)_minmax(0,10rem)_minmax(0,10rem)_auto] lg:items-end"
         onSubmit={(event) => {
           event.preventDefault();
           set("q", query.trim());
