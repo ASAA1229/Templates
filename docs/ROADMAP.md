@@ -69,3 +69,16 @@ Detailed state is only in [PROJECT_STATUS.md](PROJECT_STATUS.md).
 | 7 Assets and coverage | Dependency/license/version resolver done; coverage expansion by demand. |
 
 Delivered since: release lifecycle UI, build/test job API with optional container boundary, shared rate limiter, load baseline. Next: UI for asset resolution, a live container run and generation-preview performance, then P2.
+
+
+---
+
+## ASAA Master Requirements Baseline v1.0 — 2026-11-14
+
+Approved planning/governance reference for ASAA, Portfolio, JARVIS, Templates and shared ecosystem capabilities. Round 6 (12 consolidation stages) is complete at framework/consolidation level. Individual requirement mapping, reconciliation of the 1,000 discovery answers, repository/runtime evidence, named owners, dependency validation, acceptance criteria, evidence-based gaps and delivery estimates remain pending. Approval does not authorize implementation, testing, deployment, paid services or merges.
+
+See `docs/ASAA_MASTER_REQUIREMENTS_BASELINE.md`, `docs/PROJECT_SCOPE.md` and `docs/EPIC_STATUS.md` for the approved baseline, project scope and epic status register.
+
+## Baseline alignment — 2026-11-14
+
+This roadmap is subordinate to the approved ASAA Master Requirements Baseline v1.0. Round 6 is complete at framework level; detailed requirement population, applicability, ownership, dependencies, evidence-based gap scoring and delivery estimates remain pending. See the project scope and epic register documents in this branch. Do not infer completion from plans or source presence. No implementation, testing, deployment, paid-service, merge or release authorization is implied.

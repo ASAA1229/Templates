@@ -61,86 +61,30 @@ Scores are engineering assessments from the evidence above, not measured perform
 
 **Overall provisional project maturity: 6.9/10** (arithmetic mean 6.86; baseline 5.0). Separate from the ASAA organization-level score; do not compare without a common rubric.
 
-## Status vocabulary
+## Classification
+| Area | Status |
+|---|---|
+| Product vision and boundaries | Initial draft created |
+| Architecture direction | Initial draft created |
+| Taxonomy | Initial proposal created |
+| Sector directory | Placeholder taxonomy |
+| Division directory | Placeholder taxonomy |
+| Lifecycle and metadata expectations | Initial proposal |
+| Roadmap | Initial proposal |
+| Application implementation | Not started |
+| Template catalog and engine | Not started |
+| JARVIS integration | Not started |
+| Portfolio integration | Showcase-only concept; not implemented |
+| Security/accessibility/quality gates | Requirements drafted; implementation/evidence pending |
 
-PLANNED, NOT STARTED, IN DEVELOPMENT, IMPLEMENTED, NEEDS TESTING, TEST FAILED, TEST PASSED, CI VERIFIED, DEVICE VERIFIED, OWNER ACCEPTANCE PENDING, ACCEPTED.
+## Next action
+Review and approve audience, platform targets, template scope, access model, and integration depth before implementation. Update this file whenever actual work changes status.
 
-Gap-closure labels used in the register: COMPLETE AND VERIFIED (locally tested), IMPLEMENTED — NOT FULLY TESTED, PARTIALLY COMPLETE, BLOCKED BY EXTERNAL DEPENDENCY, NOT IMPLEMENTED.
 
-## Gap register
+---
 
-| ID | Priority | Status | Evidence |
-|---|---|---|---|
-| RG-01 Authorization isolation | P0 | COMPLETE AND VERIFIED (locally tested) | `test/authorization-matrix.test.ts`: route inventory plus owner/editor/viewer/unrelated employee/unrelated admin/platform OWNER/suspended/revoked across 35 project endpoints, list/search/dashboard leakage and saved-search ownership. Defect fixed: request bodies were validated before project access, so callers without access saw validation behaviour; access is now resolved first. No asynchronous jobs exist (generation is synchronous). Accepted design: OWNER/ADMIN read the global audit log. |
-| RG-02 Authentication lifecycle | P0 | COMPLETE AND VERIFIED (locally tested) | `test/auth-lifecycle.test.ts` (activation/reset expiry, single use, races, rate limits, generic errors, privileged restrictions, password change and reset revoke sessions), `test/mfa.test.ts` (TOTP RFC vector, encrypted secrets, challenge, replay, single-use recovery codes, reset, policy). Gap fixed: activation endpoint had no rate limit. MFA decision recorded in SECURITY.md. |
-| RG-03 CI reliability | P0 | COMPLETE AND VERIFIED (locally tested); GitHub run not observed | Workflow is `contents: read` with no push step; local E2E green (27 passed, 0 failed (desktop, desktop-dark, mobile)). |
-| RG-04 Template certification | P0 | COMPLETE AND VERIFIED (locally tested) | `npm run certify:templates`: 29/29 packages (25 demos, landing page, 3 starters) pass manifest, license, provenance, pinned dependencies, secret scan, deterministic dry-run, static HTML quality and digest lock; wired into CI with a report artifact; negative tests prove tampering, credentials, unpinned dependencies and missing provenance fail. Starter manifests were missing declared dependencies (fixed). Maintainer sign-off remains a human step. |
-| RG-05 Blueprint/generator | P0 | COMPLETE AND VERIFIED (locally tested) | Versioned manifest and blueprint schema (`schemaVersion`), typed inputs, adapter capability checks, preview, disk and verify digests identical, byte-identical repeat renders (`test/template-lifecycle.test.ts`). |
-| RG-06 Template lifecycle | P0 | COMPLETE AND VERIFIED (locally tested) | API plus browser UI (`/template-releases`): draft, submit, approval by a second person, release, deprecate, version pinning in the project wizard. `template-lifecycle.test.ts` and Playwright `zz-release-lifecycle.spec.ts` (developer drafts, administrator approves and releases, deprecation needs a reason, axe clean). Released rows are immutable in the API and by database trigger. |
-| RG-07 Isolated execution | P0 | PARTIALLY COMPLETE | Worker (13 process tests) is now exposed through an authenticated job API (`/api/projects/:id/jobs`: submit, list, status, logs, cancel; presets `node-script` and `node-test`; job:read/job:write permissions; audit; recovery of interrupted jobs). Optional Docker boundary (`--network none`, read-only root, tmpfs, cap-drop ALL, pids/memory/cpu limits, no image pull) is selected automatically when the daemon and image are present; otherwise jobs run in the process worker and are labelled "process: NO network sandbox and NO filesystem sandbox". The container path is tested only with an injected fake docker (the daemon is not running on the development machine); no live container run has been observed. |
-| RG-08 ZIP/Git hand-off | P0 | PARTIALLY COMPLETE | ZIP export complete and verified (deterministic, manifest, provenance, SHA-256, zip-slip, symlink refusal, authorization, audit; UI button). Approved remote Git provisioning needs credentials and an authorized destination (external). |
-| RG-09 Accessibility | P0 | PARTIALLY COMPLETE | axe WCAG 2.2 A/AA sweep over all routes, states and 25 demos, plus `reflow.spec.ts`: 320 px reflow (400% zoom equivalent), 200% text size, focus indicators, Escape behaviour, reduced motion and forced colors. Five real overflows were fixed (Security, Projects, Catalog, Dashboard, Files). Manual screen-reader review still not performed. |
-| RG-10 Operational release | P0 | BLOCKED BY EXTERNAL DEPENDENCY | `scripts/db-backup.mjs` (backup, verify, restore-check) with a local round-trip test is implemented. Approved zero-cost topology, operational owner, RPO/RTO and owner sign-off are owner decisions. |
-| RG-11 Online workspace | P1 | COMPLETE AND VERIFIED (locally tested) | File tree, safe read/write with hash-based conflict detection, diff, history, commit detail, commit on work branches only; UI panel; API suite (`workspace-files.test.ts`), E2E edit and conflict journey, matrix coverage. IDE hand-off is the ZIP export. |
-| RG-12 Connectors | P1 | BLOCKED BY EXTERNAL DEPENDENCY | Contract, guarded manager (scope, approval, revocation, redaction, audit), Jenkins and Nexus HTTP adapters and mocks, tested against local protocol fakes (`connectors.test.ts`). Live validation needs authorized endpoints and credentials. |
-| RG-13 Reusable assets | P1 | COMPLETE AND VERIFIED (locally tested) | Semver ranges, version resolution, conflicts, cycles, license policy, trust and lifecycle checks, bounded graphs; `POST /api/catalog/resolve` (23 tests). |
-| RG-14 Delivery operations | P1 | PARTIALLY COMPLETE | Readiness probe, backup/restore drill, safe template updates, and a reproducible load baseline (`npm run perf:baseline`, numbers below). Artifact promotion, deployment verification, rollback rehearsal and alerting need a target environment (external). |
-| RG-15 Coverage expansion | P1 | PARTIALLY COMPLETE | All 29 packages certified; breadth unchanged by design (expand by demand, certify each). |
+## ASAA Master Requirements Baseline v1.0 — 2026-11-14
 
-P2 deferred: advanced collaboration, notifications, semantic search/command orchestration, advanced BI, configurable workflows/forms, optional company-safe AI/JARVIS, offline/native clients, multi-organization tenancy and business operations. Public marketplace and paid services remain outside authorization.
+Approved planning/governance reference for ASAA, Portfolio, JARVIS, Templates and shared ecosystem capabilities. Round 6 (12 consolidation stages) is complete at framework/consolidation level. Individual requirement mapping, reconciliation of the 1,000 discovery answers, repository/runtime evidence, named owners, dependency validation, acceptance criteria, evidence-based gaps and delivery estimates remain pending. Approval does not authorize implementation, testing, deployment, paid services or merges.
 
-## External dependencies (what is still needed)
-
-1. Owner decisions: target environment and zero-cost topology, operational owner, RPO/RTO, MFA policy switch (`REQUIRE_MFA_PRIVILEGED=true`) and release sign-off.
-2. Jenkins: base URL, a scoped service account token, an allow-listed job list. Nexus: base URL, scoped credentials, repository names. See OPERATIONS.md for the exact configuration.
-3. A GitHub Actions run on the exact candidate SHA (authenticate `gh` or open the PR checks page).
-4. Manual screen-reader and keyboard review by a human tester.
-5. Remote Git hand-off: destination repository and scoped token.
-
-## Security findings (2026-11-14 review)
-
-| Finding | Severity | Status |
-|---|---|---|
-| Request bodies validated before project authorization (requirements, workspace, project update, submissions, generation retry) | Low (no data exposure; validation oracle) | Fixed, covered by matrix |
-| Activation endpoint without rate limit | Medium | Fixed |
-| Template release rows mutable; re-approval overwrote catalog digest | Medium | Fixed (ledger, trigger, 409 on changed content) |
-| Catalog metadata (version, license, dependencies) editable after release | Low | Fixed |
-| No MFA | Medium | Implemented (TOTP, recovery codes, policy flag) |
-| Global audit log readable by ADMIN (all projects) | Info | Accepted governance behaviour |
-| Execution worker has no network/syscall isolation in process mode | High if used on untrusted code | Mitigated when Docker is available (container boundary, untested live); jobs are labelled by isolation level; process mode must not run untrusted code |
-| In-memory rate limiters reset on restart and did not span instances | Low | Fixed: PostgreSQL-backed shared buckets (atomic upsert, hashed keys), tested across two API instances |
-
-## Load baseline (local, single machine)
-
-`npm run perf:baseline` creates a throw-away database, seeds 50 projects, starts the built API and measures each endpoint at concurrency 1, 10 and 25 (300 requests; 60 for preview). Run on Windows 11, Node 24, PostgreSQL 18 on the same host, development mode. Budgets: no 5xx or errors; p95 below 500 ms for reads at concurrency 10.
-
-| Endpoint (concurrency 10) | req/s | p50 ms | p95 ms |
-|---|---:|---:|---:|
-| GET /api/health | 353 | 11.7 | 34.7 |
-| GET /api/health/ready | 265 | 26.7 | 100.5 |
-| GET /api/projects | 200 | 47.8 | 67.5 |
-| GET /api/projects/:id | 265 | 33.6 | 58.8 |
-| GET /api/search?q= | 112 | 75.1 | 185.5 |
-| GET /api/dashboard | 117 | 71.4 | 146.9 |
-| POST /api/generations/preview | 8.6 | 1143 | 1442 |
-
-Findings: all read budgets met with zero errors. Generation preview is the outlier (about 1 to 9 req/s) because it renders a template and reads the library on each request; optimising it is a follow-up. Login is correctly rate limited (429). Numbers are indicative, not capacity planning.
-
-## Delivery order (unchanged)
-
-1. RG-01/RG-02 access and identity. 2. RG-03 CI. 3. RG-04/05/06 certification, blueprint, lifecycle. 4. RG-07 execution. 5. RG-08 export. 6. RG-09/RG-10 accessibility and operations. 7. P1.
-
-## Change/evidence log
-
-### 2026-11-13 — baseline and CI hardening
-Initial assessment of README, requirements, stories, architecture, security, development, operations, CI workflow, Prisma schema and representative modules. CI run #705 (merge candidate 886c8aaa37add14ea53ceb1e85d7ca92532f4f07, PR head b34c0a250be539833f8f927cc92b3fd1795ee31d): dependency audit, migrations, format, lint, typecheck, tests, build and smoke passed; Playwright 19 passed, 3 failed. The workflow was reduced from `contents: write` to `contents: read` and the formatter-and-push step removed; the template-batch helper was moved to Playwright's request context (insufficient: the real cause was the `file:` origin). Later commits on `new` (15fdfe1b016d2f7997008dc68701b99e4220ce26, CI #738) were documentation-only after that point; no completed result for them was observed.
-
-### 2026-11-14 — delta increment
-`prisma generate` hit EPERM on the engine DLL when another process held it; `scripts/prisma-generate.mjs` now skips regeneration when the generated client already matches the schema (types stay exact), clears stale temp engines and retries. Added: release lifecycle UI with E2E, job API with optional Docker boundary, PostgreSQL-backed rate limiter, load baseline script, reflow/zoom/forced-colors/keyboard E2E with five layout fixes.
-
-### 2026-11-14 — implementation of the gap register
-Reproduced the baseline locally, fixed the three browser failures at their root causes, and implemented RG-01 to RG-15 locally as described in the register. 14 logical commits on `new` (see `git log ba7918b..HEAD`). Documentation reconciled in this change; duplicated checkpoint sections in the other documents were consolidated here.
-
-## Release decision
-
-**NO-GO** until the external items above are closed: owner approval and topology (RG-10), live Jenkins/Nexus validation (RG-12), manual accessibility review (RG-09), a green GitHub run on the exact candidate SHA, and owner release sign-off. A passing build, source presence, merged PR or documentation update alone is insufficient.
+See `docs/ASAA_MASTER_REQUIREMENTS_BASELINE.md`, `docs/PROJECT_SCOPE.md` and `docs/EPIC_STATUS.md` for the approved baseline, project scope and epic status register.
