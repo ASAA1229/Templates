@@ -15,8 +15,8 @@ function testDatabaseUrl(): string {
   return match[1];
 }
 
-const API_PORT = 4100;
-const WEB_PORT = 5180;
+const API_PORT = Number(process.env.E2E_API_PORT ?? 4100);
+const WEB_PORT = Number(process.env.E2E_WEB_PORT ?? 5180);
 /** Generated E2E project outputs go to a disposable folder, cleared by global setup. */
 export const E2E_GENERATION_DIR = path.resolve(import.meta.dirname, "../../.local/e2e-generated");
 process.env.E2E_GENERATION_DIR = E2E_GENERATION_DIR;

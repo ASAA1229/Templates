@@ -133,6 +133,7 @@ model Project {
   requirements   Requirement[]
   members        ProjectMember[]
   generation     ProjectGeneration?
+  executionJobs  ExecutionJob[]
   repository     ProjectRepository?
   environment    ProjectEnvironment?
 
@@ -476,5 +477,47 @@ model TemplateRelease {
   rowVersion        Int           @default(1)
 
   @@unique([templateId, version])
+  @@index([status])
+}
+
+/// Shared fixed-window rate-limit counters (replaces per-process memory so limits survive restarts and span instances).
+model RateLimitBucket {
+  key     String   @id @db.VarChar(240)
+  count   Int
+  resetAt DateTime @db.Timestamptz(3)
+
+  @@index([resetAt])
+}
+
+enum ExecutionJobStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+  TIMED_OUT
+  LIMIT_EXCEEDED
+}
+
+/// Build/test job executed by the isolated worker against a disposable copy of a project folder.
+model ExecutionJob {
+  id            String             @id @default(uuid()) @db.Uuid
+  projectId     String             @db.Uuid
+  project       Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  requestedById String             @db.Uuid
+  task          String             @db.VarChar(40)
+  target        String             @default("") @db.VarChar(240)
+  isolation     String             @db.VarChar(20)
+  status        ExecutionJobStatus @default(QUEUED)
+  exitCode      Int?
+  stdout        String             @default("") @db.Text
+  stderr        String             @default("") @db.Text
+  truncated     Boolean            @default(false)
+  reason        String?            @db.VarChar(300)
+  createdAt     DateTime           @default(now()) @db.Timestamptz(3)
+  startedAt     DateTime?          @db.Timestamptz(3)
+  finishedAt    DateTime?          @db.Timestamptz(3)
+
+  @@index([projectId, createdAt])
   @@index([status])
 }

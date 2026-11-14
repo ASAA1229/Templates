@@ -18,7 +18,7 @@ export default async function globalSetup() {
     await prisma.$transaction([
       prisma.$executeRawUnsafe("SET LOCAL session_replication_role = replica"),
       prisma.$executeRawUnsafe(
-        'TRUNCATE "AuditEvent", "ProjectRepository", "ProjectEnvironment", "ProjectGeneration", "TraceLink", "RequirementVersion", "RequirementDependency", "Requirement", "Project", "Session", "Owner", "CatalogItem", "TemplateRelease" RESTART IDENTITY CASCADE',
+        'TRUNCATE "AuditEvent", "ProjectRepository", "ProjectEnvironment", "ProjectGeneration", "TraceLink", "RequirementVersion", "RequirementDependency", "Requirement", "Project", "Session", "Owner", "CatalogItem", "TemplateRelease", "RateLimitBucket" RESTART IDENTITY CASCADE',
       ),
     ]);
   } finally {

@@ -7,10 +7,10 @@
   "scripts": {
     "dev": "tsx watch --env-file-if-exists=.env src/server.ts",
     "serve:ts": "tsx --env-file-if-exists=.env src/server.ts",
-    "build": "prisma generate && tsc -p tsconfig.build.json",
+    "build": "node ../../scripts/prisma-generate.mjs && tsc -p tsconfig.build.json",
     "start": "node --env-file-if-exists=.env dist/server.js",
-    "typecheck": "prisma generate && tsc -p tsconfig.json --noEmit",
-    "test": "prisma generate && vitest run",
+    "typecheck": "node ../../scripts/prisma-generate.mjs && tsc -p tsconfig.json --noEmit",
+    "test": "node ../../scripts/prisma-generate.mjs && vitest run",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:status": "prisma migrate status",
