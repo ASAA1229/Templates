@@ -34,3 +34,12 @@
 - [ ] Licensing, client handoff, and optional marketplace readiness.
 
 Phases are proposed sequencing, not committed delivery dates. Keep the product free-first and deliver incrementally.
+
+
+---
+
+## ASAA Master Requirements Baseline v1.0 — 2026-11-14
+
+Approved planning/governance reference for ASAA, Portfolio, JARVIS, Templates and shared ecosystem capabilities. Round 6 (12 consolidation stages) is complete at framework/consolidation level. Individual requirement mapping, reconciliation of the 1,000 discovery answers, repository/runtime evidence, named owners, dependency validation, acceptance criteria, evidence-based gaps and delivery estimates remain pending. Approval does not authorize implementation, testing, deployment, paid services or merges.
+
+See `docs/ASAA_MASTER_REQUIREMENTS_BASELINE.md`, `docs/PROJECT_SCOPE.md` and `docs/EPIC_STATUS.md` for the approved baseline, project scope and epic status register.
