@@ -24,7 +24,7 @@ beforeAll(async () => {
 });
 afterAll(async () => {
   await h.close();
-  await rm(base, { recursive: true, force: true });
+  await rm(base, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
 });
 
 type AccountRole = "ADMIN" | "DEVELOPER" | "TESTER" | "EMPLOYEE";

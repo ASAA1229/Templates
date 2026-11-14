@@ -13,7 +13,7 @@ describe("health and readiness", () => {
   afterAll(async () => {
     await healthy.close();
     await broken.close();
-    rmSync(scratch, { recursive: true, force: true });
+    rmSync(scratch, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
   });
 
   it("reports ready when the database, migrations, library and output dir are usable", async () => {

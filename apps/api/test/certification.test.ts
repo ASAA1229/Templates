@@ -14,10 +14,10 @@ beforeAll(async () => {
   base = await mkdtemp(path.join(tmpdir(), "asaa-certify-"));
   copy = path.join(base, "library");
 });
-afterAll(() => rm(base, { recursive: true, force: true }));
+afterAll(() => rm(base, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 }));
 
 async function freshCopy() {
-  await rm(copy, { recursive: true, force: true });
+  await rm(copy, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
   await cp(BUNDLED, copy, { recursive: true });
 }
 

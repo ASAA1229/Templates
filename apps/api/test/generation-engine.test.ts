@@ -27,7 +27,7 @@ beforeEach(async () => {
   work = await mkdtemp(path.join(tmpdir(), "asaa-gen-"));
 });
 afterEach(async () => {
-  await rm(work, { recursive: true, force: true });
+  await rm(work, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
 });
 
 async function usable(id: string, version = "1.0.0", root = LIBRARY) {

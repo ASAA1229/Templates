@@ -234,10 +234,10 @@ describe("build/test job API", () => {
   });
   afterAll(async () => {
     await h.close();
-    await rm(base, { recursive: true, force: true });
+    await rm(base, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
   });
   beforeEach(async () => {
-    await rm(output, { recursive: true, force: true });
+    await rm(output, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
     await h.reset();
     await h.createOwner();
     resetDockerProbeCache();

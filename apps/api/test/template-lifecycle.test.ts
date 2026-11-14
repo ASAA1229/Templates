@@ -29,7 +29,7 @@ beforeAll(async () => {
 });
 afterAll(async () => {
   await h.close();
-  await rm(base, { recursive: true, force: true });
+  await rm(base, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
 });
 
 async function account(email: string, role: "ADMIN" | "DEVELOPER") {
@@ -49,8 +49,8 @@ async function account(email: string, role: "ADMIN" | "DEVELOPER") {
 }
 
 beforeEach(async () => {
-  await rm(library, { recursive: true, force: true });
-  await rm(output, { recursive: true, force: true });
+  await rm(library, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
+  await rm(output, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
   await cp(BUNDLED, library, { recursive: true });
   await h.reset();
   await h.createOwner();

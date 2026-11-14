@@ -69,11 +69,11 @@ describe("update API", () => {
   });
   afterAll(async () => {
     await h.close();
-    await rm(base, { recursive: true, force: true });
+    await rm(base, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
   });
   beforeEach(async () => {
-    await rm(library, { recursive: true, force: true });
-    await rm(output, { recursive: true, force: true });
+    await rm(library, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
+    await rm(output, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
     await cp(BUNDLED, library, { recursive: true });
     await h.reset();
     await h.createOwner();

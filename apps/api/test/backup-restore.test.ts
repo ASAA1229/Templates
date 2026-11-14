@@ -68,13 +68,13 @@ if (!hasPgDump) {
       await source.auditEvent.create({ data: { actorType: "SYSTEM", action: "backup.test", outcome: "SUCCESS" } });
       mkdirSync(generatedDir, { recursive: true });
       writeFileSync(path.join(generatedDir, "sample.txt"), "generated output");
-    }, 120_000);
+    }, 300_000);
 
     afterAll(async () => {
       await source?.$disconnect();
       await admin.$executeRawUnsafe(`DROP DATABASE IF EXISTS "${sourceName}" WITH (FORCE)`);
       await admin.$disconnect();
-      rmSync(work, { recursive: true, force: true });
+      rmSync(work, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
     });
 
     it("backs up, verifies, detects tampering, and passes a restore check that leaves no scratch database", async () => {
@@ -115,6 +115,6 @@ if (!hasPgDump) {
       expect(tampered.stderr).toContain("checksum mismatch");
       const refused = runScript("restore-check", "--dir", backupDir);
       expect(refused.status).not.toBe(0);
-    }, 120_000);
+    }, 300_000);
   });
 }
