@@ -15,6 +15,7 @@ export interface AuthenticatedOwner {
   email: string;
   displayName: string;
   role: "OWNER" | "ADMIN" | "DEVELOPER" | "TESTER" | "EMPLOYEE";
+  mfaEnabled?: boolean;
 }
 
 declare global {

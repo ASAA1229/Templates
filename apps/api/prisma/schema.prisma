@@ -29,6 +29,13 @@ model Owner {
   passwordHash      String    @db.VarChar(512)
   passwordChangedAt DateTime  @default(now()) @db.Timestamptz(3)
   createdAt         DateTime  @default(now()) @db.Timestamptz(3)
+  /// AES-256-GCM encrypted TOTP secret; pending until mfaEnabledAt is set (US-A04).
+  mfaSecretEnc      String?   @db.VarChar(512)
+  mfaEnabledAt      DateTime? @db.Timestamptz(3)
+  /// SHA-256 hashes of unused single-use recovery codes.
+  mfaRecoveryHashes String[]  @default([])
+  /// Last accepted TOTP time step; codes at or below it are rejected (replay protection).
+  mfaLastStep       Int?
   sessions          Session[]
   projects          Project[]
   savedSearches     SavedSearch[]

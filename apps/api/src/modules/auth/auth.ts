@@ -8,6 +8,7 @@ import { hashPassword, needsRehash, timingDummyHash, verifyPassword } from "../.
 import { hashToken, newSessionToken } from "../../lib/tokens.js";
 import { RateLimiter } from "../../middleware/security.js";
 import { audit } from "../audit/audit.service.js";
+import { registerMfaRoutes, verifySecondFactor } from "./mfa.js";
 import { authorize } from "./policy.js";
 
 export const SESSION_COOKIE = "asaa_session";
@@ -22,11 +23,18 @@ function cookieOptions(ctx: AppContext): CookieOptions {
   };
 }
 
-const ownerView = (owner: { id: string; email: string; displayName: string; role: OwnerView["role"] }): OwnerView => ({
+const ownerView = (owner: {
+  id: string;
+  email: string;
+  displayName: string;
+  role: OwnerView["role"];
+  mfaEnabledAt?: Date | null;
+}): OwnerView => ({
   id: owner.id,
   email: owner.email,
   displayName: owner.displayName,
   role: owner.role,
+  mfaEnabled: Boolean(owner.mfaEnabledAt),
 });
 
 /**
@@ -376,6 +384,17 @@ export function authRouter(ctx: AppContext): Router {
           data: { passwordHash: await hashPassword(parsed.data.password) },
         });
       }
+      if (owner.mfaEnabledAt) {
+        // The password was right: ask for (or check) the second factor. Attempts stay rate limited.
+        if (!parsed.data.code) {
+          await audit(ctx, req, { action: "auth.login", outcome: "DENIED", metadata: { reason: "mfa_required" } });
+          throw new AppError(401, "MFA_REQUIRED", "Enter the code from your authenticator app.");
+        }
+        if (!(await verifySecondFactor(ctx, owner, parsed.data.code))) {
+          await audit(ctx, req, { action: "auth.login", outcome: "FAILURE", metadata: { reason: "invalid_mfa_code" } });
+          throw new AppError(401, "UNAUTHENTICATED", "Invalid verification code.");
+        }
+      }
       // A successful account login clears both counters.
       emailLimiter.reset(email);
       ipLimiter.reset(req.ip ?? "unknown");
@@ -399,6 +418,8 @@ export function authRouter(ctx: AppContext): Router {
       next(error);
     }
   });
+
+  registerMfaRoutes(router, ctx);
 
   router.get("/members", requireOwner(), authorize(ctx, "identity:manage"), async (_req, res, next) => {
     try {

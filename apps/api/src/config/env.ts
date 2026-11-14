@@ -45,6 +45,13 @@ const envSchema = z.object({
     ),
   /** Upper bound for any single Git command. */
   GIT_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120_000).default(20_000),
+  /** Key (base64 of 32 bytes, or a passphrase of 16+ characters) that encrypts TOTP secrets at rest. */
+  MFA_ENCRYPTION_KEY: z.string().min(16).optional(),
+  /** When true, OWNER/ADMIN accounts must enable MFA before privileged actions are allowed. */
+  REQUIRE_MFA_PRIVILEGED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
   /** Where independent project outputs are written; never inside the platform source. */
   GENERATION_OUTPUT_DIR: z
     .string()
@@ -63,6 +70,9 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
   const config = parsed.data;
   if ((config.NODE_ENV === "production" || config.NODE_ENV === "staging") && !config.COOKIE_SECURE) {
     throw new Error("COOKIE_SECURE must be true in staging and production (HTTPS only).");
+  }
+  if (config.REQUIRE_MFA_PRIVILEGED && !config.MFA_ENCRYPTION_KEY) {
+    throw new Error("REQUIRE_MFA_PRIVILEGED needs MFA_ENCRYPTION_KEY to be set.");
   }
   if (config.SESSION_IDLE_MINUTES > config.SESSION_ABSOLUTE_MINUTES) {
     throw new Error("SESSION_IDLE_MINUTES cannot exceed SESSION_ABSOLUTE_MINUTES.");

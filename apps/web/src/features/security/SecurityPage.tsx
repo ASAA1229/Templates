@@ -16,6 +16,7 @@ import {
 import { ApiError, api } from "@/lib/api";
 import { useResource } from "@/lib/hooks";
 import { formatDateTime } from "@/lib/utils";
+import { MfaPanel } from "./MfaPanel";
 
 /** Session management and password change (US-A02). */
 export function SecurityPage() {
@@ -115,6 +116,7 @@ export function SecurityPage() {
             )}
           </CardContent>
         </Card>
+        <MfaPanel />
         <Card>
           <CardHeader>
             <CardTitle>Change password</CardTitle>

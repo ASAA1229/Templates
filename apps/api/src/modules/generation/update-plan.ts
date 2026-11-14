@@ -19,7 +19,8 @@ export interface UpdatePlan {
   clean: boolean;
 }
 
-const same = (a: Buffer | undefined, b: Buffer | undefined) => (a === undefined || b === undefined ? a === b : a.equals(b));
+const same = (a: Buffer | undefined, b: Buffer | undefined) =>
+  a === undefined || b === undefined ? a === b : a.equals(b);
 
 export function planUpdate(
   base: Map<string, Buffer>,

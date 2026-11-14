@@ -17,6 +17,7 @@ const required = (max: number, label: string) => trimmed(max).min(1, `${label} i
 export type ApiErrorCode =
   | "VALIDATION_FAILED"
   | "UNAUTHENTICATED"
+  | "MFA_REQUIRED"
   | "FORBIDDEN"
   | "NOT_FOUND"
   | "CONFLICT"
@@ -60,6 +61,8 @@ export const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email("Enter a valid email address.").max(254),
   // Login accepts any non-empty password up to the max; policy applies when setting one.
   password: z.string().min(1, "Password is required.").max(PASSWORD_MAX),
+  /** Authenticator (TOTP) code or recovery code; required only for accounts with MFA enabled. */
+  code: z.string().trim().min(6, "Enter the code from your authenticator app.").max(32).optional(),
 });
 export type LoginInput = z.infer<typeof loginSchema>;
 
@@ -81,6 +84,8 @@ export interface OwnerView {
   email: string;
   displayName: string;
   role: WorkspaceRole;
+  /** Whether this account has multi-factor authentication enabled. */
+  mfaEnabled?: boolean;
 }
 
 export interface SessionView {

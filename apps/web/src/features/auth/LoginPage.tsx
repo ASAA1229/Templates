@@ -11,7 +11,8 @@ import { useAuth } from "@/lib/auth";
 export function LoginPage() {
   const { status, signIn, expired } = useAuth();
   const location = useLocation();
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ email: "", password: "", code: "" });
+  const [needsCode, setNeedsCode] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
@@ -24,7 +25,7 @@ export function LoginPage() {
   async function submit(event: FormEvent) {
     event.preventDefault();
     setMessage("");
-    const parsed = loginSchema.safeParse(form);
+    const parsed = loginSchema.safeParse({ ...form, code: needsCode ? form.code : undefined });
     if (!parsed.success) {
       setErrors(fieldErrors(parsed.error));
       return;
@@ -34,8 +35,11 @@ export function LoginPage() {
     try {
       await signIn(parsed.data);
     } catch (error) {
+      if (error instanceof ApiError && error.code === "MFA_REQUIRED") setNeedsCode(true);
       setMessage(error instanceof ApiError ? error.message : "Sign-in failed.");
-      setForm((current) => ({ ...current, password: "" }));
+      if (!(error instanceof ApiError && error.code === "MFA_REQUIRED")) {
+        setForm((current) => ({ ...current, password: "", code: "" }));
+      }
     } finally {
       setPending(false);
     }
@@ -78,6 +82,16 @@ export function LoginPage() {
                 required
               />
             </Field>
+            {needsCode && (
+              <Field label="Authenticator or recovery code" error={errors.code}>
+                <Input
+                  autoComplete="one-time-code"
+                  value={form.code}
+                  onChange={(event) => setForm({ ...form, code: event.target.value })}
+                  required
+                />
+              </Field>
+            )}
             <Button type="submit" className="w-full" disabled={pending} aria-busy={pending}>
               <LogIn aria-hidden="true" /> {pending ? "Signing in…" : "Sign in"}
             </Button>
