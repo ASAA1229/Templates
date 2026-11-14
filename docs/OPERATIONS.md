@@ -110,12 +110,37 @@ Before production, define:
 
 Perform dependency updates, security review, backup restore drills and recovery exercises on a documented cadence. Keep monitoring and backup tools local/free unless spending is approved.
 
+## 8. Implemented operations tooling and external configuration — 2026-11-14
 
-## 8. Authoritative status and current CI limitation — 2026-11-13
+Status, evidence and maturity are maintained only in [PROJECT_STATUS.md](PROJECT_STATUS.md). No production deployment, Jenkins execution, Nexus operation or production restore has been performed.
 
-Current maturity scores, gap status, CI evidence and release decision are maintained in [PROJECT_STATUS.md](PROJECT_STATUS.md); do not maintain a competing status table here. The latest observed CI run #705 failed in Playwright (19 passed, 3 failed) after dependency audit, migrations, format/lint/typecheck/unit+integration/build and smoke passed. The workflow currently has a temporary formatting repair/push step and contents: write; remove that behavior and use least-privilege read-only validation. No production deployment, Jenkins agent execution, Nexus publishing/retrieval or restore drill is evidenced. Configuration or written procedures alone do not establish these operations.
+### Health and readiness
 
+- `GET /api/health` is liveness plus a database check.
+- `GET /api/health/ready` is readiness: database reachable, migrations applied with none failed or rolled back, template library readable, generation output folder writable. It returns 200 `ready` or 503 `not_ready` with per-check `ok`/`fail` and no paths or secrets. `npm run smoke` checks both.
 
-## Current CI and release checkpoint — 2026-11-13
+### Backup, verification and restore drill
 
-PR #1 is open and unmerged. Candidate `15fdfe1b016d2f7997008dc68701b99e4220ce26` on `new` has CI #738 (`43419669158`) in progress at last inspection; no completed result is available. The validation workflow uses `contents: read` and no longer includes the temporary formatting-and-push behavior. This is a configuration-level improvement only. No production deployment, Jenkins agent execution, Nexus publishing/retrieval, backup restore drill or production rollback is evidenced. Current release decision remains NO-GO; see [PROJECT_STATUS.md](PROJECT_STATUS.md).
+```bash
+npm run backup:db -- backup --out <folder>          # pg_dump custom format + template library + generated outputs + manifest
+npm run backup:verify -- verify --dir <folder>      # recompute SHA-256 of every file, parse the dump
+npm run backup:restore-check -- restore-check --dir <folder>   # restore into a new scratch database, compare row counts, drop it
+```
+
+The manifest records sizes, checksums, the migration count and key table row counts and never contains credentials. `restore-check` refuses to restore over the configured database and always drops its scratch database. A local round-trip (backup, verify, tamper detection, restore-check) is covered by `apps/api/test/backup-restore.test.ts`. Not yet defined (owner decisions): backup schedule, encryption of the backup destination, retention, RPO/RTO.
+
+### Template certification
+
+`npm run certify:templates -w @asaa/api` certifies every package and writes `.local/certification/report.json` (uploaded by CI). After human review of a new or changed package version, record it with `-- --update-lock`; released content cannot change without a new version.
+
+### External configuration still required
+
+| Item | What is needed |
+|---|---|
+| Jenkins connector | `https` base URL, a service account with minimal job permissions, API token stored as an environment variable referenced by name (for example `JENKINS_TOKEN` holding `user:token`), the allow-listed job names, a named approver policy. |
+| Nexus connector | `https` base URL, a scoped deployment account (`user:password` or bearer token in an environment variable), allow-listed repositories. |
+| MFA | `MFA_ENCRYPTION_KEY` (base64 32 bytes or a 16+ character passphrase kept outside the repository) and, before exposure, `REQUIRE_MFA_PRIVILEGED=true`. |
+| Staging/production | Owner-approved zero-cost topology, HTTPS termination with `COOKIE_SECURE=true`, a dedicated database, backup destination and operational owner. |
+| CI | A GitHub Actions run on the exact candidate SHA (the workflow is read-only and runs validate, smoke, certification and E2E). |
+
+Connector adapters (`apps/api/src/integrations`) are tested against local protocol fakes only; live validation requires the items above.

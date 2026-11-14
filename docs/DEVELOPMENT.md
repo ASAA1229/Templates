@@ -191,3 +191,15 @@ Use [PROJECT_STATUS.md](PROJECT_STATUS.md) as the single source for maturity sco
 ## Current branch verification checkpoint — 2026-11-13
 
 PR #1 candidate is `15fdfe1b016d2f7997008dc68701b99e4220ce26` on `new`, targeting `dev`; it is open and unmerged. CI #738 (`43419669158`) was in progress at last inspection. Do not treat partial workflow steps as validation success. Current evidence and release decision are in [PROJECT_STATUS.md](PROJECT_STATUS.md).
+
+
+## 8. Additional commands (2026-11-14)
+
+```bash
+npm run certify:templates -w @asaa/api        # certify all template packages, write .local/certification/report.json
+npm run backup:db -- backup --out <folder>    # database + template library + generated outputs backup
+npm run backup:verify -- verify --dir <folder>
+npm run backup:restore-check -- restore-check --dir <folder>
+```
+
+Optional configuration: `MFA_ENCRYPTION_KEY` enables TOTP MFA; `REQUIRE_MFA_PRIVILEGED=true` requires it for OWNER/ADMIN privileged actions. Apply `npm run db:deploy` to both the development and test databases after pulling migrations. See OPERATIONS.md and TESTING.md for details.

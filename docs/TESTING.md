@@ -72,37 +72,30 @@ The report artifact was uploaded by the workflow and is retained only for a limi
 
 For each release-blocking story record its gap/story ID, acceptance criterion, test identifier/layer, exact commit SHA/environment, command/procedure, expected/actual result, report artifact, defect/retest, reviewer and owner acceptance. Never mark ACCEPTED based only on source inspection or build success.
 
+## Current evidence — 2026-11-14
 
-## 2026-11-13 — test harness change awaiting verification
+Authoritative results and the initial-versus-final comparison are in [PROJECT_STATUS.md](PROJECT_STATUS.md). Local environment: Windows 11, Node 24.16.0, PostgreSQL 18 (local cluster, separate databases for API tests and E2E), Microsoft Edge for Playwright. GitHub Actions results for the new commits were not observable (the `gh` CLI was not authenticated).
 
-The template batch review helper was changed to use Playwright's shared API request context rather than executing fetch inside the page. This preserves the browser context's authentication state while avoiding a page-origin fetch dependency. The change is a hypothesis-driven hardening step; it is not considered fixed until the browser suite is rerun and the template batch review passes. The blueprint selection assertion failure remains open. No post-change CI result was available at the time of this update.
+### Suites added
 
+| Suite | Layer | Covers |
+|---|---|---|
+| `authorization-matrix.test.ts` | API security | RG-01 role matrix, route inventory, leakage |
+| `auth-lifecycle.test.ts`, `mfa.test.ts` | API security | RG-02 activation/reset/password/MFA |
+| `certification.test.ts` | Integration | RG-04 certification checker, lock, negative cases |
+| `template-lifecycle.test.ts` | API | RG-05 reproducibility and RG-06 release lifecycle |
+| `template-update.test.ts` | API | US-E05 three-way update plan and apply |
+| `export.test.ts` | API | RG-08 ZIP writer/reader, export authorization |
+| `workspace-files.test.ts` | API | RG-11 files, diff, history, commit |
+| `asset-resolution.test.ts` | Unit and API | RG-13 resolver |
+| `connectors.test.ts` | Unit and protocol | RG-12 manager and HTTP adapters against fake servers |
+| `execution.test.ts` | Process | RG-07 limits, cancel, cleanup |
+| `backup-restore.test.ts`, `health.test.ts` | Integration | RG-10/RG-14 |
+| `accessibility.spec.ts` (Playwright) | Accessibility | RG-09 axe sweep of every route, states and keyboard |
+| `template-batch.spec.ts` (Playwright) | E2E | all 25 demos at desktop and mobile widths: render, overflow and axe, reported together |
 
-## Latest candidate validation status — 2026-11-13
+### Notes for maintainers
 
-The hardened candidate is 7268eae2ace8d037c1797a4a306b3968ad9d3a42. GitHub Actions CI run #731 (43419462644) is pending and has not exposed job results yet. Do not call it a pass. The last completed evidence remains run #705 with 19 passed and 3 failed browser tests.
-
-
-## Latest candidate — live CI run #738 (2026-11-13)
-
-- PR #1 head: `15fdfe1b016d2f7997008dc68701b99e4220ce26`; base: `7989af5e858a4221d71183636e0cf5c285d10180`.
-- Run: [CI #738](https://github.com/ASAA1229/Templates/actions/runs/43419669158), ID `43419669158`.
-- State when inspected: **in progress**.
-- Completed successfully at inspection: checkout, Node setup, `npm ci`, dependency audit and database migrations.
-- Still running: combined format/lint/typecheck/unit+integration/build validation.
-- Not yet started: smoke, Playwright Chromium installation, E2E/accessibility tests and report upload.
-- No final result is available. Do not mark CI VERIFIED or infer a pass from the completed setup steps.
-- The template-batch request helper change is present in the candidate and is awaiting this run's E2E execution. The blueprint selection issue remains unresolved until evidence demonstrates otherwise.
-
-
-
-## Latest candidate — CI #738 (2026-11-13)
-
-- PR #1 head: `15fdfe1b016d2f7997008dc68701b99e4220ce26`; base: `7989af5e858a4221d71183636e0cf5c285d10180`.
-- [Run #738](https://github.com/ASAA1229/Templates/actions/runs/43419669158) was **in progress** when inspected. Checkout, Node setup, `npm ci`, dependency audit and migrations had passed. Combined format/lint/typecheck/unit+integration/build was running. Smoke, Playwright installation, E2E/accessibility and report upload had not started.
-- No final result is available. Do not mark CI VERIFIED. The template-batch request-helper change awaits E2E execution; the blueprint selection issue remains open pending evidence.
-
-
-## Documentation-only head update — 2026-11-13
-
-Documentation synchronization advanced PR #1 after the code/test candidate `15fdfe1b016d2f7997008dc68701b99e4220ce26`. Run #738 (`43419669158`) belongs to that earlier candidate, not the subsequent documentation-only commits. No workflow run or status check was observed for the latest documentation head at inspection. Confirm CI against the live PR head before claiming CI VERIFIED.
+- The API suites share one PostgreSQL test database and run serially. Create it with `npm run db:local -- init` and apply migrations to **both** databases (`DATABASE_URL` and `TEST_DATABASE_URL`) with `prisma migrate deploy`; an unmigrated test database fails dozens of tests at once.
+- Run E2E against a database that API tests are not using (set `TEST_DATABASE_URL`), and do not run `prisma generate` while an E2E API server is running on Windows (the query-engine DLL is locked).
+- Remaining human steps: manual screen-reader review, a performance/load baseline, and live connector tests.

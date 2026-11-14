@@ -226,7 +226,16 @@ export class TemplateLibrary {
   /** Exact id and version; never resolves "latest" implicitly. */
   async get(id: string, version: string): Promise<LibraryTemplate | null> {
     if (!ID_PATTERN.test(id) || !VERSION_PATTERN.test(version)) return null;
-    return (await this.list()).find((t) => t.id === id && t.version === version) ?? null;
+    // Load only the requested version (list() would read the whole library on every lookup).
+    const idDir = path.join(this.root, id);
+    const versionDir = path.join(idDir, version);
+    const [idStats, versionStats] = await Promise.all([
+      lstat(idDir).catch(() => null),
+      lstat(versionDir).catch(() => null),
+    ]);
+    if (!idStats || !versionStats || idStats.isSymbolicLink() || versionStats.isSymbolicLink()) return null;
+    if (!idStats.isDirectory() || !versionStats.isDirectory()) return null;
+    return loadTemplate(versionDir, id, version);
   }
 
   /** Newest usable starter for a from-scratch project type. */

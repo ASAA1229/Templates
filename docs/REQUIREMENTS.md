@@ -313,22 +313,6 @@ Advanced collaboration/presence, notification channels, semantic search and comm
 
 The initial internal release is blocked until RG-01 through RG-10 have objective evidence, all critical/high security findings are resolved or explicitly risk-accepted by the owner, the required CI/E2E/accessibility checks pass on the candidate commit, all released templates are certified, and backup/restore plus operational ownership are demonstrated. A passing build or merged PR alone is insufficient.
 
+## Implementation traceability — 2026-11-14
 
-## 2026-11-13 status authority and verification correction
-
-Current implementation, evidence, maturity scores, gap status and release decision are maintained only in [PROJECT_STATUS.md](PROJECT_STATUS.md). The detailed story acceptance criteria remain in [USER_STORIES.md](USER_STORIES.md); the status values in this requirements document are historical planning vocabulary and do not override the authoritative status record.
-
-The Owner/Admin password-reset implementation already exists on branch new (hashed, expiring, single-use tokens, rate limiting, audit and active-session revocation). Its API/UI/E2E behavior remains NEEDS TESTING; do not describe the feature as unimplemented. Activation foundations also exist and require verification. MFA policy remains an open owner/security decision. The latest observed CI run #705 failed in the Playwright stage (19 passed, 3 failed); earlier successful unit/integration/build/smoke steps do not make the overall workflow green.
-
-Use PROJECT_STATUS.md for the canonical status vocabulary: PLANNED, NOT STARTED, IN DEVELOPMENT, IMPLEMENTED, NEEDS TESTING, TEST FAILED, TEST PASSED, CI VERIFIED, DEVICE VERIFIED, OWNER ACCEPTANCE PENDING, ACCEPTED.
-
-
-## Current verification addendum — 2026-11-13
-
-Current evidence and status are authoritative in [PROJECT_STATUS.md](PROJECT_STATUS.md). Latest candidate: `15fdfe1b016d2f7997008dc68701b99e4220ce26` on `new`, PR #1 open/unmerged. CI #738 (`43419669158`) was still in progress at inspection; only checkout, dependency installation, dependency audit and migrations had completed successfully. Do not represent the candidate as CI verified. The template-batch Playwright request helper change is awaiting execution; the earlier blueprint-selection failure remains open. All P0 requirements remain release-blocking until their evidence and acceptance criteria are met.
-
-
-
-## Current verification addendum — 2026-11-13
-
-Current evidence and status are authoritative in [PROJECT_STATUS.md](PROJECT_STATUS.md). Latest candidate: `15fdfe1b016d2f7997008dc68701b99e4220ce26` on `new`, PR #1 open/unmerged. CI #738 (`43419669158`) was in progress; only checkout, dependency installation, dependency audit and migrations had completed successfully. The Playwright template-batch helper change awaits execution; the earlier blueprint-selection failure remains open. All P0 requirements remain release-blocking until verified.
+Authoritative status and evidence: [PROJECT_STATUS.md](PROJECT_STATUS.md). No requirement above was removed or weakened. Locally verified mappings: 4.1 identity (MFA, lifecycle, isolation matrix); 4.4 catalog and assets (dependency, license and version resolution); 4.5 template lifecycle (draft, review, approval, immutable release, deprecation, pinning); 4.6 builder and generation (versioned blueprint, reproducible output, preview parity, safe updates); 4.7 workspace and delivery (file tree, editor, diff/history, ZIP export, readiness, backup/restore drill); 4.8 integrations (connector contract with scoped credentials, health, revocation and audit, tested against local fakes). Not yet implemented or externally gated: remote Git provisioning, live Jenkins/Nexus validation, OS-level execution isolation and a product build/test job API, deployment promotion and rollback, performance baseline, P2 items.

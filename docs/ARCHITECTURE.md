@@ -108,18 +108,21 @@ The approved technology baseline above supersedes earlier exploratory/pending st
 
 Do not introduce a separate Markdown ADR collection. Keep the decision record concise and current here.
 
+## Module additions — 2026-11-14
 
-## Current status authority — 2026-11-13
+Status is maintained only in [PROJECT_STATUS.md](PROJECT_STATUS.md). The modular monolith is unchanged; new capabilities are isolated modules inside `apps/api/src`:
 
-Current implementation status, evidence, maturity scores, gap register and release decision are maintained in [PROJECT_STATUS.md](PROJECT_STATUS.md). This architecture record describes design boundaries and decisions, not acceptance status.
+| Module | Responsibility |
+|---|---|
+| `certification/` | Per-package template certification (manifest, license, provenance, dependencies, secret scan, deterministic dry run, digest lock) and the CLI `certify:templates`. |
+| `modules/generation/releases.ts`, `TemplateRelease` | Release ledger: draft, review, approved, released (immutable via database trigger), deprecated; version pinning through `templateVersion`. |
+| `modules/generation/update-plan.ts`, `update-service.ts` | Three-way impact analysis and opt-in safe update with backups. |
+| `modules/export/` | Deterministic ZIP writer/reader with zip-slip protection and the project archive builder. |
+| `modules/workspace/files.ts` | File tree, safe read/write with conflict detection, diff, history, commit. |
+| `modules/catalog/resolver.ts` | Pure dependency, license and version resolver for reusable assets. |
+| `modules/auth/mfa.ts`, `lib/totp.ts` | TOTP MFA with encrypted secrets, replay protection and recovery codes. |
+| `execution/worker.ts` | Local isolated process runner with limits, tree kill, cancellation and cleanup (process-level isolation only). |
+| `integrations/` | Provider-independent build and artifact-registry connector contracts, a guarded manager, Jenkins and Nexus HTTP adapters and mocks. |
+| `scripts/db-backup.mjs` | Backup, verification and isolated restore drill for PostgreSQL and file stores. |
 
-
-## Current candidate status — 2026-11-13
-
-This document records architecture, not verification status. The active candidate is `15fdfe1b016d2f7997008dc68701b99e4220ce26` on `new`; PR #1 remains open/unmerged. CI #738 (`43419669158`) was in progress at last inspection and does not yet verify this candidate. Current implementation/testing distinctions and release gates are maintained in [PROJECT_STATUS.md](PROJECT_STATUS.md).
-
-
-
-## Current candidate status — 2026-11-13
-
-This document records architecture, not verification status. The active candidate is `15fdfe1b016d2f7997008dc68701b99e4220ce26` on `new`; PR #1 remains open/unmerged. CI #738 (`43419669158`) was in progress at last inspection and does not verify this candidate yet. Current implementation/testing distinctions and release gates are maintained in [PROJECT_STATUS.md](PROJECT_STATUS.md).
+Decisions: released template versions are immutable and enforced in the database; authorization is resolved before input validation on every project-scoped route; connectors never store credentials; the execution worker must be placed behind a container or VM boundary before it runs untrusted builds.

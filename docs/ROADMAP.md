@@ -53,13 +53,19 @@ Advanced collaboration/presence, notifications, semantic search, command orchest
 
 Maintain the ₹0 ceiling; preserve the modular monolith absent measured reasons to change; keep work on new until reviewed; do not merge to dev or main without explicit approval. Use PROJECT_STATUS.md as the single current-state source.
 
+## Progress against milestones — 2026-11-14
 
-## Candidate verification checkpoint — 2026-11-13
+Detailed state is only in [PROJECT_STATUS.md](PROJECT_STATUS.md).
 
-The active candidate is `15fdfe1b016d2f7997008dc68701b99e4220ce26` on `new`; PR #1 remains open and unmerged. CI #738 (`43419669158`) was in progress at last inspection. Continue Milestone 0 until the complete workflow, including browser E2E/accessibility, finishes successfully on the exact candidate SHA. Do not advance to acceptance or raise maturity scores based on partial job success. Current detailed state: [PROJECT_STATUS.md](PROJECT_STATUS.md).
+| Milestone | State |
+|---|---|
+| 0 Trustworthy baseline | Done locally: the three browser failures fixed at root cause, read-only CI, local E2E green. Awaiting a GitHub run on the candidate SHA. |
+| 1 Identity and isolation | Done locally: role matrix, lifecycle suite, TOTP MFA. |
+| 2 CI and QA gates | Done locally; certification and report artifact added to CI. |
+| 3 Template and generation governance | Done in API: certification, versioned blueprint, release ledger with immutability and pinning. Browser UI for the release lifecycle remains. |
+| 4 Safe execution and hand-off | Worker and ZIP export done; network/syscall sandbox and remote Git hand-off remain (external). |
+| 5 Accessible operational release | Automated accessibility and backup/restore tooling done; manual review, topology, RPO/RTO and owner sign-off remain (external). |
+| 6 Workspace and delivery | Files/diff/history/commit and connector contracts done; live Jenkins/Nexus and deployment rehearsal remain (external). |
+| 7 Assets and coverage | Dependency/license/version resolver done; coverage expansion by demand. |
 
-
-
-## Candidate verification checkpoint — 2026-11-13
-
-The active candidate is `15fdfe1b016d2f7997008dc68701b99e4220ce26` on `new`; PR #1 remains open/unmerged. CI #738 (`43419669158`) was in progress at last inspection. Continue Milestone 0 until the complete workflow, including browser E2E/accessibility, finishes successfully on the exact candidate SHA. Do not advance acceptance or raise maturity scores based on partial job success. Current state: [PROJECT_STATUS.md](PROJECT_STATUS.md).
+Next: UI for the release lifecycle and asset resolution, wiring the execution worker to a build/test job API behind a container boundary, performance baseline, then P2.

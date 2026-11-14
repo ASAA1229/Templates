@@ -52,13 +52,19 @@ All P0 gates in PROJECT_STATUS.md have objective evidence; critical journeys pas
 
 **NO-GO.** E2E failures, incomplete authorization evidence, uncertified templates, missing isolated execution and unproven recovery prevent POC acceptance.
 
+## Proof scenario status — 2026-11-14
 
-## Latest candidate verification — 2026-11-13
+Authoritative evidence is in [PROJECT_STATUS.md](PROJECT_STATUS.md). The POC is still **not accepted** pending owner decisions and external validation, but most scenarios now have local evidence.
 
-Candidate: `15fdfe1b016d2f7997008dc68701b99e4220ce26` on branch `new`, PR #1 open/unmerged. CI run #738 (`43419669158`) was in progress at last inspection; only setup, dependency audit and migrations had passed, while the core validation step was still running and browser tests had not started. The POC remains **not accepted / NO-GO**. See [PROJECT_STATUS.md](PROJECT_STATUS.md) and [TESTING.md](TESTING.md) for current evidence.
+| # | Scenario | Local evidence |
+|---|---|---|
+| 1 | Owner bootstrap, request, review, activation, login, lifecycle | `auth.test.ts`, `auth-lifecycle.test.ts`, `mfa.test.ts` |
+| 2 | Project sharing and isolation across APIs, search, dashboard, export | `authorization-matrix.test.ts`, `project-sharing.test.ts`, `export.test.ts` |
+| 3 | Import/submit, validate, review, immutable approved version | `template-lifecycle.test.ts`, `certification.test.ts` (UI for the lifecycle pending) |
+| 4 | Select blueprint, configure, preview, generate, verify provenance | `generation.test.ts`, `template-lifecycle.test.ts`, Playwright generation journeys |
+| 5 | Untrusted code in a disposable constrained worker | `execution.test.ts` (no network/syscall sandbox; not wired to a job API) |
+| 6 | Safe ZIP export; remote Git with approval | ZIP verified; remote Git needs credentials (external) |
+| 7 | WCAG 2.2 AA workflows | axe sweep over all routes and 25 demos; manual review pending |
+| 8 | Backup and isolated restore, rollback, incident ownership | `backup-restore.test.ts`; owner-approved topology and RPO/RTO pending |
 
-
-
-## Latest candidate verification — 2026-11-13
-
-Candidate: `15fdfe1b016d2f7997008dc68701b99e4220ce26` on branch `new`, PR #1 open/unmerged. CI #738 (`43419669158`) was in progress at last inspection; setup, dependency audit and migrations had passed, but the core validation step was still running and browser tests had not started. The POC remains **not accepted / NO-GO**. See [PROJECT_STATUS.md](PROJECT_STATUS.md) and [TESTING.md](TESTING.md).
+Decision: **NO-GO** until the external items in PROJECT_STATUS.md are closed.

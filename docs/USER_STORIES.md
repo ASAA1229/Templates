@@ -171,18 +171,28 @@ The following remain future work and must not displace P0 closure: advanced coll
 
 For every RLC task, record: implementation PR/commit, acceptance-test identifiers and results, security/accessibility findings, artifact or template version/checksum where applicable, reviewer/owner decision, and residual risks. Use the existing status vocabulary. Never change a task to complete because documentation was updated or code merely exists.
 
+## Story status update — 2026-11-14
 
-## 2026-11-13 status authority
+Authoritative status and evidence: [PROJECT_STATUS.md](PROJECT_STATUS.md). Stories not listed keep their previous status.
 
-This file is the authoritative detailed user-story and acceptance-criteria backlog. Current implementation state, evidence, maturity scores, gap status and release decision are maintained in [PROJECT_STATUS.md](PROJECT_STATUS.md). The release-blocking RLC task definitions below remain the execution backlog; their status must follow the canonical vocabulary and evidence in PROJECT_STATUS.md. A story is not accepted because its implementation exists or documentation has changed.
+| Story | New status | Evidence |
+|---|---|---|
+| US-A02, US-A03 | Locally tested | `auth-lifecycle.test.ts` |
+| US-A04 MFA and sessions | Locally tested (TOTP, recovery codes, policy flag, UI) | `mfa.test.ts` |
+| US-A05, US-A06, US-A07 | Locally tested | `authorization-matrix.test.ts`, `project-sharing.test.ts` |
+| US-B03 | Partial: automated axe sweep passes; manual screen-reader review pending | `accessibility.spec.ts` |
+| US-D02, US-D03 | Locally tested (certification checker, lock, CI report) | `certification.test.ts` |
+| US-D04, US-D05 | Locally tested in the API (immutable release, provenance, deprecation, replacement mapping, pinning); UI pending | `template-lifecycle.test.ts` |
+| US-D06 | Locally tested (resolver and API) | `asset-resolution.test.ts` |
+| US-E02, US-E03, US-E04 | Locally tested (typed inputs, preview parity, byte-identical output) | `template-lifecycle.test.ts` |
+| US-E05 | Locally tested (impact analysis, opt-in apply, backups, conflicts untouched) | `template-update.test.ts` |
+| US-F01 | Locally tested (tree, editor, diff, history, conflict handling) | `workspace-files.test.ts`, E2E |
+| US-F02 | Partial: local Git only; remote needs credentials (external) | `connectors.test.ts` for the contract |
+| US-F03 ZIP export | Locally tested | `export.test.ts` |
+| US-G01, US-I02 | Partial: worker with limits tested; no network/syscall sandbox, no job API | `execution.test.ts` |
+| US-H03, US-H04 | Partial: readiness and backup/restore drill tested; alerting and RPO/RTO pending | `health.test.ts`, `backup-restore.test.ts` |
+| US-G03 | Partial: certification gates enforce required checks; waivers not implemented | `certification.test.ts` |
 
+Newly implemented beyond the original RLC list: US-A04 (MFA), US-E05 (safe template update), US-D06 (asset resolution), US-F03 (ZIP export).
 
-## Current candidate and verification note — 2026-11-13
-
-Use [PROJECT_STATUS.md](PROJECT_STATUS.md) for the current story/gap state, evidence, maturity and release decision. PR #1 remains open and unmerged at `15fdfe1b016d2f7997008dc68701b99e4220ce26` on branch `new`. CI #738 (`43419669158`) was in progress at the latest inspection and has no final result. The Playwright template-batch helper adjustment is awaiting test execution; do not close its linked story or acceptance criteria based on the code change alone.
-
-
-
-## Current candidate and verification note — 2026-11-13
-
-Use [PROJECT_STATUS.md](PROJECT_STATUS.md) for current story/gap state, evidence, maturity and release decision. PR #1 remains open/unmerged at `15fdfe1b016d2f7997008dc68701b99e4220ce26` on `new`. CI #738 (`43419669158`) was in progress and has no final result. The Playwright template-batch helper adjustment awaits test execution; do not close linked stories based on source changes alone.
+Remaining achievable follow-ups: browser UI for release lifecycle and asset resolution, a build/test job API over the execution worker behind a container boundary, quality-gate waivers, environment profiles (US-H01).

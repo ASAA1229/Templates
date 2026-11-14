@@ -107,18 +107,18 @@ Before enabling employee access or deploying beyond local development:
 
 A green build alone is not a security sign-off.
 
+## Implemented controls and verification — 2026-11-14
 
-## CI workflow least privilege — 2026-11-13
+Authoritative status and evidence: [PROJECT_STATUS.md](PROJECT_STATUS.md).
 
-The inspected CI workflow currently grants contents: write and contains a temporary formatting repair step capable of committing and pushing to branch new. This is not required for validation. Replace it with committed formatting changes and reduce pull-request validation permissions to contents: read (and only other explicitly required read permissions). Any artifact publication or release write operation must be a separate, explicitly scoped job with protected approval. See [PROJECT_STATUS.md](PROJECT_STATUS.md) for current evidence and release status.
+- **CI least privilege:** the validation workflow uses `contents: read` and contains no commit or push step; template certification output is uploaded as an artifact only.
+- **Authorization isolation (RG-01):** project access is resolved before any request body is parsed. `apps/api/test/authorization-matrix.test.ts` proves the project owner, EDITOR, VIEWER, unrelated employee, unrelated administrator, platform OWNER, suspended and revoked actors across every project-scoped endpoint, plus list, search, dashboard and saved-search leakage. Platform roles never grant access to another user's project. The global audit log is intentionally readable by OWNER and ADMIN.
+- **Identity lifecycle (RG-02):** activation links (24 h) and reset links (30 min) are hashed, single use, race-safe and rate limited; unknown, expired and reused tokens return the same generic error; password change and reset revoke sessions; privileged accounts can only be reset by the owner.
+- **MFA decision (US-A04):** TOTP (RFC 6238) is implemented with AES-256-GCM encrypted secrets (`MFA_ENCRYPTION_KEY`), replay-protected time steps and ten single-use hashed recovery codes. `REQUIRE_MFA_PRIVILEGED=true` blocks OWNER/ADMIN privileged actions until MFA is enabled. Decision: MFA is optional on a trusted local installation and **must be enabled (policy flag true) before any exposure beyond localhost or a trusted network**. Passkeys remain a future option.
+- **Template supply chain (RG-04/06):** per-package certification (manifest, license, provenance, pinned dependencies, secret scan, deterministic dry run, content-digest lock); released versions are immutable in the API and by database trigger; released catalog metadata cannot be edited.
+- **Safe export (RG-08):** ZIP entries are validated on write and on read (no absolute paths, `..`, backslashes, drive letters, duplicates, decompression bombs); symbolic links, `.git` and `node_modules` are never exported; export requires project read access and is audited.
+- **Workspace files (RG-11):** every path is resolved segment by segment inside the project folder, symbolic links and VCS folders are refused, writes need EDITOR access and detect concurrent edits by content hash, commits are refused on the protected production branch.
+- **Isolated execution (RG-07):** `apps/api/src/execution/worker.ts` runs allow-listed executables in a disposable directory with a scrubbed environment and time, memory, output and disk limits, tree kill, cancellation and guaranteed cleanup. **Limit:** no network or syscall sandbox is provided. Do not route untrusted builds through it without a container or virtual-machine boundary.
+- **Connectors (RG-12):** every call is scoped to an explicit allow-list, requires a named approver for consequential actions, honours revocation, times out, redacts credentials and is audited. Credentials are resolved from the environment at call time and never stored.
 
-
-## Current security verification checkpoint — 2026-11-13
-
-The CI validation workflow on branch `new` was inspected and confirmed to use `contents: read`; the temporary formatting repair/commit/push step is absent. This verifies the workflow file configuration only, not the complete security posture. Authorization isolation, authentication lifecycle/MFA policy, safe execution isolation and security testing remain open P0 gates. Candidate `15fdfe1b016d2f7997008dc68701b99e4220ce26` has CI #738 (`43419669158`) in progress, not passed. See [PROJECT_STATUS.md](PROJECT_STATUS.md).
-
-
-
-## Current security verification checkpoint — 2026-11-13
-
-The CI validation workflow on branch `new` was inspected and confirmed to use `contents: read`; the temporary formatting repair/commit/push step is absent. This verifies workflow configuration only, not the complete security posture. Authorization isolation, authentication lifecycle/MFA policy, safe execution isolation and security testing remain open P0 gates. Candidate `15fdfe1b016d2f7997008dc68701b99e4220ce26` has CI #738 (`43419669158`) in progress, not passed. See [PROJECT_STATUS.md](PROJECT_STATUS.md).
+Open: independent security review, OS-level execution isolation, persistent/shared rate-limit storage for multi-instance deployments.
