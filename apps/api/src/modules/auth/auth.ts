@@ -6,7 +6,7 @@ import type { AppContext } from "../../context.js";
 import { AppError, unauthenticated, validationFailed } from "../../lib/errors.js";
 import { hashPassword, needsRehash, timingDummyHash, verifyPassword } from "../../lib/password.js";
 import { hashToken, newSessionToken } from "../../lib/tokens.js";
-import { RateLimiter } from "../../middleware/security.js";
+import { DbRateLimiter } from "../../middleware/rate-limit.js";
 import { audit } from "../audit/audit.service.js";
 import { registerMfaRoutes, verifySecondFactor } from "./mfa.js";
 import { authorize } from "./policy.js";
@@ -83,13 +83,13 @@ export function requireOwner() {
 export function authRouter(ctx: AppContext): Router {
   const router = Router();
   // Per client address and per submitted email, so neither can be brute-forced.
-  const ipLimiter = new RateLimiter(20, 15 * 60_000, () => ctx.now().getTime());
-  const emailLimiter = new RateLimiter(8, 15 * 60_000, () => ctx.now().getTime());
+  const ipLimiter = new DbRateLimiter(ctx, "login-ip", 20, 15 * 60_000);
+  const emailLimiter = new DbRateLimiter(ctx, "login-email", 8, 15 * 60_000);
 
-  const accessRequestIpLimiter = new RateLimiter(5, 60 * 60_000, () => ctx.now().getTime());
-  const passwordResetIpLimiter = new RateLimiter(10, 15 * 60_000, () => ctx.now().getTime());
-  const activationIpLimiter = new RateLimiter(10, 15 * 60_000, () => ctx.now().getTime());
-  const accessRequestEmailLimiter = new RateLimiter(2, 24 * 60 * 60_000, () => ctx.now().getTime());
+  const accessRequestIpLimiter = new DbRateLimiter(ctx, "access-ip", 5, 60 * 60_000);
+  const passwordResetIpLimiter = new DbRateLimiter(ctx, "reset-ip", 10, 15 * 60_000);
+  const activationIpLimiter = new DbRateLimiter(ctx, "activate-ip", 10, 15 * 60_000);
+  const accessRequestEmailLimiter = new DbRateLimiter(ctx, "access-email", 2, 24 * 60 * 60_000);
 
   // Public access request: account existence and duplicate submissions are not disclosed.
   router.post("/access-requests", async (req, res, next) => {
@@ -102,8 +102,8 @@ export function authRouter(ctx: AppContext): Router {
         })
         .parse(req.body);
       const retryAfter = Math.max(
-        accessRequestIpLimiter.consume(req.ip ?? "unknown"),
-        accessRequestEmailLimiter.consume(input.email),
+        await accessRequestIpLimiter.consume(req.ip ?? "unknown"),
+        await accessRequestEmailLimiter.consume(input.email),
       );
       if (retryAfter > 0) {
         res.setHeader("retry-after", String(retryAfter));
@@ -136,7 +136,7 @@ export function authRouter(ctx: AppContext): Router {
 
   router.post("/access-requests/activate", async (req, res, next) => {
     try {
-      const retryAfter = activationIpLimiter.consume(req.ip ?? "unknown");
+      const retryAfter = await activationIpLimiter.consume(req.ip ?? "unknown");
       if (retryAfter > 0) {
         res.setHeader("retry-after", String(retryAfter));
         throw new AppError(429, "RATE_LIMITED", "Too many activation attempts. Try again later.");
@@ -311,7 +311,7 @@ export function authRouter(ctx: AppContext): Router {
 
   router.post("/password-reset/consume", async (req, res, next) => {
     try {
-      const retryAfter = passwordResetIpLimiter.consume(req.ip ?? "unknown");
+      const retryAfter = await passwordResetIpLimiter.consume(req.ip ?? "unknown");
       if (retryAfter > 0) {
         res.setHeader("retry-after", String(retryAfter));
         throw new AppError(429, "RATE_LIMITED", "Too many password reset attempts. Try again later.");
@@ -359,7 +359,10 @@ export function authRouter(ctx: AppContext): Router {
     try {
       const parsed = loginSchema.safeParse(req.body);
       const email = parsed.success ? parsed.data.email : "";
-      const retryAfter = Math.max(ipLimiter.consume(req.ip ?? "unknown"), email ? emailLimiter.consume(email) : 0);
+      const retryAfter = Math.max(
+        await ipLimiter.consume(req.ip ?? "unknown"),
+        email ? await emailLimiter.consume(email) : 0,
+      );
       if (retryAfter > 0) {
         await audit(ctx, req, { action: "auth.login", outcome: "DENIED", metadata: { reason: "rate_limited" } });
         res.setHeader("retry-after", String(retryAfter));
@@ -396,8 +399,8 @@ export function authRouter(ctx: AppContext): Router {
         }
       }
       // A successful account login clears both counters.
-      emailLimiter.reset(email);
-      ipLimiter.reset(req.ip ?? "unknown");
+      await emailLimiter.reset(email);
+      await ipLimiter.reset(req.ip ?? "unknown");
       const { token, tokenHash } = newSessionToken();
       const now = ctx.now();
       const session = await ctx.prisma.session.create({

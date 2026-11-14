@@ -15,6 +15,7 @@ import { ProjectDetailPage } from "@/features/projects/ProjectDetailPage";
 import { ProjectsPage } from "@/features/projects/ProjectsPage";
 import { SecurityPage } from "@/features/security/SecurityPage";
 import { TeamMembersPage } from "@/features/security/TeamMembersPage";
+import { ReleasesPage } from "@/features/templates/ReleasesPage";
 import { TemplateSubmissionsPage } from "@/features/templates/TemplateSubmissionsPage";
 import { SearchPage } from "@/features/search/SearchPage";
 import { AuthProvider, useAuth } from "@/lib/auth";
@@ -39,6 +40,7 @@ const TITLES: [RegExp, string][] = [
   [/^\/security/, "Security"],
   [/^\/team/, "Team members"],
   [/^\/template-submissions/, "Template submissions"],
+  [/^\/template-releases/, "Template releases"],
   [/^\/login/, "Sign in"],
   [/^\/reset-password/, "Reset password"],
 ];
@@ -170,6 +172,7 @@ export const routes: RouteObject[] = [
       { path: "team", element: <TeamMembersPage /> },
       { path: "access-requests", element: <AccessRequestsPage /> },
       { path: "template-submissions", element: <TemplateSubmissionsPage /> },
+      { path: "template-releases", element: <ReleasesPage /> },
       { path: "*", element: <NotFound /> },
     ],
   },

@@ -17,7 +17,7 @@ import { ArrowLeft, ArrowRight, Check, FilePlus2, LayoutTemplate, Loader2, Rocke
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router";
 import { EmptyState, ErrorState, Field, LoadingState, PageHeader, StatusBadge } from "@/components/common";
-import { Alert, Badge, Button, Card, CardContent, Input, Textarea } from "@/components/ui";
+import { Alert, Badge, Button, Card, CardContent, Input, Select, Textarea } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
 import { useResource } from "@/lib/hooks";
 import { cn, humanize } from "@/lib/utils";
@@ -167,6 +167,13 @@ export function NewProjectWizard() {
   const starters = options.data?.starters ?? [];
   const templates = options.data?.templates ?? [];
   const selectedTemplate = templates.find((option) => option.catalogItem.id === catalogItemId) ?? null;
+  // Version pinning: released versions of the chosen template (the current release is the default).
+  const [pinVersion, setPinVersion] = useState("");
+  const releasedVersions = useResource<{ releases: { version: string; status: string }[] }>(
+    selectedTemplate ? `/templates/releases?templateId=${selectedTemplate.catalogItem.slug}&status=RELEASED` : null,
+  );
+  const pinnable =
+    releasedVersions.state === "ready" ? releasedVersions.data.releases.map((release) => release.version) : [];
   const starterBlueprints = starters.flatMap((starter) => {
     const parsed = parseManifest(starter.manifest).manifest;
     return parsed?.blueprint
@@ -214,6 +221,9 @@ export function NewProjectWizard() {
       ? {
           mode,
           catalogItemId: catalogItemId ?? "",
+          ...(pinVersion && pinVersion !== selectedTemplate?.catalogItem.version
+            ? { templateVersion: pinVersion }
+            : {}),
           blueprint: manifest?.blueprint,
           project,
           inputs: manifest ? cleanInputValues(manifest.inputs, inputs) : {},
@@ -576,6 +586,24 @@ export function NewProjectWizard() {
                 </div>
               </CardContent>
             </Card>
+            {mode === "TEMPLATE" && pinnable.length > 1 && (
+              <Field
+                label="Template version"
+                hint="Pin an earlier released version. The form below follows the current release; the server validates against the pinned version."
+              >
+                <Select
+                  value={pinVersion || selectedTemplate?.catalogItem.version || ""}
+                  onChange={(event) => setPinVersion(event.target.value)}
+                >
+                  {pinnable.map((version) => (
+                    <option key={version} value={version}>
+                      {version}
+                      {version === selectedTemplate?.catalogItem.version ? " (current)" : ""}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            )}
             <section aria-labelledby="selected-blueprint" className="space-y-3">
               <div>
                 <h3 id="selected-blueprint" className="font-semibold">
