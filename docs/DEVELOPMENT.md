@@ -202,4 +202,4 @@ npm run backup:verify -- verify --dir <folder>
 npm run backup:restore-check -- restore-check --dir <folder>
 ```
 
-Optional configuration: `MFA_ENCRYPTION_KEY` enables TOTP MFA; `REQUIRE_MFA_PRIVILEGED=true` requires it for OWNER/ADMIN privileged actions. Apply `npm run db:deploy` to both the development and test databases after pulling migrations. See OPERATIONS.md and TESTING.md for details.
+`npm run perf:baseline` runs the local load baseline (build first). Optional configuration: `JOB_ISOLATION`, `JOB_CONTAINER_IMAGE`, `MFA_ENCRYPTION_KEY` enables TOTP MFA; `REQUIRE_MFA_PRIVILEGED=true` requires it for OWNER/ADMIN privileged actions. Apply `npm run db:deploy` to both the development and test databases after pulling migrations. See OPERATIONS.md and TESTING.md for details.

@@ -1,6 +1,6 @@
 # Project Status — ASAA Templates
 
-**Date:** 2026-11-14  
+**Date:** 2026-11-14 (delta increment applied)  
 **Authoritative status and gap register:** this document  
 **Assessment branch:** new  
 **PR:** [#1 — new to dev](https://github.com/ASAA1229/Templates/pull/1) (open, not merged)  
@@ -49,17 +49,17 @@ Scores are engineering assessments from the evidence above, not measured perform
 |---|---:|---:|---|
 | Architecture and maintainability | 7.0 | 7.5 | New isolated modules (certification, execution, export, integrations, resolver, release ledger) behind existing boundaries; DB-level immutability. |
 | Requirements and documentation | 6.5 | 7.5 | Docs reconciled with code; duplicated sections removed; every gap has evidence or an explicit external dependency. |
-| Implementation completeness | 6.0 | 8.0 | RG-01 to RG-15 implemented locally; remaining items are external or human review. |
+| Implementation completeness | 6.0 | 8.5 | RG-01 to RG-15 implemented locally; remaining items are external or human review. |
 | Unit, integration, API, UI and E2E testing | 6.0 | 8.5 | API 279 tests in 25 files, contracts 25, web 22, E2E 27 including the axe sweep; baseline was 138 + 25 + 22 and 19/22 E2E. |
-| Security and privacy | 5.5 | 7.5 | Role matrix and lifecycle suites, MFA, authorization-before-validation, immutable releases, safe export; no OS-level sandbox or external review. |
-| Performance and scalability | 4.5 | 4.5 | No load, capacity or latency evidence yet; unchanged. |
-| Accessibility and compatibility | 5.0 | 7.0 | axe sweep over every route (light, dark, mobile layout) and all 25 demos; manual screen-reader review not done. |
+| Security and privacy | 5.5 | 8.0 | Role matrix and lifecycle suites, MFA, authorization-before-validation, immutable releases, safe export, shared rate limits, labelled job isolation with an optional container boundary; no live container run or external review. |
+| Performance and scalability | 4.5 | 5.5 | Reproducible load baseline with recorded latency and throughput and budgets; no capacity or soak testing; preview endpoint is slow. |
+| Accessibility and compatibility | 5.0 | 7.5 | axe sweep, 320 px reflow, 200% text, focus, reduced motion, forced colors, 25 demos; manual screen-reader review not done. |
 | CI/CD and DevOps | 5.0 | 6.5 | Read-only workflow, certification gate and report; no observed GitHub run for the new commits. |
 | Deployment and infrastructure | 3.0 | 3.5 | Readiness probe added; no approved topology or deployment. |
 | Monitoring, backup and disaster recovery | 3.5 | 6.0 | Verified backup, checksum verification and isolated restore-check with a local round-trip test; no alerting, no approved RPO/RTO. |
 | Release readiness and operational support | 3.0 | 5.0 | Gates mostly closed locally; owner sign-off, topology and live integrations outstanding. |
 
-**Overall provisional project maturity: 6.5/10** (arithmetic mean 6.5; baseline 5.0). Separate from the ASAA organization-level score; do not compare without a common rubric.
+**Overall provisional project maturity: 6.9/10** (arithmetic mean 6.86; baseline 5.0). Separate from the ASAA organization-level score; do not compare without a common rubric.
 
 ## Status vocabulary
 
@@ -76,15 +76,15 @@ Gap-closure labels used in the register: COMPLETE AND VERIFIED (locally tested),
 | RG-03 CI reliability | P0 | COMPLETE AND VERIFIED (locally tested); GitHub run not observed | Workflow is `contents: read` with no push step; local E2E green (27 passed, 0 failed (desktop, desktop-dark, mobile)). |
 | RG-04 Template certification | P0 | COMPLETE AND VERIFIED (locally tested) | `npm run certify:templates`: 29/29 packages (25 demos, landing page, 3 starters) pass manifest, license, provenance, pinned dependencies, secret scan, deterministic dry-run, static HTML quality and digest lock; wired into CI with a report artifact; negative tests prove tampering, credentials, unpinned dependencies and missing provenance fail. Starter manifests were missing declared dependencies (fixed). Maintainer sign-off remains a human step. |
 | RG-05 Blueprint/generator | P0 | COMPLETE AND VERIFIED (locally tested) | Versioned manifest and blueprint schema (`schemaVersion`), typed inputs, adapter capability checks, preview, disk and verify digests identical, byte-identical repeat renders (`test/template-lifecycle.test.ts`). |
-| RG-06 Template lifecycle | P0 | PARTIALLY COMPLETE | API complete and verified: draft, review, approval (separate person unless OWNER), immutable release (database trigger), deprecation, version pinning (`templateVersion`), certification gate; metadata of released catalog items immutable. No browser UI for the release lifecycle yet. |
-| RG-07 Isolated execution | P0 | PARTIALLY COMPLETE | `src/execution/worker.ts` with 13 real-process tests (timeout, tree kill, output/memory/disk caps, cancel, secret scrubbing, cleanup, concurrency). Honest limits: no network or syscall sandbox, POSIX path untested, not yet exposed as a product build/test job API. |
+| RG-06 Template lifecycle | P0 | COMPLETE AND VERIFIED (locally tested) | API plus browser UI (`/template-releases`): draft, submit, approval by a second person, release, deprecate, version pinning in the project wizard. `template-lifecycle.test.ts` and Playwright `zz-release-lifecycle.spec.ts` (developer drafts, administrator approves and releases, deprecation needs a reason, axe clean). Released rows are immutable in the API and by database trigger. |
+| RG-07 Isolated execution | P0 | PARTIALLY COMPLETE | Worker (13 process tests) is now exposed through an authenticated job API (`/api/projects/:id/jobs`: submit, list, status, logs, cancel; presets `node-script` and `node-test`; job:read/job:write permissions; audit; recovery of interrupted jobs). Optional Docker boundary (`--network none`, read-only root, tmpfs, cap-drop ALL, pids/memory/cpu limits, no image pull) is selected automatically when the daemon and image are present; otherwise jobs run in the process worker and are labelled "process: NO network sandbox and NO filesystem sandbox". The container path is tested only with an injected fake docker (the daemon is not running on the development machine); no live container run has been observed. |
 | RG-08 ZIP/Git hand-off | P0 | PARTIALLY COMPLETE | ZIP export complete and verified (deterministic, manifest, provenance, SHA-256, zip-slip, symlink refusal, authorization, audit; UI button). Approved remote Git provisioning needs credentials and an authorized destination (external). |
-| RG-09 Accessibility | P0 | PARTIALLY COMPLETE | axe WCAG 2.2 A/AA sweep over all public and authenticated routes, form-error states, 25 demos, keyboard checks; violations fixed. Manual screen-reader review not performed. |
+| RG-09 Accessibility | P0 | PARTIALLY COMPLETE | axe WCAG 2.2 A/AA sweep over all routes, states and 25 demos, plus `reflow.spec.ts`: 320 px reflow (400% zoom equivalent), 200% text size, focus indicators, Escape behaviour, reduced motion and forced colors. Five real overflows were fixed (Security, Projects, Catalog, Dashboard, Files). Manual screen-reader review still not performed. |
 | RG-10 Operational release | P0 | BLOCKED BY EXTERNAL DEPENDENCY | `scripts/db-backup.mjs` (backup, verify, restore-check) with a local round-trip test is implemented. Approved zero-cost topology, operational owner, RPO/RTO and owner sign-off are owner decisions. |
 | RG-11 Online workspace | P1 | COMPLETE AND VERIFIED (locally tested) | File tree, safe read/write with hash-based conflict detection, diff, history, commit detail, commit on work branches only; UI panel; API suite (`workspace-files.test.ts`), E2E edit and conflict journey, matrix coverage. IDE hand-off is the ZIP export. |
 | RG-12 Connectors | P1 | BLOCKED BY EXTERNAL DEPENDENCY | Contract, guarded manager (scope, approval, revocation, redaction, audit), Jenkins and Nexus HTTP adapters and mocks, tested against local protocol fakes (`connectors.test.ts`). Live validation needs authorized endpoints and credentials. |
 | RG-13 Reusable assets | P1 | COMPLETE AND VERIFIED (locally tested) | Semver ranges, version resolution, conflicts, cycles, license policy, trust and lifecycle checks, bounded graphs; `POST /api/catalog/resolve` (23 tests). |
-| RG-14 Delivery operations | P1 | PARTIALLY COMPLETE | Readiness probe, backup and restore verification, safe template updates with backups (US-E05). Artifact promotion, deployment verification, rollback rehearsal and alerting need a target environment (external). |
+| RG-14 Delivery operations | P1 | PARTIALLY COMPLETE | Readiness probe, backup/restore drill, safe template updates, and a reproducible load baseline (`npm run perf:baseline`, numbers below). Artifact promotion, deployment verification, rollback rehearsal and alerting need a target environment (external). |
 | RG-15 Coverage expansion | P1 | PARTIALLY COMPLETE | All 29 packages certified; breadth unchanged by design (expand by demand, certify each). |
 
 P2 deferred: advanced collaboration, notifications, semantic search/command orchestration, advanced BI, configurable workflows/forms, optional company-safe AI/JARVIS, offline/native clients, multi-organization tenancy and business operations. Public marketplace and paid services remain outside authorization.
@@ -107,8 +107,24 @@ P2 deferred: advanced collaboration, notifications, semantic search/command orch
 | Catalog metadata (version, license, dependencies) editable after release | Low | Fixed |
 | No MFA | Medium | Implemented (TOTP, recovery codes, policy flag) |
 | Global audit log readable by ADMIN (all projects) | Info | Accepted governance behaviour |
-| Execution worker has no network/syscall isolation | High if exposed to untrusted code | Open: do not wire to untrusted builds without a container or VM boundary |
-| In-memory rate limiters reset on restart and do not span instances | Low | Open (single-instance deployment assumed) |
+| Execution worker has no network/syscall isolation in process mode | High if used on untrusted code | Mitigated when Docker is available (container boundary, untested live); jobs are labelled by isolation level; process mode must not run untrusted code |
+| In-memory rate limiters reset on restart and did not span instances | Low | Fixed: PostgreSQL-backed shared buckets (atomic upsert, hashed keys), tested across two API instances |
+
+## Load baseline (local, single machine)
+
+`npm run perf:baseline` creates a throw-away database, seeds 50 projects, starts the built API and measures each endpoint at concurrency 1, 10 and 25 (300 requests; 60 for preview). Run on Windows 11, Node 24, PostgreSQL 18 on the same host, development mode. Budgets: no 5xx or errors; p95 below 500 ms for reads at concurrency 10.
+
+| Endpoint (concurrency 10) | req/s | p50 ms | p95 ms |
+|---|---:|---:|---:|
+| GET /api/health | 353 | 11.7 | 34.7 |
+| GET /api/health/ready | 265 | 26.7 | 100.5 |
+| GET /api/projects | 200 | 47.8 | 67.5 |
+| GET /api/projects/:id | 265 | 33.6 | 58.8 |
+| GET /api/search?q= | 112 | 75.1 | 185.5 |
+| GET /api/dashboard | 117 | 71.4 | 146.9 |
+| POST /api/generations/preview | 8.6 | 1143 | 1442 |
+
+Findings: all read budgets met with zero errors. Generation preview is the outlier (about 1 to 9 req/s) because it renders a template and reads the library on each request; optimising it is a follow-up. Login is correctly rate limited (429). Numbers are indicative, not capacity planning.
 
 ## Delivery order (unchanged)
 
@@ -118,6 +134,9 @@ P2 deferred: advanced collaboration, notifications, semantic search/command orch
 
 ### 2026-11-13 — baseline and CI hardening
 Initial assessment of README, requirements, stories, architecture, security, development, operations, CI workflow, Prisma schema and representative modules. CI run #705 (merge candidate 886c8aaa37add14ea53ceb1e85d7ca92532f4f07, PR head b34c0a250be539833f8f927cc92b3fd1795ee31d): dependency audit, migrations, format, lint, typecheck, tests, build and smoke passed; Playwright 19 passed, 3 failed. The workflow was reduced from `contents: write` to `contents: read` and the formatter-and-push step removed; the template-batch helper was moved to Playwright's request context (insufficient: the real cause was the `file:` origin). Later commits on `new` (15fdfe1b016d2f7997008dc68701b99e4220ce26, CI #738) were documentation-only after that point; no completed result for them was observed.
+
+### 2026-11-14 — delta increment
+`prisma generate` hit EPERM on the engine DLL when another process held it; `scripts/prisma-generate.mjs` now skips regeneration when the generated client already matches the schema (types stay exact), clears stale temp engines and retries. Added: release lifecycle UI with E2E, job API with optional Docker boundary, PostgreSQL-backed rate limiter, load baseline script, reflow/zoom/forced-colors/keyboard E2E with five layout fixes.
 
 ### 2026-11-14 — implementation of the gap register
 Reproduced the baseline locally, fixed the three browser failures at their root causes, and implemented RG-01 to RG-15 locally as described in the register. 14 logical commits on `new` (see `git log ba7918b..HEAD`). Documentation reconciled in this change; duplicated checkpoint sections in the other documents were consolidated here.

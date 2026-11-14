@@ -68,4 +68,4 @@ Detailed state is only in [PROJECT_STATUS.md](PROJECT_STATUS.md).
 | 6 Workspace and delivery | Files/diff/history/commit and connector contracts done; live Jenkins/Nexus and deployment rehearsal remain (external). |
 | 7 Assets and coverage | Dependency/license/version resolver done; coverage expansion by demand. |
 
-Next: UI for the release lifecycle and asset resolution, wiring the execution worker to a build/test job API behind a container boundary, performance baseline, then P2.
+Delivered since: release lifecycle UI, build/test job API with optional container boundary, shared rate limiter, load baseline. Next: UI for asset resolution, a live container run and generation-preview performance, then P2.

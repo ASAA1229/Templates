@@ -123,6 +123,8 @@ Status is maintained only in [PROJECT_STATUS.md](PROJECT_STATUS.md). The modular
 | `modules/auth/mfa.ts`, `lib/totp.ts` | TOTP MFA with encrypted secrets, replay protection and recovery codes. |
 | `execution/worker.ts` | Local isolated process runner with limits, tree kill, cancellation and cleanup (process-level isolation only). |
 | `integrations/` | Provider-independent build and artifact-registry connector contracts, a guarded manager, Jenkins and Nexus HTTP adapters and mocks. |
+| `modules/execution/` | Authenticated job API over the worker with an optional Docker boundary (`container.ts`). |
+| `middleware/rate-limit.ts` | PostgreSQL-backed shared rate limiter. |
 | `scripts/db-backup.mjs` | Backup, verification and isolated restore drill for PostgreSQL and file stores. |
 
 Decisions: released template versions are immutable and enforced in the database; authorization is resolved before input validation on every project-scoped route; connectors never store credentials; the execution worker must be placed behind a container or VM boundary before it runs untrusted builds.

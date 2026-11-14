@@ -133,6 +133,14 @@ The manifest records sizes, checksums, the migration count and key table row cou
 
 `npm run certify:templates -w @asaa/api` certifies every package and writes `.local/certification/report.json` (uploaded by CI). After human review of a new or changed package version, record it with `-- --update-lock`; released content cannot change without a new version.
 
+### Load baseline
+
+`npm run perf:baseline` (build first) runs a reproducible local load and latency baseline against a throw-away database and writes `.local/perf/baseline.json`; it exits non-zero when a budget is breached. Recorded numbers are in PROJECT_STATUS.md.
+
+### Job isolation
+
+Set `JOB_ISOLATION=auto|process|container` (default auto) and optionally `JOB_CONTAINER_IMAGE` (default `node:24-alpine`; the image must already exist locally). `container` fails closed (HTTP 503) if Docker or the image is unavailable; `auto` falls back to the labelled process worker.
+
 ### External configuration still required
 
 | Item | What is needed |

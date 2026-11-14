@@ -195,4 +195,4 @@ Authoritative status and evidence: [PROJECT_STATUS.md](PROJECT_STATUS.md). Stori
 
 Newly implemented beyond the original RLC list: US-A04 (MFA), US-E05 (safe template update), US-D06 (asset resolution), US-F03 (ZIP export).
 
-Remaining achievable follow-ups: browser UI for release lifecycle and asset resolution, a build/test job API over the execution worker behind a container boundary, quality-gate waivers, environment profiles (US-H01).
+Delta increment: US-D04/D05 now have a browser UI (release lifecycle and pinning) with E2E; US-G01/US-G02 have a job API with logs, exit codes and cancel (isolation labelled; container path not yet run live). Remaining follow-ups: asset resolution UI, quality-gate waivers, environment profiles (US-H01).

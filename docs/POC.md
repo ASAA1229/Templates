@@ -62,7 +62,7 @@ Authoritative evidence is in [PROJECT_STATUS.md](PROJECT_STATUS.md). The POC is 
 | 2 | Project sharing and isolation across APIs, search, dashboard, export | `authorization-matrix.test.ts`, `project-sharing.test.ts`, `export.test.ts` |
 | 3 | Import/submit, validate, review, immutable approved version | `template-lifecycle.test.ts`, `certification.test.ts` (UI for the lifecycle pending) |
 | 4 | Select blueprint, configure, preview, generate, verify provenance | `generation.test.ts`, `template-lifecycle.test.ts`, Playwright generation journeys |
-| 5 | Untrusted code in a disposable constrained worker | `execution.test.ts` (no network/syscall sandbox; not wired to a job API) |
+| 5 | Untrusted code in a disposable constrained worker | `execution.test.ts`, `execution-jobs.test.ts` (job API; Docker boundary tested with a fake daemon only; process mode has no network sandbox) |
 | 6 | Safe ZIP export; remote Git with approval | ZIP verified; remote Git needs credentials (external) |
 | 7 | WCAG 2.2 AA workflows | axe sweep over all routes and 25 demos; manual review pending |
 | 8 | Backup and isolated restore, rollback, incident ownership | `backup-restore.test.ts`; owner-approved topology and RPO/RTO pending |

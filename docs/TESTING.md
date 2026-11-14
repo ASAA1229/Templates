@@ -94,6 +94,8 @@ Authoritative results and the initial-versus-final comparison are in [PROJECT_ST
 | `accessibility.spec.ts` (Playwright) | Accessibility | RG-09 axe sweep of every route, states and keyboard |
 | `template-batch.spec.ts` (Playwright) | E2E | all 25 demos at desktop and mobile widths: render, overflow and axe, reported together |
 
+Added in the delta increment: `execution-jobs.test.ts` (job API, container command construction and fallback with a fake docker), `rate-limit.test.ts` (shared limiter, atomicity, cross-instance sign-in lockout), Playwright `zz-release-lifecycle.spec.ts` (release lifecycle UI with two people) and `reflow.spec.ts` (320 px reflow, 200% text, focus, reduced motion, forced colors). `npm run perf:baseline` produces the load numbers.
+
 ### Notes for maintainers
 
 - The API suites share one PostgreSQL test database and run serially. Create it with `npm run db:local -- init` and apply migrations to **both** databases (`DATABASE_URL` and `TEST_DATABASE_URL`) with `prisma migrate deploy`; an unmigrated test database fails dozens of tests at once.

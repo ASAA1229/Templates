@@ -121,4 +121,7 @@ Authoritative status and evidence: [PROJECT_STATUS.md](PROJECT_STATUS.md).
 - **Isolated execution (RG-07):** `apps/api/src/execution/worker.ts` runs allow-listed executables in a disposable directory with a scrubbed environment and time, memory, output and disk limits, tree kill, cancellation and guaranteed cleanup. **Limit:** no network or syscall sandbox is provided. Do not route untrusted builds through it without a container or virtual-machine boundary.
 - **Connectors (RG-12):** every call is scoped to an explicit allow-list, requires a named approver for consequential actions, honours revocation, times out, redacts credentials and is audited. Credentials are resolved from the environment at call time and never stored.
 
-Open: independent security review, OS-level execution isolation, persistent/shared rate-limit storage for multi-instance deployments.
+- **Job API (RG-07):** `/api/projects/:id/jobs` runs only presets (`node <file>`, `node --test`) on a disposable copy of the project, requires EDITOR access plus job:write, audits submit/cancel/finish without contents, and labels every job with its isolation level. With Docker available the job runs with `--network none`, a read-only root, tmpfs, all capabilities dropped, pids/memory/cpu limits and a locally present image (never pulled); otherwise it runs in the process worker with no network or filesystem sandbox.
+- **Rate limiting:** counters live in PostgreSQL (atomic upsert, hashed keys), so they survive restarts and are shared by every API instance.
+
+Open: independent security review, a live container run, and the process-mode limitation above for untrusted code.
