@@ -285,6 +285,25 @@ const ENDPOINTS: Endpoint[] = [
   { name: "generation read", method: "get", url: (w) => `/api/generations/${w.generationId}`, min: "read" },
   { name: "generation verify", method: "post", url: (w) => `/api/generations/${w.generationId}/verify`, min: "read" },
   {
+    name: "generation update preview",
+    method: "get",
+    url: (w) => `/api/generations/${w.generationId}/update-preview?toVersion=9.9.9`,
+    min: "read",
+  },
+  {
+    name: "generation update apply",
+    method: "post",
+    url: (w) => `/api/generations/${w.generationId}/update`,
+    body: () => ({ toVersion: "9.9.9" }),
+    min: "write",
+  },
+  {
+    name: "generation export",
+    method: "get",
+    url: (w) => `/api/generations/${w.generationId}/export`,
+    min: "read",
+  },
+  {
     name: "generation retry (invalid)",
     method: "post",
     url: (w) => `/api/generations/${w.generationId}/retry`,

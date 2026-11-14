@@ -19,6 +19,8 @@ import type { Request } from "express";
 import type { AppContext } from "../../context.js";
 import { AppError, conflict, notEligible, notFound, validationFailed } from "../../lib/errors.js";
 import { audit } from "../audit/audit.service.js";
+import { planUpdate, type UpdatePlan } from "./update-plan.js";
+import { applyChanges, readCurrentFiles } from "./update-service.js";
 import { buildProjectArchive } from "../export/archive.js";
 import { catalogView } from "../catalog/catalog.js";
 import { snapshot } from "../requirements/requirements.js";
@@ -756,6 +758,72 @@ export class GenerationService {
       metadata: { generationId: generation.id, reproducible: result.reproducible, outputIntact: result.outputIntact },
     });
     return result;
+  }
+
+  // ───── Template updates (US-E05) ─────
+
+  /** Three-way comparison of the base render, files on disk and a newer released template version. */
+  private async updateContext(req: Request, id: string, toVersion: string, access: "read" | "write") {
+    const generation = await this.load(req, id, access);
+    if (generation.status !== "SUCCEEDED") throw conflict("Only successfully generated projects can be updated.");
+    if (toVersion === generation.templateVersion) throw conflict("The project already uses this template version.");
+    const release = await this.prisma.templateRelease.findUnique({
+      where: { templateId_version: { templateId: generation.templateId, version: toVersion } },
+    });
+    if (!release || release.status !== "RELEASED") {
+      throw notEligible(`${generation.templateId}@${toVersion} is not a released, non-deprecated version.`);
+    }
+    const [baseTemplate, targetTemplate] = await Promise.all([
+      this.options.library.get(generation.templateId, generation.templateVersion),
+      this.options.library.get(generation.templateId, toVersion),
+    ]);
+    if (!baseTemplate || !isUsable(baseTemplate) || baseTemplate.digest !== generation.templateDigest) {
+      throw notEligible("The version this project was generated from is unavailable, so changes cannot be isolated.");
+    }
+    if (!targetTemplate || !isUsable(targetTemplate) || targetTemplate.digest !== release.contentDigest) {
+      throw notEligible("The target version content is missing or differs from its release record.");
+    }
+    const inputs = generation.inputs as TemplateInputValues;
+    const base = this.render(baseTemplate, this.values(baseTemplate.manifest, inputs), generation.project);
+    const target = this.render(targetTemplate, this.values(targetTemplate.manifest, inputs), generation.project);
+    const directory = await resolveOutputDir(this.options.outputRoot, generation.outputDir);
+    if (!directory) throw conflict("The project's output folder is unavailable.");
+    const current = await readCurrentFiles(directory);
+    const toMap = (plan: RenderPlan) => new Map(plan.files.map((file) => [file.path, file.content]));
+    return {
+      generation,
+      directory,
+      targetMap: toMap(target),
+      plan: planUpdate(toMap(base), current, toMap(target)),
+    };
+  }
+
+  async updatePreview(req: Request, id: string, toVersion: string): Promise<{ toVersion: string; plan: UpdatePlan }> {
+    const { plan } = await this.updateContext(req, id, toVersion, "read");
+    return { toVersion, plan };
+  }
+
+  /** Apply only changes that cannot clobber local work; conflicts are reported, never overwritten. */
+  async applyUpdate(req: Request, id: string, toVersion: string) {
+    const { generation, directory, plan, targetMap } = await this.updateContext(req, id, toVersion, "write");
+    if (generation.project.archivedAt) throw conflict("Restore the project before updating it.");
+    const stamp = this.ctx.now().toISOString().replace(/[:.]/g, "-");
+    const backup = `.asaa/backups/${stamp}-to-${toVersion}`;
+    const { applied, skipped } = await applyChanges(directory, backup, plan.entries, targetMap);
+    await audit(this.ctx, req, {
+      action: "generation.update",
+      outcome: "SUCCESS",
+      targetType: "project",
+      targetId: generation.projectId,
+      metadata: {
+        generationId: generation.id,
+        from: generation.templateVersion,
+        to: toVersion,
+        applied: applied.length,
+        conflicts: skipped.length,
+      },
+    });
+    return { applied, skipped, backup };
   }
 
   /** Safe, complete ZIP hand-off of a generated project (RG-08). Requires read access to the project. */

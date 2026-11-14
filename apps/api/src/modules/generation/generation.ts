@@ -1,10 +1,13 @@
 import { generationActionSchema, generationListQuerySchema } from "@asaa/contracts";
+import { z } from "zod";
 import { Router } from "express";
 import type { AppContext } from "../../context.js";
 import { authorize } from "../auth/policy.js";
 import { catalogView } from "../catalog/catalog.js";
 import { GenerationService, generationView } from "./generation.service.js";
 import { TemplateLibrary } from "./library.js";
+
+const updateQuerySchema = z.object({ toVersion: z.string().regex(/^[0-9]+[.][0-9]+[.][0-9]+(?:-[0-9A-Za-z.-]+)?$/) });
 
 export function createGenerationService(ctx: AppContext): GenerationService {
   return new GenerationService(ctx, {
@@ -103,6 +106,25 @@ export function generationsRouter(ctx: AppContext, service = createGenerationSer
       res.setHeader("content-length", String(archive.length));
       res.setHeader("x-content-type-options", "nosniff");
       res.end(archive);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.get("/:id/update-preview", authorize(ctx, "generation:read"), async (req, res, next) => {
+    try {
+      const { toVersion } = updateQuerySchema.parse(req.query);
+      res.json(await service.updatePreview(req, String(req.params.id), toVersion));
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.post("/:id/update", authorize(ctx, "generation:write"), async (req, res, next) => {
+    try {
+      await service.load(req, String(req.params.id), "write");
+      const { toVersion } = updateQuerySchema.parse(req.body);
+      res.json(await service.applyUpdate(req, String(req.params.id), toVersion));
     } catch (error) {
       next(error);
     }
