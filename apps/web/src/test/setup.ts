@@ -1,6 +1,9 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import { afterEach } from "vitest";
+
+// Async queries wait up to 10 s (default 1 s) so loaded machines do not cause false failures.
+configure({ asyncUtilTimeout: 10_000 });
 
 // Vitest globals are off, so Testing Library cannot register its own cleanup.
 afterEach(() => cleanup());

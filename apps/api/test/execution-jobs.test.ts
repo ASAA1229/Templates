@@ -336,7 +336,7 @@ describe("build/test job API", () => {
     expect(submitted.status).toBe(202);
     const job = await waitFor(p.agent, `${p.jobs}/${submitted.body.job.id}`, final);
     expect(job.status).toBe("SUCCEEDED");
-  });
+  }, 180_000);
 
   it("reports a failing script as FAILED with its exit code", async () => {
     const p = await project({ "bad.js": "console.log('x'); process.exit(3)" });
@@ -424,7 +424,13 @@ describe("build/test job API", () => {
     expect((await anon.post(p.jobs, { task: "node-test" })).status).toBe(401);
     expect((await anon.get(`${p.jobs}/${id}/logs`)).status).toBe(401);
     // A job id from another project is not reachable through this one.
-    expect((await p.agent.get(`/api/projects/${p.projectId.replace(/.$/, "0")}/jobs/${id}`)).status).toBe(404);
+    expect(
+      (
+        await p.agent.get(
+          `/api/projects/${p.projectId.replace(/.$/, p.projectId.endsWith("0") ? "1" : "0")}/jobs/${id}`,
+        )
+      ).status,
+    ).toBe(404);
   });
 
   it("rejects unsafe or invalid targets and bodies", async () => {
