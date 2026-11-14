@@ -82,6 +82,9 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
   if (config.REQUIRE_MFA_PRIVILEGED && !config.MFA_ENCRYPTION_KEY) {
     throw new Error("REQUIRE_MFA_PRIVILEGED needs MFA_ENCRYPTION_KEY to be set.");
   }
+  if (config.REQUIRE_MFA_PRIVILEGED && !config.MFA_ENCRYPTION_KEY) {
+    throw new Error("REQUIRE_MFA_PRIVILEGED needs MFA_ENCRYPTION_KEY to be set.");
+  }
   if (config.SESSION_IDLE_MINUTES > config.SESSION_ABSOLUTE_MINUTES) {
     throw new Error("SESSION_IDLE_MINUTES cannot exceed SESSION_ABSOLUTE_MINUTES.");
   }
