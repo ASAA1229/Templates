@@ -36,3 +36,8 @@ env/
 .ruff_cache/
 .coverage
 htmlcov/
+
+# Jenkins/CI scratch output
+.jenkins-temp/
+.playwright-browsers/
+templates-dependencies.cdx.json
