@@ -1,0 +1,60 @@
+processor	: 0
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 85
+model name	: Intel(R) Xeon(R) Gold 6248 CPU @ 2.50GHz
+stepping	: 7
+cpu MHz		: 2500.000
+cache size	: 28160 KB
+physical id	: 0
+siblings	: 2
+core id		: 0
+cpu cores	: 2
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr
+bogomips	: 5000.00
+
+processor	: 1
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 85
+model name	: Intel(R) Xeon(R) Gold 6248 CPU @ 2.50GHz
+stepping	: 7
+cpu MHz		: 2500.000
+cache size	: 28160 KB
+physical id	: 0
+siblings	: 2
+core id		: 1
+cpu cores	: 2
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr
+bogomips	: 5000.00
+
+processor	: 2
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 85
+model name	: Intel(R) Xeon(R) Gold 6248 CPU @ 2.50GHz
+stepping	: 7
+cpu MHz		: 2500.000
+cache size	: 28160 KB
+physical id	: 1
+siblings	: 2
+core id		: 0
+cpu cores	: 2
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr
+bogomips	: 5000.00
+
+processor	: 3
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 85
+model name	: Intel(R) Xeon(R) Gold 6248 CPU @ 2.50GHz
+stepping	: 7
+cpu MHz		: 2500.000
+cache size	: 28160 KB
+physical id	: 1
+siblings	: 2
+core id		: 1
+cpu cores	: 2
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr
+bogomips	: 5000.00
+

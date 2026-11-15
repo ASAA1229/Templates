@@ -27,6 +27,7 @@ import { ApiError, api } from "@/lib/api";
 import { useResource } from "@/lib/hooks";
 import { humanize } from "@/lib/utils";
 import { TemplateLibraryPanel } from "./TemplateLibraryPanel";
+import { ToolsPanel } from "./ToolsPanel";
 
 const csv = (value: string) =>
   value
@@ -81,6 +82,7 @@ export function CatalogPage() {
       )}
 
       <TemplateLibraryPanel onApproved={catalog.reload} />
+      <ToolsPanel />
 
       <form
         role="search"

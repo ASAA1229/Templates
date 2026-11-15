@@ -25,13 +25,15 @@
     "test": "npm run build:contracts && npm run test --workspaces --if-present",
     "test:e2e": "npm run test:e2e -w @asaa/web",
     "validate": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build",
+    "validate:generated": "node scripts/validate-generated.mjs",
     "backup:db": "node scripts/db-backup.mjs backup",
     "backup:verify": "node scripts/db-backup.mjs verify",
     "backup:restore-check": "node scripts/db-backup.mjs restore-check",
     "smoke": "node scripts/smoke.mjs",
     "perf:baseline": "node scripts/perf-baseline.mjs",
     "audit:deps": "npm audit --audit-level=high",
-    "db:deploy": "npm run db:deploy -w @asaa/api"
+    "db:deploy": "npm run db:deploy -w @asaa/api",
+    "tools:manifest": "node scripts/tool-manifest.mjs"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

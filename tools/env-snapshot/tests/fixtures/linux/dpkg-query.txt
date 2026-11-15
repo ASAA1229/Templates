@@ -1,0 +1,4 @@
+adduser	3.118	all
+bash	5.1-2+deb11u1	amd64
+libc6	2.31-13+deb11u7	amd64
+pass	1.7.4-3	all

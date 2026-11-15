@@ -76,3 +76,25 @@ jobs:
           path: apps/web/playwright-report
           retention-days: 14
           if-no-files-found: ignore
+
+  generated-projects:
+    name: Generated projects install and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Generate starters, install dependencies, build and test them
+        run: npm run validate:generated
+      - name: Upload generated-project validation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-validation-${{ github.sha }}
+          path: .local/generated-validation/report.json
+          retention-days: 14
+          if-no-files-found: ignore

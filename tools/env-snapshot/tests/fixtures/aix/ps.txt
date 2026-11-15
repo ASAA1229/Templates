@@ -1,0 +1,5 @@
+  PID  PPID USER     %CPU %MEM     ELAPSED COMMAND
+    1     0 root      0.1  0.2  3-02:11:09 /usr/lib/systemd/systemd --switched-root --system
+  842     1 postgres 42.5 12.3    05:12:44 postgres: checkpointer
+  901     1 app      12.0 30.1    02:10:11 java -Xmx4g -jar app.jar --db.password=hunter2pass --port=8080
+ 1203   901 app       3.2  1.1       00:42 /usr/bin/python3 worker.py

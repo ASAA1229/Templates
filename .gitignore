@@ -23,3 +23,16 @@ Thumbs.db
 playwright-report/
 test-results/
 *.tsbuildinfo
+
+# Python hygiene
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/

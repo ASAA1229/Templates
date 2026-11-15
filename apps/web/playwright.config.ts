@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { defineConfig, devices } from "@playwright/test";
+import { prepareE2eLibrary } from "./e2e/library";
 
 /**
  * End-to-end tests run the real API and web app against the dedicated PostgreSQL
@@ -20,6 +21,7 @@ const WEB_PORT = Number(process.env.E2E_WEB_PORT ?? 5180);
 /** Generated E2E project outputs go to a disposable folder, cleared by global setup. */
 export const E2E_GENERATION_DIR = path.resolve(import.meta.dirname, "../../.local/e2e-generated");
 process.env.E2E_GENERATION_DIR = E2E_GENERATION_DIR;
+const E2E_LIBRARY_DIR = prepareE2eLibrary(path.resolve(import.meta.dirname, "../.."));
 export const E2E_BASE_URL = `http://localhost:${WEB_PORT}`;
 const databaseUrl = testDatabaseUrl();
 process.env.E2E_DATABASE_URL = databaseUrl;
@@ -67,6 +69,7 @@ export default defineConfig({
         WEB_ORIGIN: E2E_BASE_URL,
         LOG_LEVEL: "warn",
         GENERATION_OUTPUT_DIR: E2E_GENERATION_DIR,
+        TEMPLATE_LIBRARY_DIR: E2E_LIBRARY_DIR,
       },
     },
     {

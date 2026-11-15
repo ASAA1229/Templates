@@ -1,0 +1,15 @@
+{
+   "blockdevices": [
+      {"name": "sda", "type": "disk", "size": "100G", "fstype": null, "mountpoint": null,
+         "children": [
+            {"name": "sda1", "type": "part", "size": "1G", "fstype": "xfs", "mountpoint": "/boot"},
+            {"name": "sda2", "type": "part", "size": "99G", "fstype": "LVM2_member", "mountpoint": null,
+               "children": [
+                  {"name": "rhel-root", "type": "lvm", "size": "80G", "fstype": "xfs", "mountpoint": "/"},
+                  {"name": "rhel-swap", "type": "lvm", "size": "4G", "fstype": "swap", "mountpoint": "[SWAP]"}
+               ]
+            }
+         ]
+      }
+   ]
+}

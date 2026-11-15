@@ -65,6 +65,11 @@ const envSchema = z.object({
     .string()
     .optional()
     .transform((value) => path.resolve(value || path.join(API_ROOT, "..", "..", ".local", "generated"))),
+  /** Repository-level packaged tools (tools/<id>/manifest.json). Read-only. */
+  TOOLS_DIR: z
+    .string()
+    .optional()
+    .transform((value) => path.resolve(value || path.join(API_ROOT, "..", "..", "tools"))),
 });
 
 export type AppConfig = z.infer<typeof envSchema>;

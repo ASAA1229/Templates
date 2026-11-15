@@ -1,0 +1,3 @@
+hdisk0          00f9c7d4b1c2d3e4                    rootvg          active
+hdisk1          00f9c7d4b1c2d3f5                    datavg          active
+hdisk2          none                                None

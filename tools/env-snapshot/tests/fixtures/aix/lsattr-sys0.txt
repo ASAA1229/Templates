@@ -1,0 +1,5 @@
+autorestart  true           Automatically REBOOT OS after a crash               True
+iostat       false          Continuously maintain DISK I/O history              True
+maxuproc     4096           Maximum number of PROCESSES allowed per user        True
+realmem      33554432       Amount of usable physical memory in Kbytes          False
+systemid     IBM,027890ABC  Hardware system identifier                          False

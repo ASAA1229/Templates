@@ -1,0 +1,4 @@
+/dev/mapper/rhel-root / xfs rw,relatime,attr2 0 0
+devtmpfs /dev devtmpfs rw,nosuid,size=8147204k 0 0
+tmpfs /dev/shm tmpfs rw,nosuid,nodev 0 0
+/dev/sda1 /boot xfs rw,relatime 0 0

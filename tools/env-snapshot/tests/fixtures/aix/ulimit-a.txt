@@ -1,0 +1,3 @@
+time(seconds)        unlimited
+file(blocks)         2097151
+nofiles(descriptors) 2000

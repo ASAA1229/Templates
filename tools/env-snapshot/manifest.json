@@ -1,0 +1,461 @@
+{
+  "id": "env-snapshot",
+  "version": "1.0.0",
+  "title": "Environment Snapshot (Linux/AIX)",
+  "description": "Offline, read-only Python 3.6+ tool that inventories a Linux or AIX host (OS, kernel, hardware, disks, packages, runtimes, network, services, limits) into TXT and JSON reports with secret redaction.",
+  "kind": "tool",
+  "language": "python",
+  "minRuntime": "3.6",
+  "offline": true,
+  "license": {
+    "spdx": "Proprietary",
+    "notice": "Internal ASAA tool. Not for redistribution outside the organisation and its engagement partners."
+  },
+  "provenance": {
+    "origin": "local",
+    "maintainer": "ASAA Platform Team",
+    "repository": "Templates/tools/env-snapshot"
+  },
+  "files": [
+    {
+      "path": "README.txt",
+      "sha256": "6fa05499cff5c5a7a7ac91fd48ef31d608a1837520be94f5d47fea0fa19d056c",
+      "bytes": 8085
+    },
+    {
+      "path": "env_snapshot.py",
+      "sha256": "9c7193dc0428a6bc933c94a81d508b9e64136226183fb86da97d31e39388db56",
+      "bytes": 66771
+    },
+    {
+      "path": "report.schema.json",
+      "sha256": "7adb14fb5dded99f6f2566f19565cfab54f3e0e6bc5d5c10f31985f9685ecd87",
+      "bytes": 5162
+    },
+    {
+      "path": "tests/fixtures/aix/bootinfo-K.txt",
+      "sha256": "913f5d1da2feaf4deeccc9e55cbb350a20f12b3f507e87be85dbb77fdd3cb9bc",
+      "bytes": 3
+    },
+    {
+      "path": "tests/fixtures/aix/df-g.txt",
+      "sha256": "93668b56be6a193d4471b7412037eb825e6a1fb1fcdab30bbd53e8ca2ee905eb",
+      "bytes": 247
+    },
+    {
+      "path": "tests/fixtures/aix/getconf-hw.txt",
+      "sha256": "913f5d1da2feaf4deeccc9e55cbb350a20f12b3f507e87be85dbb77fdd3cb9bc",
+      "bytes": 3
+    },
+    {
+      "path": "tests/fixtures/aix/getconf-kernel.txt",
+      "sha256": "913f5d1da2feaf4deeccc9e55cbb350a20f12b3f507e87be85dbb77fdd3cb9bc",
+      "bytes": 3
+    },
+    {
+      "path": "tests/fixtures/aix/hostname-f.txt",
+      "sha256": "dff3b0bff006a526ec351b754637be3a9316881814f63ec57bab8c41dabd4c3a",
+      "bytes": 23
+    },
+    {
+      "path": "tests/fixtures/aix/id.txt",
+      "sha256": "ddefeda108e603b8cf77f94bbd74acdc5e1dec803fd1ada0a5d6b901d340c6e6",
+      "bytes": 45
+    },
+    {
+      "path": "tests/fixtures/aix/ifconfig-a.txt",
+      "sha256": "fc234b20bf0654f646d590bc26f629a070fd486f535f1c4c4ae0a488ec01b6b7",
+      "bytes": 347
+    },
+    {
+      "path": "tests/fixtures/aix/instfix-i.txt",
+      "sha256": "f9ade66db25394acb0b94a8ae0acfe40a8c9e3a5da51e13e4180e7219a006355",
+      "bytes": 148
+    },
+    {
+      "path": "tests/fixtures/aix/iostat.txt",
+      "sha256": "38c1cfa7e4bedbde0ebc15e08ff7f5ab286624ab91466d055d2e6e63cd188ed5",
+      "bytes": 191
+    },
+    {
+      "path": "tests/fixtures/aix/java-version.txt",
+      "sha256": "914ec5a23649b0e3d09262d7ea4e760df4d54d5092be72fbc25b4a27fa684c18",
+      "bytes": 113
+    },
+    {
+      "path": "tests/fixtures/aix/limits.txt",
+      "sha256": "fb1d8bb14c0cd715f37dde470f155db0f9c1ec43dac77961fd545e41180c70c7",
+      "bytes": 42
+    },
+    {
+      "path": "tests/fixtures/aix/lsattr-proc0.txt",
+      "sha256": "4c7804aa8fd9f4bd632bcf3040acafa27275ad0622889e4e5d13afadb7d77da1",
+      "bytes": 275
+    },
+    {
+      "path": "tests/fixtures/aix/lsattr-sys0.txt",
+      "sha256": "3381af3d373e845c126a417fd0a1ea18033e3d03c09d1422763843e3fc4b74ad",
+      "bytes": 427
+    },
+    {
+      "path": "tests/fixtures/aix/lsdev-C.txt",
+      "sha256": "4327217d1281c52e6d2a3900bf0aeb31a8f54acc79b8eb933f9f73293acd014c",
+      "bytes": 262
+    },
+    {
+      "path": "tests/fixtures/aix/lsfs.txt",
+      "sha256": "cc19bc9e949afdc2a21f769af3e140e39eaa92877e184eea7b88e9c13307bc57",
+      "bytes": 257
+    },
+    {
+      "path": "tests/fixtures/aix/lslpp-L.txt",
+      "sha256": "220b970510f507399f805631dd90611d390c9fd77affb79f6c71488fc7aeb9e3",
+      "bytes": 615
+    },
+    {
+      "path": "tests/fixtures/aix/lsps-a.txt",
+      "sha256": "3df08b2a4d92769c5bf256d7ac280f04a0713c25287e985c3225a7983189542a",
+      "bytes": 172
+    },
+    {
+      "path": "tests/fixtures/aix/lspv.txt",
+      "sha256": "e5b92805085ebcada49003003edb5c78b92fcbb4424cf9446eaac44b824ca8c2",
+      "bytes": 207
+    },
+    {
+      "path": "tests/fixtures/aix/lssrc-a.txt",
+      "sha256": "ddfd9787a79ffeb975da9782343ca042286bed9007c15f79b2e1500275036e23",
+      "bytes": 280
+    },
+    {
+      "path": "tests/fixtures/aix/lsuser.txt",
+      "sha256": "3816ef78fcf976ad3640aac150152decdd61a612ca033dbe64966fd95da16ed6",
+      "bytes": 70
+    },
+    {
+      "path": "tests/fixtures/aix/lsvg-l-rootvg.txt",
+      "sha256": "4445249e68a11b403deec89a394ccf4214154b4611d9932940e00d8049fec8e7",
+      "bytes": 365
+    },
+    {
+      "path": "tests/fixtures/aix/lsvg.txt",
+      "sha256": "b9095389cc1fd7bb138ef923ab8215856757461dd9c1fd164c6ad7e903e12779",
+      "bytes": 14
+    },
+    {
+      "path": "tests/fixtures/aix/netstat-an.txt",
+      "sha256": "44a7929cdf3238693f9b616bbc25d8c353d468fdedf72c3f57db40417b67ca87",
+      "bytes": 398
+    },
+    {
+      "path": "tests/fixtures/aix/netstat-rn.txt",
+      "sha256": "50db4f013f89c6e2f01a6e490ace190aa5e2b7350e19f323b1f561c87d771deb",
+      "bytes": 289
+    },
+    {
+      "path": "tests/fixtures/aix/oslevel-r.txt",
+      "sha256": "2ac22be376c8e1fdfb0fcc5b8d4caf9287296775751c875fe213d3db1f6ad64b",
+      "bytes": 8
+    },
+    {
+      "path": "tests/fixtures/aix/oslevel-s.txt",
+      "sha256": "542ce0df59add2deb962589ff3ee38b63bff3ad46c965acdbffaaa92760928ba",
+      "bytes": 16
+    },
+    {
+      "path": "tests/fixtures/aix/prtconf.txt",
+      "sha256": "c467c682090ce69e0840c2435fb00049f93d192bdcaea66e11c8dfd89db367c3",
+      "bytes": 490
+    },
+    {
+      "path": "tests/fixtures/aix/ps.txt",
+      "sha256": "522e835f9d0116eaea5ca294ab607e1cc428820414c37bb82072171f19606b65",
+      "bytes": 386
+    },
+    {
+      "path": "tests/fixtures/aix/svmon-G.txt",
+      "sha256": "f067eb59c81d4cb7ada9b5744ec3666814c145be7db318be15fb07a842709af2",
+      "bytes": 361
+    },
+    {
+      "path": "tests/fixtures/aix/ulimit-a.txt",
+      "sha256": "b0b27568e7502a12e0b382741c122d4283d3f8f1f788217cc3997384273b4f23",
+      "bytes": 86
+    },
+    {
+      "path": "tests/fixtures/aix/uname-a.txt",
+      "sha256": "0c71512629c094e2c190a741d093f5a7cb30133b4c95375bb8a7648ca8910359",
+      "bytes": 31
+    },
+    {
+      "path": "tests/fixtures/aix/uptime.txt",
+      "sha256": "ffac10a559ce092d7116f7b7d9822680a7aa04c33599b6e2b217396eeee7c386",
+      "bytes": 73
+    },
+    {
+      "path": "tests/fixtures/aix/vmstat.txt",
+      "sha256": "62fe3bc677f8e368296cf6cd8a6e021fdb653c0e6157d28b8325de5dc5aa2eb3",
+      "bytes": 322
+    },
+    {
+      "path": "tests/fixtures/aix/who-b.txt",
+      "sha256": "c1f409196b1eba38dc955d28bc227dfb3640eafcba4ab5f70d55b1fd86deb028",
+      "bytes": 38
+    },
+    {
+      "path": "tests/fixtures/aix/whoami.txt",
+      "sha256": "de53f91c0541224a9314e6207b450ac61b4e05e107165c6bbc649543f8d453fd",
+      "bytes": 7
+    },
+    {
+      "path": "tests/fixtures/linux/apk-info.txt",
+      "sha256": "00e61a4721564a09340aed5dba5a61e544dd773f29a4bff64bc713e5a0cecdbf",
+      "bytes": 53
+    },
+    {
+      "path": "tests/fixtures/linux/cpuinfo",
+      "sha256": "b1f790a67c68f3466d9461f2733ab00ae13ca92a40da7db89ce7a0b82bc3c57e",
+      "bytes": 1236
+    },
+    {
+      "path": "tests/fixtures/linux/df-P",
+      "sha256": "48a1dc114580fc707eaf2503bede383c112bf05702fb59296703549262fc10c4",
+      "bytes": 368
+    },
+    {
+      "path": "tests/fixtures/linux/dpkg-query.txt",
+      "sha256": "181f73c8ddf3c4190234793bdb56e63b357a0c7878dc05a688e04fdd2376b213",
+      "bytes": 88
+    },
+    {
+      "path": "tests/fixtures/linux/etc-environment",
+      "sha256": "d6d7afd94775f20f84834786e621f824dac5dd21ff3780d0ce9ec43de163c112",
+      "bytes": 76
+    },
+    {
+      "path": "tests/fixtures/linux/etc-profile",
+      "sha256": "c7c3048a2623423f605f95d7da62f020ccd1d4033ff6b48391c87bd74461d0c3",
+      "bytes": 48
+    },
+    {
+      "path": "tests/fixtures/linux/free-m.txt",
+      "sha256": "4e3ca3294e7919219ad00e86b6465cf791b7f93b2d5c7c03596d92cb30dbc0e0",
+      "bytes": 204
+    },
+    {
+      "path": "tests/fixtures/linux/gcc-version.txt",
+      "sha256": "e1b1ee58786bd85a4bbc11ccb2abd61f8ebbcb24a967ab21b2813b04bc68576d",
+      "bytes": 44
+    },
+    {
+      "path": "tests/fixtures/linux/hostname-f.txt",
+      "sha256": "b488a1c596456fe2e6e9e9df960bb023889e29b6d47a0a1ba08840f72b554217",
+      "bytes": 25
+    },
+    {
+      "path": "tests/fixtures/linux/hosts",
+      "sha256": "4d8d7d6aa37ec3f4c5e6bd321b87b5c3d905a22ab0d68658f468c66ec098b3e0",
+      "bytes": 69
+    },
+    {
+      "path": "tests/fixtures/linux/id.txt",
+      "sha256": "e591592794d186a408014fd8f5d480b2d2d718e8af3149ad96c13a40d7a9fb33",
+      "bytes": 64
+    },
+    {
+      "path": "tests/fixtures/linux/ip-addr.txt",
+      "sha256": "042b15ce31eda6f51382336b11781ed5870a1283e252a25b37906a542057abd1",
+      "bytes": 359
+    },
+    {
+      "path": "tests/fixtures/linux/ip-route.txt",
+      "sha256": "a229967681d147a4f94ecb4d338ae6ad7c99fa622914c6b803113f384b786fe9",
+      "bytes": 123
+    },
+    {
+      "path": "tests/fixtures/linux/java-version.txt",
+      "sha256": "160ff1553c2f9251175b95dc9ff0d43547837997a0d905737f2e84ef1d6736e6",
+      "bytes": 115
+    },
+    {
+      "path": "tests/fixtures/linux/limits.conf",
+      "sha256": "815aff7561215d08b259b72a68a1b02fca26867b8840de5843f138c1437a2e14",
+      "bytes": 81
+    },
+    {
+      "path": "tests/fixtures/linux/lsblk-j.txt",
+      "sha256": "6195c5c4c252162e57370bedeadad1796cd06d045921d75125a872a19aa50ebb",
+      "bytes": 645
+    },
+    {
+      "path": "tests/fixtures/linux/lsblk-pairs.txt",
+      "sha256": "a04c1225ab3e896b7447d2b1a0eed77bc693e19411e92d8b72a11d953db381b7",
+      "bytes": 192
+    },
+    {
+      "path": "tests/fixtures/linux/lscpu",
+      "sha256": "5e1738699285bbb8398b3ba971055f972cd5f992d64b36b24011a933c4fcf01f",
+      "bytes": 218
+    },
+    {
+      "path": "tests/fixtures/linux/meminfo",
+      "sha256": "ed1f2b676636a07365071acf8373c1488938e93efac48573305a6193ea356823",
+      "bytes": 252
+    },
+    {
+      "path": "tests/fixtures/linux/mount.txt",
+      "sha256": "fea7b57916304793398f72104c086cbff43f4314bac70b673c8cb9e647146cba",
+      "bytes": 98
+    },
+    {
+      "path": "tests/fixtures/linux/node-v.txt",
+      "sha256": "333c2b1481e934dc36643e9069c73769cc4bfc1ef8a1d2e8d0d96403906842fa",
+      "bytes": 9
+    },
+    {
+      "path": "tests/fixtures/linux/os-release",
+      "sha256": "a1f28ff153f71914499c9b7d7849bf78bba3e01cce660621b62f344aca82ab05",
+      "bytes": 230
+    },
+    {
+      "path": "tests/fixtures/linux/perl-v.txt",
+      "sha256": "b0f0a1d501cd3307307744bbcb5135012c0ac5f009b0f87ec7777fb36170acbd",
+      "bytes": 88
+    },
+    {
+      "path": "tests/fixtures/linux/proc-loadavg",
+      "sha256": "911020c8f9e2550b00fba178c8aa4fc6cd54fb195f8ff14449be08250bcc681c",
+      "bytes": 27
+    },
+    {
+      "path": "tests/fixtures/linux/proc-mounts",
+      "sha256": "496144f5feb31decc416f183d4360f88a84ca29b1754d39f424b482fb78b3e63",
+      "bytes": 178
+    },
+    {
+      "path": "tests/fixtures/linux/proc-stat",
+      "sha256": "47c782e80f2d4b46bf099c6f6d36f0806dc03a99b30c3b764f9581f9c134a974",
+      "bytes": 63
+    },
+    {
+      "path": "tests/fixtures/linux/proc-uptime",
+      "sha256": "273ec32ff2c6c1e7f925ae083a5dd1f81587dbe1a602ce24b423a73a233a3462",
+      "bytes": 22
+    },
+    {
+      "path": "tests/fixtures/linux/proc-version",
+      "sha256": "630ba5f0bcafd8dc3b905b8142d3557b4a1f4af713f4d22098c864a4ee1dc192",
+      "bytes": 120
+    },
+    {
+      "path": "tests/fixtures/linux/ps.txt",
+      "sha256": "522e835f9d0116eaea5ca294ab607e1cc428820414c37bb82072171f19606b65",
+      "bytes": 386
+    },
+    {
+      "path": "tests/fixtures/linux/python3-version.txt",
+      "sha256": "fafa35207a6e16f48aa835ba27f0235bd98489eab39ac93311867998085137a4",
+      "bytes": 13
+    },
+    {
+      "path": "tests/fixtures/linux/redhat-release",
+      "sha256": "c5bd6c1b12c81deae54c11f39c5aa7005b627e3cc1e6202a45a60ac1735d7618",
+      "bytes": 45
+    },
+    {
+      "path": "tests/fixtures/linux/resolv.conf",
+      "sha256": "8b2e7262af1d58425d0828f9e9087c023d3aaf99b4995f549c7d514299eef2b7",
+      "bytes": 64
+    },
+    {
+      "path": "tests/fixtures/linux/rpm-qa.txt",
+      "sha256": "2685d65b3f4cf2f87c0b08f35b94a383d3b3c3d0146b491e0a10b63641d71a9f",
+      "bytes": 132
+    },
+    {
+      "path": "tests/fixtures/linux/service-status-all.txt",
+      "sha256": "1089581d87f8848781e9a70f3451a39c3c1aefa42b66c315b45042e4eb3f09da",
+      "bytes": 51
+    },
+    {
+      "path": "tests/fixtures/linux/ss-tuln.txt",
+      "sha256": "2fc683e7f871854f130ccaa15bcc557bc00ab8c5c0c650f13308b5d349f2d458",
+      "bytes": 313
+    },
+    {
+      "path": "tests/fixtures/linux/sysctl-a.txt",
+      "sha256": "d9799f16d78ffb2801bc1d7ee2c9f25ead6a1b4746b6c690741a45db25423b19",
+      "bytes": 286
+    },
+    {
+      "path": "tests/fixtures/linux/systemctl-units.txt",
+      "sha256": "fa920e270ccba4b48d93ea3ade410b2b7828e99977bb1426f18f34ae040cab37",
+      "bytes": 449
+    },
+    {
+      "path": "tests/fixtures/linux/ulimit-a.txt",
+      "sha256": "1c632e0cd21a66a1a3972f480d26fab4db546f33163c26870ebe0bd14fbcca2f",
+      "bytes": 261
+    },
+    {
+      "path": "tests/fixtures/linux/uname-a.txt",
+      "sha256": "50187c0d2c6307a8a0e3abac49723c0c28c6fb3c286a92e2a5b4c4a2f83a5647",
+      "bytes": 113
+    },
+    {
+      "path": "tests/fixtures/linux/uname-r.txt",
+      "sha256": "5daa320009abe3a137c8d2c4eaa37b7d2e86659bd17018f1dc712ace5806c2c2",
+      "bytes": 28
+    },
+    {
+      "path": "tests/fixtures/linux/uptime.txt",
+      "sha256": "3656051069fc0f6e362bcf7115194900cafb3f57286d80ac31cd0399d7073a76",
+      "bytes": 71
+    },
+    {
+      "path": "tests/fixtures/linux/vmstat.txt",
+      "sha256": "35e8941ad84bc7742c2270e737e6bb45c3b79d5904ead5f67bde8a7827d567af",
+      "bytes": 245
+    },
+    {
+      "path": "tests/fixtures/linux/whoami.txt",
+      "sha256": "de53f91c0541224a9314e6207b450ac61b4e05e107165c6bbc649543f8d453fd",
+      "bytes": 7
+    },
+    {
+      "path": "tests/helpers.py",
+      "sha256": "c41455a24a45eb6b07514a454f46cd89555532782ffd434f5a4ba9a05f89cc13",
+      "bytes": 10773
+    },
+    {
+      "path": "tests/test_cli.py",
+      "sha256": "5d8c162704b79c30246fec765dc0f22b84e9ee59d74a601fabab748086d1db5f",
+      "bytes": 10338
+    },
+    {
+      "path": "tests/test_parsers.py",
+      "sha256": "328b4a106591eeabb12e9d1a987f4391e4ef3c6bef413fa110d51f66ac289d06",
+      "bytes": 10016
+    },
+    {
+      "path": "tests/test_redaction.py",
+      "sha256": "4e2766a4422d1660179f2e1a03d37de6d8bc3489d5171f175dba61ca7cc3143b",
+      "bytes": 7798
+    },
+    {
+      "path": "tests/test_reports.py",
+      "sha256": "a086dc920317587d1d0b4fc54e06da886f29cac96e4e3f012f014615d1e9f88d",
+      "bytes": 15752
+    },
+    {
+      "path": "tests/test_runner.py",
+      "sha256": "665b10f7b3dc3d9ea3e0a061b37566aa749763ad65a9b80c1c5d828f6fc6164a",
+      "bytes": 6226
+    },
+    {
+      "path": "tests/test_source_compat.py",
+      "sha256": "b4eeb6218097190e9347d6b0aa2b9783d356caede81c669aef7fe6952c74ba8c",
+      "bytes": 3828
+    }
+  ]
+}
