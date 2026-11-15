@@ -77,6 +77,14 @@ pipeline {
   post {
     success {
       echo 'Templates CI pipeline passed. No deployment was performed.'
+      script {
+        def branchName = env.BRANCH_NAME ?: env.GIT_BRANCH ?: ''
+        if (branchName == 'new' || branchName.endsWith('/new')) {
+          build job: 'ASAA-Local-Stack',
+            parameters: [string(name: 'ACTION', value: 'DEPLOY')],
+            wait: false
+        }
+      }
     }
     failure {
       echo 'Templates CI pipeline failed. Review the first failing stage.'
