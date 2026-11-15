@@ -3,6 +3,7 @@ import path from "node:path";
 import {
   branchPolicySchema,
   createBranchSchema,
+  switchBranchSchema,
   DEFAULT_BRANCH_POLICY,
   environmentSpecSchema,
   initRepositorySchema,
@@ -340,6 +341,35 @@ export class WorkspaceService {
     });
   }
 
+  /**
+   * Switch the working branch. Safety: the branch must already exist, the working tree must be clean (a switch can
+   * never discard or carry over uncommitted work), and nothing is merged or forced. Switching onto the protected
+   * production branch is allowed for reading; commits there stay refused.
+   */
+  async switchBranch(req: Request, projectId: string, raw: unknown) {
+    const input = switchBranchSchema.parse(raw);
+    const { project, dir, policy } = await this.requireRepository(req, projectId);
+    return this.serialize(dir, async () => {
+      const state = await this.provider.inspect(dir, policy, 1).catch(gitFailure);
+      const target = state.branches.find((candidate) => candidate.name === input.name);
+      if (!target) throw validationFailed({ name: "That branch does not exist." }, "That branch does not exist.");
+      if (state.head.branch === target.name) throw conflict("That branch is already checked out.");
+      if (!state.status.clean) {
+        throw conflict("Commit or discard your uncommitted changes before switching branches.");
+      }
+      await this.provider.switchBranch(dir, target.name).catch(gitFailure);
+      await audit(this.ctx, req, {
+        action: "repository.branch_switch",
+        outcome: "SUCCESS",
+        targetType: "project",
+        targetId: project.id,
+        metadata: { from: state.head.branch, to: target.name, protected: target.protected },
+      });
+      const after = await this.provider.inspect(dir, policy, 1).catch(gitFailure);
+      return { branch: after.branches.find((candidate) => candidate.name === target.name) ?? target };
+    });
+  }
+
   private async updateRecord(
     req: Request,
     projectId: string,
@@ -551,6 +581,10 @@ export function workspaceRouter(ctx: AppContext, service = new WorkspaceService(
   router.post(
     "/branches",
     ...handle("workspace:write", async (req) => service.createBranch(req, projectId(req), req.body), 201),
+  );
+  router.post(
+    "/branches/switch",
+    ...handle("workspace:write", async (req) => service.switchBranch(req, projectId(req), req.body)),
   );
   router.get("/files/tree", ...handle("workspace:read", (req) => files.tree(req, projectId(req), queryPath(req))));
   router.get("/files/content", ...handle("workspace:read", (req) => files.read(req, projectId(req), queryPath(req))));

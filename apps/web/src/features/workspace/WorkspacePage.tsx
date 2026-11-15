@@ -29,6 +29,7 @@ import { ApiError, api } from "@/lib/api";
 import { useResource } from "@/lib/hooks";
 import { formatDateTime, humanize } from "@/lib/utils";
 import { EnvironmentPanel } from "./EnvironmentPanel";
+import { CommentsPanel } from "./CommentsPanel";
 import { FilesPanel } from "./FilesPanel";
 
 const short = (sha: string | null) => (sha ? sha.slice(0, 10) : "—");
@@ -125,7 +126,7 @@ export function WorkspacePage() {
             <div className="min-w-0 space-y-4">
               <RepositoryCard workspace={workspace} base={base} readOnly={readOnly} onChanged={resource.reload} />
               {workspace.state && <WorkingTreeCard workspace={workspace} />}
-              {workspace.state && <HistoryCard workspace={workspace} />}
+              {workspace.state && <HistoryCard workspace={workspace} base={base} />}
             </div>
             <div className="min-w-0 space-y-4">
               {workspace.state && workspace.repository && (
@@ -149,6 +150,7 @@ export function WorkspacePage() {
             </div>
           </div>
           <FilesPanel projectId={project.id} readOnly={readOnly} />
+          <CommentsPanel projectId={project.id} targetType="PROJECT" title="Project discussion" />
           <EnvironmentPanel projectId={project.id} readOnly={readOnly} onSaved={resource.reload} />
           <ActivityCard workspace={workspace} />
         </div>
@@ -327,8 +329,21 @@ function WorkingTreeCard({ workspace }: { workspace: WorkspaceView }) {
   );
 }
 
-function HistoryCard({ workspace }: { workspace: WorkspaceView }) {
+interface CommitDetail {
+  commit: { sha: string; subject: string } | null;
+  files: { status: string; path: string }[];
+  patch: string;
+  truncated: boolean;
+}
+
+function HistoryCard({ workspace, base }: { workspace: WorkspaceView; base: string }) {
   const commits = workspace.state!.commits;
+  const [detail, setDetail] = useState<CommitDetail | null>(null);
+  const action = useAction();
+  async function view(sha: string) {
+    const loaded = await action.run(() => api<CommitDetail>(`${base}/commits/${sha}`));
+    if (loaded) setDetail(loaded);
+  }
   return (
     <Card>
       <CardHeader>
@@ -351,10 +366,42 @@ function HistoryCard({ workspace }: { workspace: WorkspaceView }) {
                     </span>{" "}
                     · {commit.author} · {formatDateTime(commit.date)}
                   </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-1"
+                    aria-label={`View changes in ${short(commit.sha)}`}
+                    onClick={() => void view(commit.sha)}
+                  >
+                    View changes
+                  </Button>
                 </div>
               </li>
             ))}
           </ol>
+        )}
+        {action.error && <Alert tone="danger">{action.error.message}</Alert>}
+        {detail && (
+          <div className="mt-3 space-y-2">
+            <p className="text-sm font-medium">
+              Changes in {short(detail.commit?.sha ?? "")}: {detail.files.length} file(s)
+            </p>
+            <ul aria-label="Changed files" className="text-xs">
+              {detail.files.map((file) => (
+                <li key={file.path} className="font-mono">
+                  {file.status} {file.path}
+                </li>
+              ))}
+            </ul>
+            <pre
+              aria-label="Commit patch"
+              className="max-h-80 overflow-auto rounded-md bg-muted p-3 text-xs"
+              tabIndex={0}
+            >
+              {detail.patch}
+              {detail.truncated ? " (truncated)" : ""}
+            </pre>
+          </div>
         )}
       </CardContent>
     </Card>
@@ -395,6 +442,12 @@ function BranchesCard({
       ? repository.policy.integrationBranch
       : `${repository.policy[`${kind}Prefix` as const]}${topic ? `/${topic.toLowerCase()}` : ""}`;
 
+  async function switchTo_(name: string) {
+    setResult(null);
+    const switched = await action.run(() => api(`${base}/branches/switch`, { method: "POST", body: { name } }));
+    if (switched) onChanged();
+  }
+
   async function submit(event: FormEvent) {
     event.preventDefault();
     setResult(null);
@@ -429,6 +482,17 @@ function BranchesCard({
               {branch.current && <Badge tone="info">Current</Badge>}
               {branch.protected && <Badge tone="warning">Protected</Badge>}
               <span className="text-xs text-muted-foreground">{humanize(branch.role)}</span>
+              {!readOnly && !branch.current && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={action.busy}
+                  aria-label={`Switch to ${branch.name}`}
+                  onClick={() => void switchTo_(branch.name)}
+                >
+                  Switch
+                </Button>
+              )}
             </li>
           ))}
           {branches.length === 0 && <li className="text-muted-foreground">No branches yet. Create a first commit.</li>}

@@ -1061,6 +1061,8 @@ export const createBranchSchema = z.object({
   from: branchNameSchema.optional(),
   switchTo: z.boolean().default(false),
 });
+export const switchBranchSchema = z.object({ name: branchNameSchema });
+export type SwitchBranchInput = z.input<typeof switchBranchSchema>;
 export type CreateBranchInput = z.input<typeof createBranchSchema>;
 
 export const updateIdentitySchema = z.object({

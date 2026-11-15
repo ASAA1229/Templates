@@ -243,6 +243,7 @@ export interface RepositoryProvider {
   ): Promise<void>;
   inspect(dir: string, policy: BranchPolicy, historyLimit: number): Promise<RepositoryStateView>;
   createBranch(dir: string, name: string, from: string, switchTo: boolean): Promise<void>;
+  switchBranch(dir: string, name: string): Promise<void>;
   setIdentity(dir: string, identity: GitIdentity): Promise<void>;
   setRemote(dir: string, name: string, url: string | null): Promise<void>;
 }
@@ -320,6 +321,11 @@ export class LocalGitProvider implements RepositoryProvider {
     if (branchNameProblem(name) || branchNameProblem(from)) throw new Error("Invalid branch name.");
     await this.git.run(dir, ["branch", "--no-track", "--end-of-options", name, `refs/heads/${from}`]);
     if (switchTo) await this.git.run(dir, ["switch", "--quiet", "--end-of-options", name]);
+  }
+
+  async switchBranch(dir: string, name: string) {
+    if (branchNameProblem(name)) throw new Error("Invalid branch name.");
+    await this.git.run(dir, ["switch", "--quiet", "--end-of-options", name]);
   }
 
   async setIdentity(dir: string, identity: GitIdentity) {

@@ -21,27 +21,30 @@ enum OwnerRole {
 /// Account principal retained under the historical Owner model name.
 /// Multiple members are supported; only one OWNER is permitted by the database.
 model Owner {
-  id                String    @id @default(uuid()) @db.Uuid
-  email             String    @unique @db.VarChar(254)
-  displayName       String    @db.VarChar(120)
-  role              OwnerRole @default(EMPLOYEE)
-  isActive          Boolean   @default(true)
-  passwordHash      String    @db.VarChar(512)
-  passwordChangedAt DateTime  @default(now()) @db.Timestamptz(3)
-  createdAt         DateTime  @default(now()) @db.Timestamptz(3)
+  id                        String               @id @default(uuid()) @db.Uuid
+  email                     String               @unique @db.VarChar(254)
+  displayName               String               @db.VarChar(120)
+  role                      OwnerRole            @default(EMPLOYEE)
+  isActive                  Boolean              @default(true)
+  passwordHash              String               @db.VarChar(512)
+  passwordChangedAt         DateTime             @default(now()) @db.Timestamptz(3)
+  createdAt                 DateTime             @default(now()) @db.Timestamptz(3)
   /// AES-256-GCM encrypted TOTP secret; pending until mfaEnabledAt is set (US-A04).
-  mfaSecretEnc      String?   @db.VarChar(512)
-  mfaEnabledAt      DateTime? @db.Timestamptz(3)
+  mfaSecretEnc              String?              @db.VarChar(512)
+  mfaEnabledAt              DateTime?            @db.Timestamptz(3)
   /// SHA-256 hashes of unused single-use recovery codes.
-  mfaRecoveryHashes String[]  @default([])
+  mfaRecoveryHashes         String[]             @default([])
   /// Last accepted TOTP time step; codes at or below it are rejected (replay protection).
-  mfaLastStep       Int?
-  sessions          Session[]
-  projects          Project[]
-  savedSearches     SavedSearch[]
-  reviewedAccessRequests AccessRequest[] @relation("AccessRequestReviewer")
-  projectMemberships ProjectMember[]
-  passwordResetTokens PasswordResetToken[] @relation("PasswordResetOwner")
+  mfaLastStep               Int?
+  sessions                  Session[]
+  projects                  Project[]
+  savedSearches             SavedSearch[]
+  reviewedAccessRequests    AccessRequest[]      @relation("AccessRequestReviewer")
+  projectMemberships        ProjectMember[]
+  projectComments           ProjectComment[]     @relation("CommentAuthor")
+  resolvedComments          ProjectComment[]     @relation("CommentResolver")
+  presence                  ProjectPresence[]
+  passwordResetTokens       PasswordResetToken[] @relation("PasswordResetOwner")
   issuedPasswordResetTokens PasswordResetToken[] @relation("PasswordResetIssuer")
 }
 
@@ -136,6 +139,8 @@ model Project {
   executionJobs  ExecutionJob[]
   repository     ProjectRepository?
   environment    ProjectEnvironment?
+  comments       ProjectComment[]
+  presence       ProjectPresence[]
 
   @@index([ownerId, archivedAt])
 }
@@ -398,7 +403,6 @@ model ProjectEnvironment {
   version   Int      @default(1)
 }
 
-
 /// Private saved search definitions. Each record belongs to exactly one owner.
 model SavedSearch {
   id        String   @id @default(uuid()) @db.Uuid
@@ -414,7 +418,6 @@ model SavedSearch {
   @@index([ownerId, updatedAt])
 }
 
-
 enum AccessRequestStatus {
   PENDING
   APPROVED
@@ -423,20 +426,20 @@ enum AccessRequestStatus {
 
 /// Public employee access request; activation secrets are stored only as hashes.
 model AccessRequest {
-  id                String             @id @default(uuid()) @db.Uuid
-  email             String             @db.VarChar(254)
-  displayName       String             @db.VarChar(120)
-  reason            String             @default("") @db.VarChar(1000)
-  status            AccessRequestStatus @default(PENDING)
-  approvedRole      OwnerRole          @default(EMPLOYEE)
-  tokenHash         String?            @unique @db.Char(64)
-  tokenExpiresAt    DateTime?          @db.Timestamptz(3)
-  activatedAt       DateTime?          @db.Timestamptz(3)
-  reviewerId        String?            @db.Uuid
-  reviewer          Owner?             @relation("AccessRequestReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
-  reviewedAt        DateTime?          @db.Timestamptz(3)
-  createdAt         DateTime           @default(now()) @db.Timestamptz(3)
-  updatedAt         DateTime           @updatedAt @db.Timestamptz(3)
+  id             String              @id @default(uuid()) @db.Uuid
+  email          String              @db.VarChar(254)
+  displayName    String              @db.VarChar(120)
+  reason         String              @default("") @db.VarChar(1000)
+  status         AccessRequestStatus @default(PENDING)
+  approvedRole   OwnerRole           @default(EMPLOYEE)
+  tokenHash      String?             @unique @db.Char(64)
+  tokenExpiresAt DateTime?           @db.Timestamptz(3)
+  activatedAt    DateTime?           @db.Timestamptz(3)
+  reviewerId     String?             @db.Uuid
+  reviewer       Owner?              @relation("AccessRequestReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  reviewedAt     DateTime?           @db.Timestamptz(3)
+  createdAt      DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime            @updatedAt @db.Timestamptz(3)
 
   @@index([status, createdAt])
   @@index([email, status])
@@ -520,4 +523,56 @@ model ExecutionJob {
 
   @@index([projectId, createdAt])
   @@index([status])
+}
+
+enum CommentTarget {
+  PROJECT
+  TEMPLATE
+  FILE
+}
+
+/// Threaded comment on a project, a template version or a workspace file. Deleting keeps the thread shape (soft delete).
+model ProjectComment {
+  id           String           @id @default(uuid()) @db.Uuid
+  projectId    String           @db.Uuid
+  project      Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  targetType   CommentTarget
+  /// File path, template id@version, or empty for the project itself.
+  targetRef    String           @default("") @db.VarChar(300)
+  parentId     String?          @db.Uuid
+  parent       ProjectComment?  @relation("CommentThread", fields: [parentId], references: [id], onDelete: Cascade)
+  replies      ProjectComment[] @relation("CommentThread")
+  authorId     String           @db.Uuid
+  author       Owner            @relation("CommentAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  body         String           @db.VarChar(4000)
+  /// Member ids mentioned in the body (project members only).
+  mentions     String[]         @default([])
+  createdAt    DateTime         @default(now()) @db.Timestamptz(3)
+  editedAt     DateTime?        @db.Timestamptz(3)
+  deletedAt    DateTime?        @db.Timestamptz(3)
+  resolvedAt   DateTime?        @db.Timestamptz(3)
+  resolvedById String?          @db.Uuid
+  resolvedBy   Owner?           @relation("CommentResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+
+  @@index([projectId, targetType, targetRef, createdAt])
+  @@index([parentId])
+}
+
+enum PresenceMode {
+  VIEWING
+  EDITING
+}
+
+/// Heartbeat-based presence: one current location per member per project.
+model ProjectPresence {
+  projectId String       @db.Uuid
+  project   Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  memberId  String       @db.Uuid
+  member    Owner        @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  filePath  String       @default("") @db.VarChar(400)
+  mode      PresenceMode @default(VIEWING)
+  seenAt    DateTime     @default(now()) @db.Timestamptz(3)
+
+  @@id([projectId, memberId])
+  @@index([projectId, seenAt])
 }

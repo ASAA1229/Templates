@@ -5,6 +5,8 @@ import { Alert, Button, Card, CardContent, CardDescription, CardHeader, CardTitl
 import { ApiError, api } from "@/lib/api";
 import { useResource } from "@/lib/hooks";
 import { AiAssist } from "./AiAssist";
+import { CommentsPanel } from "./CommentsPanel";
+import { PresenceBar } from "./PresenceBar";
 import { VisualJsonEditor } from "./VisualJsonEditor";
 
 interface TreeView {
@@ -160,6 +162,7 @@ export function FilesPanel({ projectId, readOnly }: { projectId: string; readOnl
                   />
                 </Field>
               )}
+              <PresenceBar projectId={projectId} filePath={open.path} editing={!readOnly && draft !== open.content} />
               <AiAssist fileName={open.path} content={draft} />
               <div className="flex flex-wrap gap-2">
                 {!readOnly && (
@@ -174,6 +177,12 @@ export function FilesPanel({ projectId, readOnly }: { projectId: string; readOnl
                   <GitCompare aria-hidden="true" /> Show changes
                 </Button>
               </div>
+              <CommentsPanel
+                projectId={projectId}
+                targetType="FILE"
+                targetRef={open.path}
+                title={`Comments on ${open.path}`}
+              />
             </>
           ) : (
             <p className="text-sm text-muted-foreground">Select a file to view it.</p>

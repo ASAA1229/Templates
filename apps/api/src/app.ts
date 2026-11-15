@@ -9,6 +9,7 @@ import { errorHandler, notFoundHandler } from "./middleware/errors.js";
 import { csrfProtection, requestId } from "./middleware/security.js";
 import { authenticate, authRouter, requireOwner } from "./modules/auth/auth.js";
 import { aiRouter } from "./modules/ai/ai.js";
+import { collaborationRouter } from "./modules/collaboration/collaboration.js";
 import { catalogRouter } from "./modules/catalog/catalog.js";
 import { toolsRouter } from "./modules/tools/tools.js";
 import { dashboardRouter } from "./modules/dashboard/dashboard.js";
@@ -120,6 +121,7 @@ export function createApp(ctx: AppContext): Express {
   const generation = createGenerationService(ctx);
   api.use("/projects", projectTemplateSubmissionsRouter(ctx, generation));
   api.use("/projects/:projectId/workspace", workspaceRouter(ctx));
+  api.use("/projects/:projectId/collaboration", collaborationRouter(ctx));
   api.use("/projects/:projectId/jobs", jobsRouter(ctx));
   api.use("/projects", projectsRouter(ctx));
   api.use("/catalog", catalogRouter(ctx));
