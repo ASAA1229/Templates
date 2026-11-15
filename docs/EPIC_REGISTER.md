@@ -11,9 +11,11 @@
 | TMP-E07 | AI-assisted creation | Target scope | Not assessed | Not assessed | Not accepted |
 | TMP-E08 | ZIP/GitHub/deployment pathways | ZIP export implemented locally; Git hand-off/deploy not authorized | export tests pass locally | No deployment | Not authorized |
 | TMP-E09 | QA/security/documentation | Implemented locally | axe sweep, reflow, certification pass locally; manual screen-reader review not done | Local only | Not accepted |
-| TMP-E10 | Offline Linux/AIX environment snapshot | Requirement captured | Not assessed | Not assessed | Not accepted |
+| TMP-E10 | Offline Linux/AIX environment snapshot | IN DEVELOPMENT (Environment Snapshot, uncommitted; not done) | Not assessed | Not assessed | Not accepted |
 | TMP-E11 | Operations/monitoring/assets/connectors | Partial (backup, readiness, resolver, connector contracts) | Fake-server connector tests pass locally | Live Jenkins/Nexus pending | Not accepted |
 
 User-reported basic platform completion is retained as a report, not upgraded to verified completion without branch/runtime evidence.
 
 **Reconciled 2026-11-14 (documentation owner):** development, testing, integration and acceptance columns updated to the verified evidence in PROJECT_STATUS.md. Local evidence is not CI evidence (no GitHub Actions run observed; `gh` unauthenticated) and nothing here is CI VERIFIED.
+
+**Reconciled 2026-11-15 (documentation owner):** development, testing, integration and acceptance columns updated to the verified evidence in PROJECT_STATUS.md. Local evidence is not CI evidence (no GitHub Actions run observed; `gh` unauthenticated) and nothing here is CI VERIFIED.

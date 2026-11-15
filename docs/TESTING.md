@@ -105,3 +105,8 @@ Added in the delta increment: `execution-jobs.test.ts` (job API, container comma
 ### Independent rerun note — 2026-11-14
 
 The coordinator's rerun of `npm run validate` stopped at the API typecheck with a Windows `EPERM` on the Prisma engine DLL rename (a file lock from a concurrent process; it is the same hazard described above for `prisma generate`). That rerun is inconclusive. The agent-reported results (validate, smoke, E2E 27/27) remain local and unreproduced by a second party, and are not CI VERIFIED. Commit `918ffa0` hardened slow-machine behaviour (temp-directory cleanup retry, longer backup drill timeout).
+
+
+## Update 2026-11-15
+
+Commit d3dcadb adjusts test timeouts and removes a flake in the job authorization test. Full-suite verification by the coordinator and a CI run are deferred to the test phase; current results remain agent-reported.

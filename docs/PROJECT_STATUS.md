@@ -117,3 +117,11 @@ Tally (15): COMPLETE AND VERIFIED (locally) 8 (RG-01, 02, 04, 05, 06, 08, 11, 13
 ## Verification caveat — coordinator rerun, 2026-11-14
 
 The coordinator's rerun of `npm run validate` failed at the API typecheck with a Windows `EPERM` on the Prisma query-engine DLL rename (an environment file lock while another process held the engine; being fixed). It is recorded as an inconclusive rerun, not as a product failure and not as a pass. The figures in the verification table above are the code agent's local results; they were not independently reproduced. Latest commit at time of writing: `918ffa0` (test hardening: retry temp-directory cleanup, longer backup drill on loaded Windows machines). No GitHub Actions run has been observed, so nothing is CI VERIFIED. Release decision: NO-GO.
+
+## Delivery phase — 2026-11-15
+
+**Current phase: DEVELOPMENT** (owner direction: DEVELOPMENT, then TESTING, then DEPLOYMENT). Features added in this phase carry the status **IMPLEMENTED — NOT FULLY TESTED** until the testing phase runs. Test-phase and deployment-phase items that are not yet due (full-suite reruns, CI runs, hosted or staging verification, hosting, live providers, production rehearsal) are **deferred to test phase** or **deferred to deployment phase**; they are not failures. Evidence classes used in these documents: coordinator-verified, agent-reported, in progress, CI not observed.
+
+## 2026-11-15 reconciliation (documentation owner)
+
+Head at time of writing: `d3dcadb` (test-only: de-flaked job authorization test, longer `node --test` job timeout, 10 s async query timeout for web tests). The RG-06 release lifecycle UI with version pinning, RG-07 authenticated job API with optional Docker boundary, database-backed shared rate limiter, load baseline and reflow/zoom checks documented above are agent-reported and not yet coordinator-verified (status: IMPLEMENTED — NOT FULLY TESTED until the testing phase). The Environment Snapshot (TMP-E10) is IN DEVELOPMENT with uncommitted work and is not documented as done. The coordinator's `npm run validate` rerun (Windows EPERM) is deferred to the test phase; it is not recorded as a product failure. No GitHub Actions run observed (deferred to test phase). Release decision NO-GO (deployment phase items deferred).
