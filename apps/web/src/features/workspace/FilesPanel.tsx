@@ -4,6 +4,8 @@ import { ErrorState, Field, LoadingState } from "@/components/common";
 import { Alert, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Textarea } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
 import { useResource } from "@/lib/hooks";
+import { AiAssist } from "./AiAssist";
+import { VisualJsonEditor } from "./VisualJsonEditor";
 
 interface TreeView {
   path: string;
@@ -35,6 +37,7 @@ export function FilesPanel({ projectId, readOnly }: { projectId: string; readOnl
   const [message, setMessage] = useState<{ tone: "success" | "warning" | "danger"; text: string } | null>(null);
   const [diff, setDiff] = useState<DiffView | null>(null);
   const [busy, setBusy] = useState(false);
+  const [visual, setVisual] = useState(false);
 
   async function openFile(path: string) {
     setMessage(null);
@@ -82,6 +85,7 @@ export function FilesPanel({ projectId, readOnly }: { projectId: string; readOnl
     }
   }
 
+  const isJson = Boolean(open?.path.toLowerCase().endsWith(".json"));
   const parent = folder.includes("/") ? folder.slice(0, folder.lastIndexOf("/")) : "";
   return (
     <Card>
@@ -123,15 +127,40 @@ export function FilesPanel({ projectId, readOnly }: { projectId: string; readOnl
           {message && <Alert tone={message.tone}>{message.text}</Alert>}
           {open ? (
             <>
-              <Field label={`Editing ${open.path}`}>
-                <Textarea
-                  rows={14}
-                  className="font-mono text-xs"
-                  value={draft}
-                  readOnly={readOnly}
-                  onChange={(event) => setDraft(event.target.value)}
-                />
-              </Field>
+              {isJson && (
+                <div role="group" aria-label="Editor mode" className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant={visual ? "outline" : "default"}
+                    aria-pressed={!visual}
+                    onClick={() => setVisual(false)}
+                  >
+                    Source
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={visual ? "default" : "outline"}
+                    aria-pressed={visual}
+                    onClick={() => setVisual(true)}
+                  >
+                    Visual
+                  </Button>
+                </div>
+              )}
+              {isJson && visual ? (
+                <VisualJsonEditor text={draft} readOnly={readOnly} onChange={setDraft} />
+              ) : (
+                <Field label={`Editing ${open.path}`}>
+                  <Textarea
+                    rows={14}
+                    className="font-mono text-xs"
+                    value={draft}
+                    readOnly={readOnly}
+                    onChange={(event) => setDraft(event.target.value)}
+                  />
+                </Field>
+              )}
+              <AiAssist fileName={open.path} content={draft} />
               <div className="flex flex-wrap gap-2">
                 {!readOnly && (
                   <Button size="sm" disabled={busy || draft === open.content} onClick={() => void save()}>

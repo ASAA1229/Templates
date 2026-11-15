@@ -19,6 +19,7 @@ import { randomBytes } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { checkInstalledPostgres } from "./pg-version-check.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const localDir = path.join(root, ".local");
@@ -75,6 +76,8 @@ function start() {
 }
 
 function init() {
+  const pg = checkInstalledPostgres();
+  if (!pg.ok) throw new Error(pg.message);
   mkdirSync(localDir, { recursive: true });
   if (!existsSync(dataDir)) {
     const secret = randomBytes(24).toString("base64url");

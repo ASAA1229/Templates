@@ -341,13 +341,29 @@ if ($requireSet -contains 'docker') {
     else { Add-Row 'docker' 'running engine' '(engine not reachable)' $docker 'FAIL' 'Start Docker Desktop and grant the Jenkins service account access to the Docker engine.' }
   }
 }
+# "postgres (PostgreSQL) 18.6" -> "18.6"; $null when no version is present.
+function ConvertTo-PgVersion {
+  param([string]$Text)
+  $m = [regex]::Match($Text, '(\d+)(?:\.(\d+))?')
+  if (-not $m.Success) { return $null }
+  if ($m.Groups[2].Success) { return "$($m.Groups[1].Value).$($m.Groups[2].Value)" }
+  return $m.Groups[1].Value
+}
 if ($requireSet -contains 'postgres') {
-  foreach ($name in @('initdb', 'pg_ctl', 'psql')) {
+  $pgVersions = [ordered]@{}
+  foreach ($name in @('postgres', 'initdb', 'pg_ctl', 'psql')) {
+    if ($name -eq 'postgres' -and -not (Get-ToolPath $name)) { continue }
     $path = Get-ToolPath $name
     if (-not $path) { Add-Row $name 'PostgreSQL client/server tools' '(not found)' '' 'FAIL' 'Install PostgreSQL and add its bin folder to the machine PATH of the Jenkins service.'; continue }
     $probe = Invoke-Probe -File $path -ArgumentList @('--version') -TimeoutSec 30
     $status = 'FAIL'; if ($probe.ExitCode -eq 0) { $status = 'OK' }
     Add-Row $name 'PostgreSQL client/server tools' $probe.StdOut.Trim() $path $status 'Reinstall PostgreSQL or fix PATH.'
+    if ($probe.ExitCode -eq 0) { $pgVersions[$name] = ConvertTo-PgVersion $probe.StdOut }
+  }
+  # A partial upgrade (for example postgres 18.6 next to initdb 18.7) makes initdb abort later; fail here instead.
+  if (@($pgVersions.Values | Select-Object -Unique).Count -gt 1) {
+    $detail = ($pgVersions.GetEnumerator() | ForEach-Object { "$($_.Key) $($_.Value)" }) -join ' vs '
+    Add-Row 'postgresql consistency' 'identical versions' $detail '' 'FAIL' "PostgreSQL binaries version mismatch: $detail; repair the PostgreSQL install."
   }
 }
 if ($requireSet -contains 'lockfile') {
