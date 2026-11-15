@@ -23,6 +23,8 @@ test.describe("template release lifecycle (RG-06)", () => {
     const suffix = unique("r").toLowerCase();
     const developer = `dev-${suffix}@asaa.test`;
     const admin = `admin-${suffix}@asaa.test`;
+    // library.ts provides one release-demo version per attempt, so retries start clean.
+    const version = `1.0.${test.info().retry}`;
 
     // Owner provisions the two people through the API.
     await signIn(page, "/");
@@ -42,14 +44,18 @@ test.describe("template release lifecycle (RG-06)", () => {
     await loginAs(page, developer);
     await page.goto("/template-releases");
     await expect(page.getByRole("heading", { level: 1, name: "Template releases" })).toBeVisible();
-    await page.getByLabel("Template version").selectOption("release-demo@1.0.0");
+    await page.getByLabel("Template version").selectOption(`release-demo@${version}`);
     await page.getByLabel("Release notes").fill("First certified release");
     await page.getByRole("button", { name: "Create draft" }).click();
-    await expect(page.getByText("Draft created for release-demo@1.0.0.")).toBeVisible();
-    const releases = page.getByRole("list", { name: "Releases" });
+    await expect(page.getByText(`Draft created for release-demo@${version}.`)).toBeVisible();
+    // Generation also records released rows for other templates, so scope everything to this journey's own row.
+    const releases = page
+      .getByRole("list", { name: "Releases" })
+      .getByRole("listitem")
+      .filter({ hasText: `release-demo ${version}` });
     await expect(releases.getByText("draft", { exact: true })).toBeVisible();
     await expectAccessible(page);
-    await releases.getByRole("button", { name: "Submit for review release-demo 1.0.0" }).click();
+    await releases.getByRole("button", { name: `Submit for review release-demo ${version}` }).click();
     await expect(page.getByText("Submitted for review.")).toBeVisible();
     // The author sees no approval controls.
     await expect(releases.getByRole("button", { name: /Approve release-demo/ })).toHaveCount(0);
@@ -57,22 +63,22 @@ test.describe("template release lifecycle (RG-06)", () => {
     // A different person approves and releases.
     await loginAs(page, admin);
     await page.goto("/template-releases");
-    await releases.getByRole("button", { name: "Approve release-demo 1.0.0" }).click();
+    await releases.getByRole("button", { name: `Approve release-demo ${version}` }).click();
     await expect(page.getByText("Approved.")).toBeVisible();
-    await releases.getByRole("button", { name: "Release release-demo 1.0.0" }).click();
+    await releases.getByRole("button", { name: `Release release-demo ${version}` }).click();
     await expect(page.getByText("Released. This version is now immutable.")).toBeVisible();
     await expect(releases.getByText("released", { exact: true })).toBeVisible();
     await expectAccessible(page);
 
     // Released versions can no longer be drafted again.
-    await page.getByLabel("Template version").selectOption("release-demo@1.0.0");
+    await page.getByLabel("Template version").selectOption(`release-demo@${version}`);
     await page.getByRole("button", { name: "Create draft" }).click();
     await expect(page.getByText(/already has a release record/)).toBeVisible();
 
     // Deprecation needs a reason.
-    const deprecate = releases.getByRole("button", { name: "Deprecate release-demo 1.0.0" });
+    const deprecate = releases.getByRole("button", { name: `Deprecate release-demo ${version}` });
     await expect(deprecate).toBeDisabled();
-    await releases.getByLabel("Deprecation reason for release-demo 1.0.0").fill("Superseded by the next release");
+    await releases.getByLabel(`Deprecation reason for release-demo ${version}`).fill("Superseded by the next release");
     await deprecate.click();
     await expect(page.getByText("Deprecated.")).toBeVisible();
     await expect(releases.getByText(/Deprecated: Superseded by the next release/)).toBeVisible();

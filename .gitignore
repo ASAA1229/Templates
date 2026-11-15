@@ -41,3 +41,7 @@ htmlcov/
 .jenkins-temp/
 .playwright-browsers/
 templates-dependencies.cdx.json
+
+# Local production secrets and backups
+deploy/local-prod/.env.local-prod
+deploy/local-prod/backups/

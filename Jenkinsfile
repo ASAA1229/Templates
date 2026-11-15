@@ -3,7 +3,7 @@
 // Standard stage order: checkout + source verification, agent prerequisites, locked install + package-manager policy,
 // SBOM + dependency audit, disposable test database, validate (format, lint, typecheck, tests, build), built-app smoke,
 // template certification, generated-project validation, required browser E2E, report archive.
-// This pipeline never publishes or deploys anything unless TRIGGER_LOCAL_STACK_DEPLOY is explicitly enabled on branch new.
+// This pipeline never publishes or deploys anything unless TRIGGER_LOCAL_STACK_DEPLOY (branch new) or DEPLOY_LOCAL_PROD (branch main, or new when ALLOW_DEPLOY_FROM_NEW is also set) is explicitly enabled.
 pipeline {
   agent any
   options {
@@ -21,6 +21,8 @@ pipeline {
   }
   parameters {
     booleanParam(name: 'TRIGGER_LOCAL_STACK_DEPLOY', defaultValue: false, description: 'After a green build of branch new, trigger the ASAA-Local-Stack job (local development stack only; the job must exist).')
+    booleanParam(name: 'DEPLOY_LOCAL_PROD', defaultValue: false, description: 'After a green build, deploy to the LOCAL production stack on this machine (web 8200, API 8201): migrate, smoke, automatic rollback on failure. Runs on main only unless ALLOW_DEPLOY_FROM_NEW is set. Needs deploy/local-prod/.env.local-prod on the agent (see setup-db.ps1).')
+    booleanParam(name: 'ALLOW_DEPLOY_FROM_NEW', defaultValue: false, description: 'Owner opt-in: let DEPLOY_LOCAL_PROD run from branch new as well as main.')
   }
   stages {
     stage('Checkout and source verification') {
@@ -105,6 +107,16 @@ pipeline {
         always {
           archiveArtifacts artifacts: 'apps/web/playwright-report/**,apps/web/test-results/**,.jenkins-temp/browser-prereqs.json', allowEmptyArchive: true
         }
+      }
+    }
+    stage('Deploy to local production (opt-in)') {
+      when {
+        expression { params.DEPLOY_LOCAL_PROD && (currentBranchName() == 'main' || (params.ALLOW_DEPLOY_FROM_NEW && currentBranchName() == 'new')) }
+      }
+      steps {
+        // deploy.ps1 backs up the database, builds, runs prisma migrate deploy, starts the stack, runs the smoke test
+        // against http://localhost:8200 and rolls back to the previous image itself when anything fails.
+        bat 'powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File deploy\\local-prod\\deploy.ps1'
       }
     }
   }

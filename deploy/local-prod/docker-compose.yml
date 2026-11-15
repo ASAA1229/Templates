@@ -1,0 +1,66 @@
+# Local production deployment on this machine. Web http://localhost:8200, API http://localhost:8201.
+# The database is the host PostgreSQL service (host.docker.internal:5432), created by setup-db.ps1.
+# Secrets come from the git-ignored .env.local-prod next to this file; nothing secret is stored here.
+name: templates-local-prod
+x-app: &app
+  image: templates-local-prod:current
+  build:
+    context: ../..
+    dockerfile: deploy/local-prod/Dockerfile
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  restart: unless-stopped
+
+services:
+  api:
+    <<: *app
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: "8201"
+      WEB_ORIGIN: http://localhost:8200
+      COOKIE_SECURE: "true"
+      TRUST_PROXY: uniquelocal
+      JOB_ISOLATION: process
+      GENERATION_OUTPUT_DIR: /data/generated
+      DATABASE_URL: ${RUNTIME_DATABASE_URL:?run setup-db.ps1 first}
+      MFA_ENCRYPTION_KEY: ${MFA_ENCRYPTION_KEY:?run setup-db.ps1 first}
+      AI_ENABLED: "false"
+    ports: ["127.0.0.1:8201:8201"]
+    volumes: ["generated:/data/generated"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8201/api/health/ready"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+  web:
+    <<: *app
+    working_dir: /app
+    command: ["node", "deploy/local-prod/web-server.mjs"]
+    environment:
+      PORT: "8200"
+      API_URL: http://api:8201
+      WEB_DIST_DIR: /app/apps/web/dist
+    depends_on: [api]
+    ports: ["127.0.0.1:8200:8200"]
+  migrate:
+    <<: *app
+    restart: "no"
+    profiles: [tools]
+    working_dir: /app/apps/api
+    command: ["npx", "prisma", "migrate", "deploy"]
+    environment:
+      DATABASE_URL: ${MIGRATOR_DATABASE_URL:?run setup-db.ps1 first}
+  owner-init:
+    <<: *app
+    restart: "no"
+    profiles: [tools]
+    command: ["node", "dist/cli/owner.js", "init"]
+    stdin_open: true
+    tty: true
+    environment:
+      DATABASE_URL: ${RUNTIME_DATABASE_URL:?run setup-db.ps1 first}
+
+volumes:
+  generated:

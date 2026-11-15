@@ -8,6 +8,7 @@ import type { AppContext } from "./context.js";
 import { errorHandler, notFoundHandler } from "./middleware/errors.js";
 import { csrfProtection, requestId } from "./middleware/security.js";
 import { authenticate, authRouter, requireOwner } from "./modules/auth/auth.js";
+import { aiRouter } from "./modules/ai/ai.js";
 import { catalogRouter } from "./modules/catalog/catalog.js";
 import { toolsRouter } from "./modules/tools/tools.js";
 import { dashboardRouter } from "./modules/dashboard/dashboard.js";
@@ -55,7 +56,7 @@ export function createApp(ctx: AppContext): Express {
   const app = express();
   app.disable("x-powered-by");
   // Loopback-only proxy trust; set explicitly when deployed behind a reverse proxy.
-  app.set("trust proxy", "loopback");
+  app.set("trust proxy", ctx.config.TRUST_PROXY);
 
   app.use(requestId());
   app.use(
@@ -123,6 +124,7 @@ export function createApp(ctx: AppContext): Express {
   api.use("/projects", projectsRouter(ctx));
   api.use("/catalog", catalogRouter(ctx));
   api.use("/tools", toolsRouter(ctx));
+  api.use("/ai", aiRouter(ctx));
   api.use("/search", searchRouter(ctx));
   api.use("/templates/releases", releasesRouter(ctx, generation));
   api.use("/templates", templatesRouter(ctx, generation));

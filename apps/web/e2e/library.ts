@@ -13,13 +13,22 @@ export function prepareE2eLibrary(repoRoot: string): string {
   rmSync(target, { recursive: true, force: true });
   cpSync(source, target, { recursive: true });
   const from = path.join(target, "clinic-essential", "1.0.0");
-  const to = path.join(target, "release-demo", "1.0.0");
-  cpSync(from, to, { recursive: true });
-  const manifestPath = path.join(to, "manifest.json");
-  const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as { id: string; title: string };
-  manifest.id = "release-demo";
-  manifest.title = "Release lifecycle demo";
-  writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  // One version per attempt (1.0.0 first run; 1.0.1/1.0.2 for retries) so a retried journey never meets a
+  // release record left by an earlier attempt.
+  for (const version of ["1.0.0", "1.0.1", "1.0.2"]) {
+    const to = path.join(target, "release-demo", version);
+    cpSync(from, to, { recursive: true });
+    const manifestPath = path.join(to, "manifest.json");
+    const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as { id: string; title: string; version: string };
+    manifest.id = "release-demo";
+    manifest.title = "Release lifecycle demo";
+    manifest.version = version;
+    writeFileSync(
+      manifestPath,
+      `${JSON.stringify(manifest, null, 2)}
+`,
+    );
+  }
   process.env.E2E_LIBRARY_READY = "1";
   return target;
 }

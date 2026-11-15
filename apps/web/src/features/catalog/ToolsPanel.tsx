@@ -37,7 +37,7 @@ export function ToolsPanel() {
           <ul className="divide-y rounded-lg border" aria-label="Available tools">
             {tools.data.items.map((tool) => (
               <li key={tool.id} className="flex flex-col gap-3 p-3 sm:flex-row sm:items-start sm:justify-between">
-                <div className="min-w-0 space-y-1">
+                <div className="min-w-0 flex-1 space-y-1">
                   <p className="font-medium">
                     {tool.title} <span className="text-sm text-muted-foreground">v{tool.version}</span>
                   </p>
@@ -56,7 +56,12 @@ export function ToolsPanel() {
                   )}
                 </div>
                 {tool.integrity === "ok" && (
-                  <Button variant="outline" size="sm" asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-auto min-h-8 max-w-full whitespace-normal py-1.5 text-left sm:max-w-[40%]"
+                    asChild
+                  >
                     <a href={`/api/tools/${tool.id}/download`} download>
                       <Download aria-hidden="true" /> Download {tool.title}
                     </a>

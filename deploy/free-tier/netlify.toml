@@ -1,0 +1,23 @@
+# Netlify static web build. Replace REPLACE-WITH-API-HOST before connecting the site (also valid for Cloudflare Pages
+# via public/_redirects with the same two rules).
+[build]
+  command = "npm run build:contracts && npm run build -w @asaa/web"
+  publish = "apps/web/dist"
+
+[[redirects]]
+  from = "/api/*"
+  to = "https://REPLACE-WITH-API-HOST/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "no-referrer"

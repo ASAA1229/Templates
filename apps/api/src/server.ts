@@ -13,7 +13,7 @@ void recoverInterruptedJobs(ctx).catch((error: unknown) =>
   logger.error("job recovery failed", { error: String(error) }),
 );
 
-const server = app.listen(config.PORT, "127.0.0.1", () => {
+const server = app.listen(config.PORT, config.HOST, () => {
   logger.info("api listening", { port: config.PORT, env: config.NODE_ENV });
 });
 

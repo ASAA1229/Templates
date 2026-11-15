@@ -9,6 +9,10 @@ const API_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "staging", "production"]).default("development"),
   PORT: z.coerce.number().int().min(1).max(65535).default(4000),
+  /** Interface the API binds to. Containers set 0.0.0.0 and publish the port to loopback only. */
+  HOST: z.string().trim().min(1).default("127.0.0.1"),
+  /** Express "trust proxy" setting: loopback (default), or uniquelocal when behind the bundled web container. */
+  TRUST_PROXY: z.enum(["loopback", "uniquelocal"]).default("loopback"),
   WEB_ORIGIN: z.string().url().default("http://localhost:5000"),
   DATABASE_URL: z.string().regex(/^postgres(?:ql)?:\/\//, "DATABASE_URL must be a PostgreSQL connection string."),
   SESSION_ABSOLUTE_MINUTES: z.coerce
@@ -70,6 +74,18 @@ const envSchema = z.object({
     .string()
     .optional()
     .transform((value) => path.resolve(value || path.join(API_ROOT, "..", "..", "tools"))),
+  /** Optional AI assistance via a LOCAL Ollama server only. Off by default; no paid or remote API. */
+  AI_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  OLLAMA_URL: z.string().url().default("http://127.0.0.1:11434"),
+  OLLAMA_MODEL: z
+    .string()
+    .trim()
+    .regex(/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,99}$/)
+    .default("llama3.2"),
+  AI_TIMEOUT_MS: z.coerce.number().int().min(1000).max(300_000).default(60_000),
 });
 
 export type AppConfig = z.infer<typeof envSchema>;
@@ -89,6 +105,12 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
   }
   if (config.REQUIRE_MFA_PRIVILEGED && !config.MFA_ENCRYPTION_KEY) {
     throw new Error("REQUIRE_MFA_PRIVILEGED needs MFA_ENCRYPTION_KEY to be set.");
+  }
+  if (config.AI_ENABLED) {
+    const host = new URL(config.OLLAMA_URL).hostname.replace(/^[|]$/g, "");
+    if (!["localhost", "127.0.0.1", "::1"].includes(host)) {
+      throw new Error("OLLAMA_URL must point to this machine (localhost, 127.0.0.1 or ::1); remote AI is not allowed.");
+    }
   }
   if (config.SESSION_IDLE_MINUTES > config.SESSION_ABSOLUTE_MINUTES) {
     throw new Error("SESSION_IDLE_MINUTES cannot exceed SESSION_ABSOLUTE_MINUTES.");
