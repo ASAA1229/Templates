@@ -4,6 +4,7 @@ pipeline {
     timestamps()
     disableConcurrentBuilds()
     buildDiscarder(logRotator(numToKeepStr: '20'))
+    skipDefaultCheckout(true)
   }
   environment {
     CI = 'true'

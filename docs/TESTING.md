@@ -44,7 +44,7 @@ Install Playwright Chromium as documented in DEVELOPMENT.md. Never run destructi
 
 ## Jenkins pipeline
 
-The repository root `Jenkinsfile` defines a Windows-agent CI pipeline. It installs the locked npm workspaces, prepares disposable local PostgreSQL development/test databases, applies migrations to both, then runs `npm run validate` and `npm run validate:generated`. The agent needs Node.js 24, npm 11+, Git, and PostgreSQL `initdb`, `pg_ctl` and `psql` on `PATH`. The pipeline stops the local PostgreSQL cluster and removes its generated local credentials after each run; it does not deploy. A checked-in Jenkinsfile is configuration, not evidence of a successful Jenkins run.
+The repository root `Jenkinsfile` defines a Windows-agent CI pipeline. It installs the locked npm workspaces, prepares disposable local PostgreSQL development/test databases, applies migrations to both, then runs `npm run validate` and `npm run validate:generated`. The agent needs Node.js 24, npm 11+, Git, and PostgreSQL `initdb`, `pg_ctl` and `psql` on `PATH`. For this private GitHub repository, configure a Jenkins SCM credential with repository read access in the Pipeline-from-SCM job; the Jenkinsfile cannot provide credentials before Jenkins fetches it. Never put a token in the repository URL or Jenkinsfile. The pipeline stops the local PostgreSQL cluster and removes its generated local credentials after each run; it does not deploy. A checked-in Jenkinsfile is configuration, not evidence of a successful Jenkins run.
 
 ## Observed CI evidence — 2026-11-13
 
