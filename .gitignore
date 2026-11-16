@@ -45,3 +45,6 @@ templates-dependencies.cdx.json
 # Local production secrets and backups
 deploy/local-prod/.env.local-prod
 deploy/local-prod/backups/
+
+# npm dependency lockfile (repository policy)
+package-lock.json
