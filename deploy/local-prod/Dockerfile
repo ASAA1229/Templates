@@ -5,7 +5,7 @@ RUN apk add --no-cache git openssl
 WORKDIR /app
 ENV NPM_CONFIG_UPDATE_NOTIFIER=false NPM_CONFIG_FUND=false
 COPY . .
-RUN npm ci && npm run build
+RUN npm install --no-audit --no-fund && npm run build
 ENV NODE_ENV=production
 WORKDIR /app/apps/api
 CMD ["node", "dist/server.js"]

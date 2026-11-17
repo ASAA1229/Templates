@@ -44,7 +44,8 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-      - run: npm ci
+          cache-dependency-path: package.json
+      - run: npm install --no-audit --no-fund
       - name: Dependency audit (fails on high/critical)
         run: npm run audit:deps
       - name: Apply database migrations
@@ -87,7 +88,8 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-      - run: npm ci
+          cache-dependency-path: package.json
+      - run: npm install --no-audit --no-fund
       - name: Generate starters, install dependencies, build and test them
         run: npm run validate:generated
       - name: Upload generated-project validation report

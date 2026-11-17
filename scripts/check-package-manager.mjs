@@ -5,12 +5,12 @@
  * Enforces (fails with a non-zero exit code and one line per problem):
  *   1. package.json declares `packageManager` as npm@<x.y.z> and `engines.node` / `engines.npm`.
  *   2. The npm that is running satisfies the declared major version and the Node.js engine range.
- *   3. package-lock.json exists, is lockfileVersion >= 3, and no competing lockfile
- *      (yarn.lock, pnpm-lock.yaml, bun.lock, bun.lockb, npm-shrinkwrap.json) exists at the root or in a workspace.
+ *   3. package-lock.json is not committed by organization policy (npm install generates it locally); when present it must be
+ *      lockfileVersion >= 3, and no competing lockfile (yarn.lock, pnpm-lock.yaml, bun.lock, bun.lockb, npm-shrinkwrap.json)
+ *      may exist at the root or in a workspace.
  *   4. Workspace packages do not carry their own lockfile or a conflicting `packageManager`.
- *   5. The lockfile is in sync with every package.json: `npm ci --dry-run` validates it without touching node_modules.
  *
- * Usage: node scripts/check-package-manager.mjs [--skip-sync]   (--skip-sync only for offline unit use)
+ * Usage: node scripts/check-package-manager.mjs
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
@@ -67,9 +67,7 @@ if (pkg.engines?.node && !satisfiesNodeEngine(pkg.engines.node, process.versions
 
 // 3. Lockfiles
 const lockPath = "package-lock.json";
-if (!existsSync(path.join(root, lockPath))) {
-  problems.push("package-lock.json is missing.");
-} else if ((readJson(lockPath).lockfileVersion ?? 0) < 3) {
+if (existsSync(path.join(root, lockPath)) && (readJson(lockPath).lockfileVersion ?? 0) < 3) {
   problems.push("package-lock.json must be lockfileVersion 3 or newer.");
 }
 const competing = ["yarn.lock", "pnpm-lock.yaml", "bun.lock", "bun.lockb", "npm-shrinkwrap.json"];
@@ -97,7 +95,7 @@ for (const dir of workspaceDirs) {
   }
 }
 
-// 5. Lockfile / package.json synchronisation
+// npm launcher (used to read the running npm version)
 function spawnNpm(args) {
   const bundledNpm = path.join(path.dirname(process.execPath), "node_modules", "npm", "bin", "npm-cli.js");
   const execPath = process.env.npm_execpath ?? (existsSync(bundledNpm) ? bundledNpm : undefined);
@@ -111,23 +109,11 @@ function spawnNpm(args) {
     shell: process.platform === "win32",
   });
 }
-if (!process.argv.includes("--skip-sync") && existsSync(path.join(root, lockPath))) {
-  const result = spawnNpm(["ci", "--dry-run", "--ignore-scripts", "--no-audit", "--no-fund"]);
-  if (result.error || result.status !== 0) {
-    const lines = (result.stderr || result.stdout || String(result.error ?? ""))
-      .split("\n")
-      .filter((line) => line.replace(/^npm error\s*/, "").trim());
-    const usageStart = lines.findIndex((line) => /Clean install a project/.test(line));
-    const detail = (usageStart > 0 ? lines.slice(0, usageStart) : lines.slice(0, 8)).join("\n");
-    problems.push(`package-lock.json is out of sync with package.json (npm ci --dry-run failed):\n${detail}`);
-  }
-}
-
 if (problems.length) {
   console.error("Package manager policy violations:");
   for (const problem of problems) console.error(` - ${problem}`);
   process.exit(1);
 }
 console.log(
-  `Package manager OK: ${pkg.packageManager}, engines node "${pkg.engines.node}" npm "${pkg.engines.npm}", single package-lock.json in sync with all workspaces.`,
+  `Package manager OK: ${pkg.packageManager}, engines node "${pkg.engines.node}" npm "${pkg.engines.npm}", no competing lockfiles (package-lock.json is generated locally by npm install, not committed).`,
 );

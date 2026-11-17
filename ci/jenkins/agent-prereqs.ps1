@@ -368,8 +368,8 @@ if ($requireSet -contains 'postgres') {
 }
 if ($requireSet -contains 'lockfile') {
   $lock = Join-Path $repoRoot 'package-lock.json'
-  if (Test-Path -LiteralPath $lock -PathType Leaf) { Add-Row 'package-lock.json' 'committed lockfile' 'present' $lock 'OK' }
-  else { Add-Row 'package-lock.json' 'committed lockfile' '(missing)' $lock 'FAIL' 'Commit package-lock.json; npm ci requires it.' }
+  if (Test-Path -LiteralPath $lock -PathType Leaf) { Add-Row 'package-lock.json' 'lockfile (not committed by policy)' 'present' $lock 'OK' }
+  else { Add-Row 'package-lock.json' 'lockfile (not committed by policy)' '(missing)' $lock 'OK' 'Not committed by organization policy; npm install generates it locally.' }
 }
 if ($requireSet -contains 'workspace') {
   $targets = @($repoRoot)
