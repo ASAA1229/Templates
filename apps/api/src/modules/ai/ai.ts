@@ -47,9 +47,7 @@ export function aiRouter(ctx: AppContext, doFetch: AiFetch = fetch) {
             const response = await doFetch(new URL("/v1/health", ctx.config.JARVIS_AI_URL), {
               signal: AbortSignal.timeout(2000),
             });
-            const body = response.ok
-              ? ((await response.json()) as { modelConfigured?: unknown })
-              : null;
+            const body = response.ok ? ((await response.json()) as { modelConfigured?: unknown }) : null;
             reachable = body?.modelConfigured === true;
           } else {
             const response = await doFetch(new URL("/api/tags", ctx.config.OLLAMA_URL), {
