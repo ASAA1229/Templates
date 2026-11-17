@@ -48,3 +48,14 @@ deploy/local-prod/backups/
 
 # npm dependency lockfile (repository policy)
 package-lock.json
+
+# Organization policy: editor state, local databases, release artefacts
+dist-ssr/
+.idea/
+.vscode/
+*.db
+*.sqlite3
+*.tar.gz
+*.sha256
+*.cdx.json
+customer-release-report.json
