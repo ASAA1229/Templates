@@ -74,17 +74,20 @@ const envSchema = z.object({
     .string()
     .optional()
     .transform((value) => path.resolve(value || path.join(API_ROOT, "..", "..", "tools"))),
-  /** Optional AI assistance via a LOCAL Ollama server only. Off by default; no paid or remote API. */
+  /** Optional AI assistance. Off by default. */
   AI_ENABLED: z
     .enum(["true", "false"])
     .default("false")
     .transform((value) => value === "true"),
+  AI_PROVIDER: z.enum(["ollama", "jarvis"]).default("ollama"),
   OLLAMA_URL: z.string().url().default("http://127.0.0.1:11434"),
   OLLAMA_MODEL: z
     .string()
     .trim()
     .regex(/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,99}$/)
     .default("llama3.2"),
+  JARVIS_AI_URL: z.string().url().default("http://127.0.0.1:3100"),
+  JARVIS_AI_KEY: z.string().optional(),
   AI_TIMEOUT_MS: z.coerce.number().int().min(1000).max(300_000).default(60_000),
 });
 
@@ -106,11 +109,30 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
   if (config.REQUIRE_MFA_PRIVILEGED && !config.MFA_ENCRYPTION_KEY) {
     throw new Error("REQUIRE_MFA_PRIVILEGED needs MFA_ENCRYPTION_KEY to be set.");
   }
-  if (config.AI_ENABLED) {
+  if (config.AI_ENABLED && config.AI_PROVIDER === "ollama") {
     const host = new URL(config.OLLAMA_URL).hostname.replace(/^[|]$/g, "");
     if (!["localhost", "127.0.0.1", "::1"].includes(host)) {
       throw new Error("OLLAMA_URL must point to this machine (localhost, 127.0.0.1 or ::1); remote AI is not allowed.");
     }
+  }
+  const jarvisUrl = new URL(config.JARVIS_AI_URL);
+  if (
+    !["http:", "https:"].includes(jarvisUrl.protocol) ||
+    !["localhost", "127.0.0.1", "::1"].includes(jarvisUrl.hostname.replace(/^\[|\]$/g, "")) ||
+    jarvisUrl.username ||
+    jarvisUrl.password ||
+    jarvisUrl.search ||
+    jarvisUrl.hash ||
+    (jarvisUrl.pathname !== "" && jarvisUrl.pathname !== "/")
+  ) {
+    throw new Error("JARVIS_AI_URL must be a local gateway origin (localhost, 127.0.0.1 or ::1).");
+  }
+  if (
+    config.AI_ENABLED &&
+    config.AI_PROVIDER === "jarvis" &&
+    !/^jrv_[a-f0-9]{12}_[A-Za-z0-9_-]{43}$/.test(config.JARVIS_AI_KEY ?? "")
+  ) {
+    throw new Error("A valid JARVIS site key is required when AI_PROVIDER=jarvis and AI_ENABLED=true.");
   }
   if (config.SESSION_IDLE_MINUTES > config.SESSION_ABSOLUTE_MINUTES) {
     throw new Error("SESSION_IDLE_MINUTES cannot exceed SESSION_ABSOLUTE_MINUTES.");

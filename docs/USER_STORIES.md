@@ -94,7 +94,7 @@ These remain future or phased requirements and must not displace P0 lifecycle an
 
 | ID / epic | User outcome | Acceptance boundary | Current state |
 |---|---|---|---|
-| US-J01–J05 AI/JARVIS | Use optional company-safe AI assistance. | Separate company identity/context/tools; grounded access; human approval; no personal JARVIS memory/device access; no paid AI without approval. | Future/partial foundations only. |
+| US-J01–J05 AI/JARVIS | Use optional company-safe AI assistance. | Local Ollama or the text-only JARVIS site gateway; suggestions remain advisory, with no tool, memory, or device access. | Local provider integration is available; broader company-context grounding remains future work. |
 | US-K01–K03 tenancy | Operate isolated external organizations. | Tenant-isolated identity/data/storage/audit/policy and independent security review. | Future. |
 | Epic L business operations | Manage CRM, sales, contracts, finance, HR, procurement, support and related business workflows. | Separate product-domain approval and roadmap; no MVP diversion. | Future. |
 | US-M01–M05 collaboration | Collaborate through comments, reviews, assignments and presence. | Project-scoped permissions, audit, conflict handling and controlled external sharing. | Open. |

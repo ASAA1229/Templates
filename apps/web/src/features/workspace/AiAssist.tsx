@@ -11,8 +11,8 @@ interface AiStatus {
 }
 
 /**
- * Optional, local-only AI assistance (Ollama on this machine). Off by default; suggestions are shown as text and
- * are never applied to a file automatically.
+ * Optional, local-only AI assistance. Off by default; suggestions are shown as text and are never applied
+ * to a file automatically.
  */
 export function AiAssist({ fileName, content }: { fileName: string; content: string }) {
   const status = useResource<AiStatus>("/ai/status");
@@ -23,7 +23,7 @@ export function AiAssist({ fileName, content }: { fileName: string; content: str
   if (!status.data.enabled) {
     return (
       <p className="text-xs text-muted-foreground">
-        AI assistance is off (optional, local Ollama only; an administrator enables it with AI_ENABLED).
+        AI assistance is off (optional local provider; an administrator enables it with AI_ENABLED).
       </p>
     );
   }
