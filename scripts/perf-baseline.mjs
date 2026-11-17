@@ -183,7 +183,7 @@ try {
   const ownerEnv = {
     OWNER_EMAIL: "perf@example.test",
     OWNER_NAME: "Perf Owner",
-    OWNER_PASSWORD: "perf-baseline-pass-12345",
+    OWNER_PASSWORD: process.env.PERF_OWNER_PASSWORD || `Pb-${randomBytes(18).toString("base64url")}`,
   };
   run(process.execPath, ["dist/cli/owner.js", "init"], { DATABASE_URL: dbUrl.toString(), ...ownerEnv });
 
