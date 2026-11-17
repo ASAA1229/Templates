@@ -14,7 +14,9 @@ beforeAll(async () => {
   fake = createServer((req, res) => {
     if (req.url === "/api/tags") return void res.writeHead(200).end("{}");
     if (req.url === "/v1/health") {
-      return void res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ modelConfigured: true }));
+      return void res
+        .writeHead(200, { "content-type": "application/json" })
+        .end(JSON.stringify({ modelConfigured: true }));
     }
     if (req.url === "/v1/chat/completions") {
       jarvisAuthorization = req.headers.authorization;
@@ -23,9 +25,9 @@ beforeAll(async () => {
       req.on("end", () => {
         const body = JSON.parse(Buffer.concat(chunks).toString("utf8")) as { messages?: unknown };
         jarvisMessages = body.messages;
-        res.writeHead(200, { "content-type": "application/json" }).end(
-          JSON.stringify({ choices: [{ message: { content: "  JARVIS suggestion.  " } }] }),
-        );
+        res
+          .writeHead(200, { "content-type": "application/json" })
+          .end(JSON.stringify({ choices: [{ message: { content: "  JARVIS suggestion.  " } }] }));
       });
       return;
     }
@@ -104,6 +106,14 @@ describe("optional local AI assist", () => {
         OLLAMA_URL: "https://api.example.com",
       }),
     ).toThrow(/this machine/);
+  });
+
+  it("accepts IPv6 and IPv4 loopback Ollama endpoints", () => {
+    const base = { DATABASE_URL: "postgresql://u:p@localhost/db", AI_ENABLED: "true" };
+    for (const url of ["http://[::1]:11434", "http://127.0.0.1:11434", "http://localhost:11434"]) {
+      expect(loadConfig({ ...base, OLLAMA_URL: url }).OLLAMA_URL).toBe(url);
+    }
+    expect(() => loadConfig({ ...base, OLLAMA_URL: "http://[2001:db8::1]:11434" })).toThrow(/this machine/);
   });
 
   it("requires a local JARVIS endpoint and a key when JARVIS is enabled", () => {

@@ -106,11 +106,8 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
   if (config.REQUIRE_MFA_PRIVILEGED && !config.MFA_ENCRYPTION_KEY) {
     throw new Error("REQUIRE_MFA_PRIVILEGED needs MFA_ENCRYPTION_KEY to be set.");
   }
-  if (config.REQUIRE_MFA_PRIVILEGED && !config.MFA_ENCRYPTION_KEY) {
-    throw new Error("REQUIRE_MFA_PRIVILEGED needs MFA_ENCRYPTION_KEY to be set.");
-  }
   if (config.AI_ENABLED && config.AI_PROVIDER === "ollama") {
-    const host = new URL(config.OLLAMA_URL).hostname.replace(/^[|]$/g, "");
+    const host = new URL(config.OLLAMA_URL).hostname.replace(/^\[|\]$/g, "");
     if (!["localhost", "127.0.0.1", "::1"].includes(host)) {
       throw new Error("OLLAMA_URL must point to this machine (localhost, 127.0.0.1 or ::1); remote AI is not allowed.");
     }
