@@ -37,7 +37,7 @@ export function aiStatus(ctx: AppContext) {
 export function aiRouter(ctx: AppContext, doFetch: AiFetch = fetch) {
   const router = Router();
 
-  router.get("/status", authorize(ctx, "workspace:read"), async (_req, res, next) => {
+  router.get("/status", authorize(ctx, "workspace:read"), async (req, res, next) => {
     try {
       const status = aiStatus(ctx);
       let reachable: boolean | null = null;
@@ -45,6 +45,7 @@ export function aiRouter(ctx: AppContext, doFetch: AiFetch = fetch) {
         try {
           if (ctx.config.AI_PROVIDER === "jarvis") {
             const response = await doFetch(new URL("/v1/health", ctx.config.JARVIS_AI_URL), {
+              headers: { "x-request-id": req.requestId },
               signal: AbortSignal.timeout(2000),
             });
             const body = response.ok ? ((await response.json()) as { modelConfigured?: unknown }) : null;
@@ -88,7 +89,8 @@ export function aiRouter(ctx: AppContext, doFetch: AiFetch = fetch) {
             method: "POST",
             headers: {
               "content-type": "application/json",
-              ...(jarvis ? { authorization: `Bearer ${ctx.config.JARVIS_AI_KEY}` } : {}),
+              // req.requestId is the valid incoming X-Request-ID, or a freshly generated one (see requestId()).
+              ...(jarvis ? { authorization: `Bearer ${ctx.config.JARVIS_AI_KEY}`, "x-request-id": req.requestId } : {}),
             },
             body: JSON.stringify(
               jarvis

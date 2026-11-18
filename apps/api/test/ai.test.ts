@@ -2,12 +2,14 @@ import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { loadConfig } from "../src/config/env.js";
+import { CSRF_HEADER, CSRF_VALUE } from "../src/middleware/security.js";
 import { createHarness } from "./helpers.js";
 
 let fake: Server;
 let fakeUrl: string;
 let fakeMode: "ok" | "bad" = "ok";
 let jarvisAuthorization: string | undefined;
+let jarvisRequestId: string | string[] | undefined;
 let jarvisMessages: unknown;
 
 beforeAll(async () => {
@@ -20,6 +22,7 @@ beforeAll(async () => {
     }
     if (req.url === "/v1/chat/completions") {
       jarvisAuthorization = req.headers.authorization;
+      jarvisRequestId = req.headers["x-request-id"];
       const chunks: Buffer[] = [];
       req.on("data", (chunk: Buffer) => chunks.push(chunk));
       req.on("end", () => {
@@ -95,6 +98,30 @@ describe("optional local AI assist", () => {
       { role: "system", content: "You assist with software templates. Follow the user's task and be concise." },
       { role: "user", content: expect.stringContaining("Explain briefly") },
     ]);
+    await h.close();
+  });
+
+  it("propagates X-Request-ID to the JARVIS gateway, reusing a valid incoming id or generating one", async () => {
+    const key = `jrv_0123456789ab_${"A".repeat(43)}`;
+    const h = createHarness({ AI_ENABLED: "true", AI_PROVIDER: "jarvis", JARVIS_AI_URL: fakeUrl, JARVIS_AI_KEY: key });
+    await h.reset();
+    await h.createOwner();
+    const agent = await h.signedIn();
+    const suggest = (id?: string) => {
+      const request = agent.raw.post("/api/ai/suggest").set(CSRF_HEADER, CSRF_VALUE);
+      return (id ? request.set("x-request-id", id) : request).send({ task: "explain", content: "x" });
+    };
+    jarvisRequestId = undefined;
+    const reused = await suggest("trace-12345678");
+    expect(reused.status).toBe(200);
+    expect(jarvisRequestId).toBe("trace-12345678");
+    expect(reused.headers["x-request-id"]).toBe("trace-12345678");
+    jarvisRequestId = undefined;
+    await suggest("bad id with spaces!");
+    expect(jarvisRequestId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+    jarvisRequestId = undefined;
+    await suggest();
+    expect(jarvisRequestId).toMatch(/^[0-9a-f-]{36}$/);
     await h.close();
   });
 
