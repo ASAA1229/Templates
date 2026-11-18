@@ -287,28 +287,27 @@ export class LocalGitProvider implements RepositoryProvider {
   }
 
   async inspect(dir: string, policy: BranchPolicy, historyLimit: number): Promise<RepositoryStateView> {
-    const status = parseStatus((await this.git.run(dir, ["status", "--porcelain=v2", "--branch", "-z"])).stdout);
-    // for-each-ref expands %1f to the unit-separator character.
-    const refs = await this.git.run(dir, [
-      "for-each-ref",
-      "--format=%(refname:short)%1f%(objectname)%1f%(HEAD)",
-      "refs/heads/",
+    // Independent read-only commands run concurrently: each spawn is slow on loaded Windows hosts.
+    // for-each-ref expands %1f to the unit-separator character; log fails harmlessly on an unborn branch.
+    const [statusResult, refs, log] = await Promise.all([
+      this.git.run(dir, ["status", "--porcelain=v2", "--branch", "-z"]),
+      this.git.run(dir, ["for-each-ref", "--format=%(refname:short)%1f%(objectname)%1f%(HEAD)", "refs/heads/"]),
+      this.git.run(
+        dir,
+        [
+          "log",
+          `--max-count=${Math.max(1, Math.min(historyLimit, 100))}`,
+          "--no-color",
+          `--format=%H%x1f%an%x1f%ae%x1f%aI%x1f%s%x1e`,
+          "HEAD",
+          "--",
+        ],
+        { allowFailure: true },
+      ),
     ]);
+    const status = parseStatus(statusResult.stdout);
     const branches = parseBranches(refs.stdout, policy);
-    const commits = status.head.sha
-      ? parseLog(
-          (
-            await this.git.run(dir, [
-              "log",
-              `--max-count=${Math.max(1, Math.min(historyLimit, 100))}`,
-              "--no-color",
-              `--format=%H%x1f%an%x1f%ae%x1f%aI%x1f%s%x1e`,
-              "HEAD",
-              "--",
-            ])
-          ).stdout,
-        )
-      : [];
+    const commits = status.head.sha && log.exitCode === 0 ? parseLog(log.stdout) : [];
     return {
       head: status.head,
       branches,

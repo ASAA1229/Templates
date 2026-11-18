@@ -186,8 +186,12 @@ export class WorkspaceFiles {
     return this.workspace.serialize(dir, async () => {
       const git = this.workspace.git;
       const args = ["diff", "--no-color", "--no-ext-diff", "--no-textconv", "HEAD", ...(rel ? ["--", rel] : ["--"])];
-      const result = await git.run(dir, args, { allowFailure: true });
-      const untracked = parseStatus((await git.run(dir, ["status", "--porcelain=v2", "-z"])).stdout).entries.filter(
+      // Independent read-only commands run concurrently: each spawn is slow on loaded Windows hosts.
+      const [result, statusResult] = await Promise.all([
+        git.run(dir, args, { allowFailure: true }),
+        git.run(dir, ["status", "--porcelain=v2", "-z"]),
+      ]);
+      const untracked = parseStatus(statusResult.stdout).entries.filter(
         (entry) => entry.state === "untracked" && (!rel || entry.path === rel || entry.path.startsWith(`${rel}/`)),
       );
       const patch = result.stdout.slice(0, FILE_LIMITS.diffBytes);
@@ -231,15 +235,11 @@ export class WorkspaceFiles {
       const git = this.workspace.git;
       const exists = await git.run(dir, ["cat-file", "-e", `${sha}^{commit}`], { allowFailure: true });
       if (exists.exitCode !== 0) throw notFound("Commit");
-      const header = await git.run(dir, [
-        "show",
-        "--no-patch",
-        "--no-color",
-        "--format=%H%x1f%an%x1f%ae%x1f%aI%x1f%s%x1e",
-        sha,
+      const [header, files, patch] = await Promise.all([
+        git.run(dir, ["show", "--no-patch", "--no-color", "--format=%H%x1f%an%x1f%ae%x1f%aI%x1f%s%x1e", sha]),
+        git.run(dir, ["show", "--no-color", "--name-status", "--format=", sha]),
+        git.run(dir, ["show", "--no-color", "--no-ext-diff", "--format=", "--patch", sha]),
       ]);
-      const files = await git.run(dir, ["show", "--no-color", "--name-status", "--format=", sha]);
-      const patch = await git.run(dir, ["show", "--no-color", "--no-ext-diff", "--format=", "--patch", sha]);
       return {
         commit: parseLog(header.stdout)[0] ?? null,
         files: files.stdout

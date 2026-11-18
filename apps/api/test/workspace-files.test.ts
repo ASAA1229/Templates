@@ -168,7 +168,8 @@ describe("workspace files (RG-11)", () => {
     expect(JSON.stringify(audits, (_k, v) => (typeof v === "bigint" ? String(v) : v))).not.toContain("Edited online");
   });
 
-  it("shows diffs, commits on a work branch, refuses the protected branch, and serves history", async () => {
+  /** Edit a tracked file and add an untracked one, so diff and commit assertions have something to show. */
+  async function dirtyProject() {
     const p = await project();
     await agent.put(`${ws(p.id)}/files/content`, {
       path: "README.txt",
@@ -176,6 +177,11 @@ describe("workspace files (RG-11)", () => {
       expectedSha256: (await agent.get(`${ws(p.id)}/files/content?path=README.txt`)).body.sha256,
     });
     await writeFile(path.join(p.dir, "untracked.txt"), "new");
+    return p;
+  }
+
+  it("shows diffs and refuses to commit on the protected branch", async () => {
+    const p = await dirtyProject();
     const diff = await agent.get(`${ws(p.id)}/diff`);
     expect(diff.status).toBe(200);
     expect(diff.body.patch).toContain("+changed readme");
@@ -186,6 +192,10 @@ describe("workspace files (RG-11)", () => {
     const blocked = await agent.post(`${ws(p.id)}/commits`, { message: "direct to main" });
     expect(blocked.status).toBe(409);
     expect(blocked.body.error.message).toMatch(/protected production branch/);
+  });
+
+  it("commits on a work branch and serves history and commit detail", async () => {
+    const p = await dirtyProject();
     expect(
       (
         await agent.post(`${ws(p.id)}/branches`, {
