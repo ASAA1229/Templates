@@ -29,6 +29,7 @@ export async function audit(ctx: AppContext, req: Request | null, entry: AuditEn
         metadata: redact(entry.metadata ?? {}) as Prisma.InputJsonValue,
       },
     });
+    ctx.events?.onAudit(entry, req);
   } catch (error) {
     ctx.logger.error("audit write failed", {
       action: entry.action,

@@ -7,6 +7,7 @@ import { createApp } from "../src/app.js";
 import { loadConfig } from "../src/config/env.js";
 import type { AppContext } from "../src/context.js";
 import { createLogger } from "../src/lib/logger.js";
+import { createEventService } from "../src/modules/integration/events.js";
 import { hashPassword } from "../src/lib/password.js";
 import { CSRF_HEADER, CSRF_VALUE } from "../src/middleware/security.js";
 
@@ -62,6 +63,8 @@ export function createHarness(overrides: Record<string, string> = {}): TestHarne
   const prisma = new PrismaClient({ datasourceUrl: url });
   const clock = { now: new Date() };
   const ctx: AppContext = { config, prisma, logger: createLogger("silent"), now: () => clock.now };
+  // Disabled unless the test supplies ASAA_EVENTS_* settings; tests call deliverDue() instead of starting the timer.
+  ctx.events = createEventService({ prisma, config, logger: ctx.logger, now: ctx.now });
   const app = createApp(ctx);
   let ownerHash: string | undefined;
 
@@ -75,7 +78,7 @@ export function createHarness(overrides: Record<string, string> = {}): TestHarne
       await prisma.$transaction([
         prisma.$executeRawUnsafe("SET LOCAL session_replication_role = replica"),
         prisma.$executeRawUnsafe(
-          'TRUNCATE "AuditEvent", "PasswordResetToken", "AccessRequest", "ProjectMember", "ProjectRepository", "ProjectEnvironment", "ProjectGeneration", "TraceLink", "RequirementVersion", "RequirementDependency", "Requirement", "Project", "Session", "Owner", "CatalogItem", "TemplateRelease", "RateLimitBucket" RESTART IDENTITY CASCADE',
+          'TRUNCATE "AuditEvent", "PasswordResetToken", "AccessRequest", "ProjectMember", "ProjectRepository", "ProjectEnvironment", "ProjectGeneration", "TraceLink", "RequirementVersion", "RequirementDependency", "Requirement", "Project", "Session", "Owner", "CatalogItem", "TemplateRelease", "RateLimitBucket", "AsaaEventOutbox" RESTART IDENTITY CASCADE',
         ),
       ]);
     },

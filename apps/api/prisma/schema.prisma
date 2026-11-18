@@ -576,3 +576,25 @@ model ProjectPresence {
   @@id([projectId, memberId])
   @@index([projectId, seenAt])
 }
+
+enum AsaaEventStatus {
+  PENDING
+  DELIVERED
+  DEAD
+}
+
+/// Durable outbox for ASAA ecosystem events (asaa.event.v1). The row id is the envelope id (idempotency key).
+/// The envelope never contains secrets, file contents or paths; lastError holds an HTTP status or error class only.
+model AsaaEventOutbox {
+  id            String          @id @db.Uuid
+  type          String          @db.VarChar(80)
+  envelope      Json
+  status        AsaaEventStatus @default(PENDING)
+  attempts      Int             @default(0)
+  nextAttemptAt DateTime        @default(now()) @db.Timestamptz(3)
+  deliveredAt   DateTime?       @db.Timestamptz(3)
+  lastError     String?         @db.VarChar(120)
+  createdAt     DateTime        @default(now()) @db.Timestamptz(3)
+
+  @@index([status, nextAttemptAt])
+}

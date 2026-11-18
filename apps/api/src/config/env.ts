@@ -89,9 +89,62 @@ const envSchema = z.object({
   JARVIS_AI_URL: z.string().url().default("http://127.0.0.1:3100"),
   JARVIS_AI_KEY: z.string().optional(),
   AI_TIMEOUT_MS: z.coerce.number().int().min(1000).max(300_000).default(60_000),
+  /**
+   * ASAA ecosystem event producer (asaa.event.v1). Disabled unless ASAA_EVENTS_URL, ASAA_ORG_ID and credentials
+   * (a static token, or Keycloak client credentials) are all set. Secrets come from the environment only.
+   */
+  ASAA_EVENTS_URL: z
+    .string()
+    .trim()
+    .url()
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  ASAA_ORG_ID: z
+    .string()
+    .trim()
+    .min(1)
+    .max(128)
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  ASAA_EVENTS_TOKEN_URL: z
+    .string()
+    .trim()
+    .url()
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  ASAA_EVENTS_CLIENT_ID: z.string().trim().min(1).max(200).default("templates-events"),
+  ASAA_EVENTS_CLIENT_SECRET: z
+    .string()
+    .min(1)
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  /** Static bearer token fallback when client credentials are not configured. */
+  ASAA_EVENTS_TOKEN: z
+    .string()
+    .min(1)
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
 });
 
 export type AppConfig = z.infer<typeof envSchema>;
+
+function isLoopbackHost(hostname: string): boolean {
+  return ["localhost", "127.0.0.1", "::1"].includes(hostname.replace(/^\[|\]$/g, ""));
+}
+
+/** HTTPS is required for ASAA endpoints unless they are loopback (local development). */
+function secureOrLoopback(url: string): boolean {
+  const parsed = new URL(url);
+  return parsed.protocol === "https:" || (parsed.protocol === "http:" && isLoopbackHost(parsed.hostname));
+}
+
+/** True only when the producer is fully configured; partial configuration leaves it disabled. */
+export function asaaEventsEnabled(config: AppConfig): boolean {
+  const credentials =
+    Boolean(config.ASAA_EVENTS_TOKEN) ||
+    Boolean(config.ASAA_EVENTS_TOKEN_URL && config.ASAA_EVENTS_CLIENT_ID && config.ASAA_EVENTS_CLIENT_SECRET);
+  return Boolean(config.ASAA_EVENTS_URL && config.ASAA_ORG_ID && credentials);
+}
 
 export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
   const parsed = envSchema.safeParse(source);
@@ -111,6 +164,12 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
     if (!["localhost", "127.0.0.1", "::1"].includes(host)) {
       throw new Error("OLLAMA_URL must point to this machine (localhost, 127.0.0.1 or ::1); remote AI is not allowed.");
     }
+  }
+  for (const [name, value] of [
+    ["ASAA_EVENTS_URL", config.ASAA_EVENTS_URL],
+    ["ASAA_EVENTS_TOKEN_URL", config.ASAA_EVENTS_TOKEN_URL],
+  ] as const) {
+    if (value && !secureOrLoopback(value)) throw new Error(`${name} must use HTTPS unless it is a loopback address.`);
   }
   const jarvisUrl = new URL(config.JARVIS_AI_URL);
   if (

@@ -34,6 +34,7 @@ export async function buildManifest(ctx: AppContext): Promise<ServiceManifest> {
     templateLibrary: ready.templateLibrary === "ok" ? "ok" : "degraded",
     generationOutput: ready.generationOutput === "ok" ? "ok" : "degraded",
     ai: ctx.config.AI_ENABLED ? "ok" : "disabled",
+    asaaEvents: ctx.events ? ctx.events.manifestStatus() : "disabled",
   };
   const status = checks.database === "down" ? "down" : Object.values(checks).includes("degraded") ? "degraded" : "ok";
   return {
