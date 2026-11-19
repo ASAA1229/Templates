@@ -39,6 +39,14 @@ class EnvironmentSnapshotTests(unittest.TestCase):
         for group in ("ICG", "ACQ", "ISS"):
             self.assertIn(group, report)
 
+
+    def test_aix_memory_is_reported_as_raw_attributes_without_unit_assumptions(self):
+        with patch.object(snapshot.platform, "system", return_value="AIX"), \
+             patch.object(snapshot, "_command_output", return_value="realmem  :  32768") as command:
+            result = snapshot._memory_bytes()
+        self.assertEqual(result, {"aix_sys0_attributes": "realmem  :  32768"})
+        command.assert_called_once_with(["lsattr", "-El", "sys0"])
+
     def test_cli_writes_json_to_requested_path(self):
         sample = {
             "schema_version": "1.0",
