@@ -1,0 +1,6 @@
+rootvg:
+LV NAME             TYPE       LPs     PPs     PVs  LV STATE      MOUNT POINT
+hd5                 boot       1       2       2    closed/syncd  N/A
+hd6                 paging     32      64      2    open/syncd    N/A
+hd4                 jfs2       8       16      2    open/syncd    /
+hd2                 jfs2       40      80      2    open/syncd    /usr

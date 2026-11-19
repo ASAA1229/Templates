@@ -1,0 +1,40 @@
+{
+  "name": "@asaa/api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ASAA Templates API — Express modular monolith on PostgreSQL/Prisma.",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=.env src/server.ts",
+    "serve:ts": "tsx --env-file-if-exists=.env src/server.ts",
+    "build": "node ../../scripts/prisma-generate.mjs && tsc -p tsconfig.build.json",
+    "start": "node --env-file-if-exists=.env dist/server.js",
+    "typecheck": "node ../../scripts/prisma-generate.mjs && tsc -p tsconfig.json --noEmit",
+    "test": "node ../../scripts/prisma-generate.mjs && vitest run",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:status": "prisma migrate status",
+    "certify:templates": "tsx src/cli/certify-templates.ts",
+    "owner:init": "tsx --env-file-if-exists=.env src/cli/owner.ts init",
+    "owner:recover": "tsx --env-file-if-exists=.env src/cli/owner.ts recover"
+  },
+  "dependencies": {
+    "@asaa/contracts": "0.1.0",
+    "@prisma/client": "6.19.3",
+    "cookie-parser": "1.4.7",
+    "express": "5.3.0",
+    "helmet": "8.3.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "1.4.10",
+    "@types/express": "5.0.6",
+    "@types/node": "24.19.2",
+    "@types/supertest": "6.0.3",
+    "@vitest/coverage-v8": "4.1.12",
+    "prisma": "6.19.3",
+    "supertest": "7.3.2",
+    "tsx": "4.23.15",
+    "vitest": "4.1.12"
+  }
+}

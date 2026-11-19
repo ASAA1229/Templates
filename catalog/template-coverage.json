@@ -1,0 +1,269 @@
+{
+  "schemaVersion": 1,
+  "library": "ASAA Templates Studio",
+  "visibility": "INTERNAL_ORGANIZATION_ONLY",
+  "templateCountIsUnlimited": true,
+  "initialDemoPolicy": {
+    "targetPerApplicableBusinessType": 5,
+    "hardLimit": false,
+    "expandable": true
+  },
+  "divisions": [
+    {
+      "id": "websites-and-web-experiences",
+      "status": "IN_PROGRESS",
+      "initialBusinessTypes": [
+        "restaurant",
+        "clinic",
+        "education",
+        "retail",
+        "professional"
+      ]
+    },
+    {
+      "id": "web-applications-and-saas",
+      "status": "PLANNED"
+    },
+    {
+      "id": "mobile-applications",
+      "status": "PLANNED"
+    },
+    {
+      "id": "desktop-applications",
+      "status": "PLANNED"
+    },
+    {
+      "id": "ecommerce-and-marketplaces",
+      "status": "IN_PROGRESS",
+      "initialBusinessTypes": [
+        "retail",
+        "restaurant"
+      ]
+    },
+    {
+      "id": "admin-panels-and-dashboards",
+      "status": "PLANNED"
+    },
+    {
+      "id": "apis-and-backend-services",
+      "status": "PLANNED"
+    },
+    {
+      "id": "ui-ux-and-design-systems",
+      "status": "PLANNED"
+    },
+    {
+      "id": "documents-and-business-assets",
+      "status": "PLANNED"
+    },
+    {
+      "id": "automation-ai-and-integrations",
+      "status": "PLANNED"
+    },
+    {
+      "id": "devops-infrastructure-and-deployment",
+      "status": "PLANNED"
+    },
+    {
+      "id": "business-operations-and-workflows",
+      "status": "PLANNED"
+    }
+  ],
+  "businessTypes": [
+    {
+      "id": "restaurant",
+      "sector": "Hospitality",
+      "businessType": "Restaurant / Cafe",
+      "displayName": "Restaurant & Cafe",
+      "initialDemoTarget": 5,
+      "templateIds": [
+        "restaurant-essential",
+        "restaurant-editorial",
+        "restaurant-catalog",
+        "restaurant-booking",
+        "restaurant-multisite"
+      ],
+      "status": "READY_FOR_REVIEW",
+      "note": "Five distinct demo variants are included; templates remain subject to owner review and approval before project generation."
+    },
+    {
+      "id": "clinic",
+      "sector": "Healthcare",
+      "businessType": "Clinic / Healthcare Provider",
+      "displayName": "Clinic & Care Provider",
+      "initialDemoTarget": 5,
+      "templateIds": [
+        "clinic-essential",
+        "clinic-editorial",
+        "clinic-catalog",
+        "clinic-booking",
+        "clinic-multisite"
+      ],
+      "status": "READY_FOR_REVIEW",
+      "note": "Five distinct demo variants are included; templates remain subject to owner review and approval before project generation."
+    },
+    {
+      "id": "education",
+      "sector": "Education",
+      "businessType": "School / Education Institute",
+      "displayName": "School & Education Institute",
+      "initialDemoTarget": 5,
+      "templateIds": [
+        "education-essential",
+        "education-editorial",
+        "education-catalog",
+        "education-booking",
+        "education-multisite"
+      ],
+      "status": "READY_FOR_REVIEW",
+      "note": "Five distinct demo variants are included; templates remain subject to owner review and approval before project generation."
+    },
+    {
+      "id": "retail",
+      "sector": "Retail & Commerce",
+      "businessType": "Retail Store / E-commerce",
+      "displayName": "Retail & E-commerce Store",
+      "initialDemoTarget": 5,
+      "templateIds": [
+        "retail-essential",
+        "retail-editorial",
+        "retail-catalog",
+        "retail-booking",
+        "retail-multisite"
+      ],
+      "status": "READY_FOR_REVIEW",
+      "note": "Five distinct demo variants are included; templates remain subject to owner review and approval before project generation."
+    },
+    {
+      "id": "professional",
+      "sector": "Professional Services",
+      "businessType": "Consulting / Agency / Professional Firm",
+      "displayName": "Professional Services Firm",
+      "initialDemoTarget": 5,
+      "templateIds": [
+        "professional-essential",
+        "professional-editorial",
+        "professional-catalog",
+        "professional-booking",
+        "professional-multisite"
+      ],
+      "status": "READY_FOR_REVIEW",
+      "note": "Five distinct demo variants are included; templates remain subject to owner review and approval before project generation."
+    }
+  ],
+  "sectors": [
+    {
+      "id": "agriculture",
+      "name": "Agriculture, forestry and food production",
+      "status": "REGISTERED_TEMPLATE_PACK_PENDING"
+    },
+    {
+      "id": "automotive",
+      "name": "Automotive, mobility and vehicle services",
+      "status": "REGISTERED_TEMPLATE_PACK_PENDING"
+    },
+    {
+      "id": "construction",
+      "name": "Construction, architecture and engineering",
+      "status": "REGISTERED_TEMPLATE_PACK_PENDING"
+    },
+    {
+      "id": "education",
+      "name": "Education, training and research",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "id": "energy",
+      "name": "Energy, utilities and natural resources",
+      "status": "REGISTERED_TEMPLATE_PACK_PENDING"
+    },
+    {
+      "id": "finance",
+      "name": "Banking, finance, insurance and fintech",
+      "status": "REGISTERED_TEMPLATE_PACK_PENDING"
+    },
+    {
+      "id": "government",
+      "name": "Government and public services",
+      "status": "REGISTERED_TEMPLATE_PACK_PENDING"
+    },
+    {
+      "id": "healthcare",
+      "name": "Healthcare, wellness and life sciences",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "id": "hospitality",
+      "name": "Hospitality, restaurants, travel and tourism",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "id": "information-technology",
+      "name": "Information technology, software and telecommunications",
+      "status": "REGISTERED_TEMPLATE_PACK_PENDING"
+    },
+    {
+      "id": "legal",
+      "name": "Legal, compliance and professional governance",
+      "status": "REGISTERED_TEMPLATE_PACK_PENDING"
+    },
+    {
+      "id": "manufacturing",
+      "name": "Manufacturing, industrial and supply chain",
+      "status": "REGISTERED_TEMPLATE_PACK_PENDING"
+    },
+    {
+      "id": "media",
+      "name": "Media, entertainment, arts and creative industries",
+      "status": "REGISTERED_TEMPLATE_PACK_PENDING"
+    },
+    {
+      "id": "nonprofit",
+      "name": "Nonprofit, charity and community organizations",
+      "status": "REGISTERED_TEMPLATE_PACK_PENDING"
+    },
+    {
+      "id": "professional-services",
+      "name": "Professional, consulting and business services",
+      "status": "REGISTERED_TEMPLATE_PACK_PENDING"
+    },
+    {
+      "id": "real-estate",
+      "name": "Real estate, property and facilities",
+      "status": "REGISTERED_TEMPLATE_PACK_PENDING"
+    },
+    {
+      "id": "retail",
+      "name": "Retail, wholesale and ecommerce",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "id": "sports",
+      "name": "Sports, recreation and fitness",
+      "status": "REGISTERED_TEMPLATE_PACK_PENDING"
+    },
+    {
+      "id": "transportation",
+      "name": "Transportation, logistics and warehousing",
+      "status": "REGISTERED_TEMPLATE_PACK_PENDING"
+    },
+    {
+      "id": "environment",
+      "name": "Environment, sustainability and climate services",
+      "status": "REGISTERED_TEMPLATE_PACK_PENDING"
+    },
+    {
+      "id": "science",
+      "name": "Science, laboratory and research services",
+      "status": "REGISTERED_TEMPLATE_PACK_PENDING"
+    }
+  ],
+  "governance": {
+    "defaultLifecycle": "DRAFT",
+    "requiresHumanReview": true,
+    "requiresOwnerApprovalBeforeGeneration": true,
+    "externalPublishingAllowed": false,
+    "sampleData": "Synthetic only",
+    "noSecrets": true
+  }
+}

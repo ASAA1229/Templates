@@ -1,0 +1,601 @@
+// ASAA Templates — relational model (US-A01/A02, US-C01/C02/C04, US-D01/D02, US-I02/I03).
+// Schema changes are made only through Prisma migrations (apps/api/prisma/migrations).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OwnerRole {
+  OWNER
+  ADMIN
+  DEVELOPER
+  TESTER
+  EMPLOYEE
+}
+
+/// Account principal retained under the historical Owner model name.
+/// Multiple members are supported; only one OWNER is permitted by the database.
+model Owner {
+  id                        String               @id @default(uuid()) @db.Uuid
+  email                     String               @unique @db.VarChar(254)
+  displayName               String               @db.VarChar(120)
+  role                      OwnerRole            @default(EMPLOYEE)
+  isActive                  Boolean              @default(true)
+  passwordHash              String               @db.VarChar(512)
+  passwordChangedAt         DateTime             @default(now()) @db.Timestamptz(3)
+  createdAt                 DateTime             @default(now()) @db.Timestamptz(3)
+  /// AES-256-GCM encrypted TOTP secret; pending until mfaEnabledAt is set (US-A04).
+  mfaSecretEnc              String?              @db.VarChar(512)
+  mfaEnabledAt              DateTime?            @db.Timestamptz(3)
+  /// SHA-256 hashes of unused single-use recovery codes.
+  mfaRecoveryHashes         String[]             @default([])
+  /// Last accepted TOTP time step; codes at or below it are rejected (replay protection).
+  mfaLastStep               Int?
+  sessions                  Session[]
+  projects                  Project[]
+  savedSearches             SavedSearch[]
+  reviewedAccessRequests    AccessRequest[]      @relation("AccessRequestReviewer")
+  projectMemberships        ProjectMember[]
+  projectComments           ProjectComment[]     @relation("CommentAuthor")
+  resolvedComments          ProjectComment[]     @relation("CommentResolver")
+  presence                  ProjectPresence[]
+  passwordResetTokens       PasswordResetToken[] @relation("PasswordResetOwner")
+  issuedPasswordResetTokens PasswordResetToken[] @relation("PasswordResetIssuer")
+}
+
+/// Server-side session. Only a SHA-256 of the opaque cookie token is stored.
+model Session {
+  id         String    @id @default(uuid()) @db.Uuid
+  ownerId    String    @db.Uuid
+  owner      Owner     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  tokenHash  String    @unique @db.Char(64)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+  lastSeenAt DateTime  @default(now()) @db.Timestamptz(3)
+  expiresAt  DateTime  @db.Timestamptz(3)
+  revokedAt  DateTime? @db.Timestamptz(3)
+  userAgent  String?   @db.VarChar(200)
+
+  @@index([ownerId, revokedAt])
+}
+
+/// Single-use password recovery token. Only its SHA-256 hash is stored.
+model PasswordResetToken {
+  id         String    @id @default(uuid()) @db.Uuid
+  ownerId    String    @db.Uuid
+  owner      Owner     @relation("PasswordResetOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  issuedById String    @db.Uuid
+  issuedBy   Owner     @relation("PasswordResetIssuer", fields: [issuedById], references: [id], onDelete: Restrict)
+  tokenHash  String    @unique @db.Char(64)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+  expiresAt  DateTime  @db.Timestamptz(3)
+  consumedAt DateTime? @db.Timestamptz(3)
+
+  @@index([ownerId, consumedAt, expiresAt])
+}
+
+enum AuditActorType {
+  OWNER
+  MEMBER
+  SYSTEM
+  ANONYMOUS
+}
+
+enum AuditOutcome {
+  SUCCESS
+  FAILURE
+  DENIED
+}
+
+/// Append-only audit trail. A database trigger (see migration) rejects UPDATE and DELETE.
+model AuditEvent {
+  id         BigInt         @id @default(autoincrement())
+  at         DateTime       @default(now()) @db.Timestamptz(3)
+  actorType  AuditActorType
+  actorId    String?        @db.Uuid
+  action     String         @db.VarChar(80)
+  targetType String?        @db.VarChar(40)
+  targetId   String?        @db.VarChar(80)
+  outcome    AuditOutcome
+  requestId  String?        @db.VarChar(64)
+  metadata   Json           @default("{}")
+
+  @@index([at])
+  @@index([action])
+  @@index([targetType, targetId])
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+}
+
+model Project {
+  id             String              @id @default(uuid()) @db.Uuid
+  /// Selected project architecture, captured from the approved starter/template blueprint.
+  blueprint      Json?
+  key            String              @unique @db.VarChar(20)
+  name           String              @db.VarChar(120)
+  purpose        String              @default("") @db.VarChar(2000)
+  status         ProjectStatus       @default(PLANNING)
+  ownerId        String              @db.Uuid
+  owner          Owner               @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  archivedAt     DateTime?           @db.Timestamptz(3)
+  createdAt      DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime            @updatedAt @db.Timestamptz(3)
+  /// Optimistic-concurrency version, incremented on every update.
+  version        Int                 @default(1)
+  /// Next per-project requirement number (REQ-1, REQ-2, ...).
+  requirementSeq Int                 @default(0)
+  requirements   Requirement[]
+  members        ProjectMember[]
+  generation     ProjectGeneration?
+  executionJobs  ExecutionJob[]
+  repository     ProjectRepository?
+  environment    ProjectEnvironment?
+  comments       ProjectComment[]
+  presence       ProjectPresence[]
+
+  @@index([ownerId, archivedAt])
+}
+
+enum ProjectAccessRole {
+  VIEWER
+  EDITOR
+}
+
+/// Explicit per-project membership. Owner remains the ultimate project administrator.
+model ProjectMember {
+  id        String            @id @default(uuid()) @db.Uuid
+  projectId String            @db.Uuid
+  project   Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  memberId  String            @db.Uuid
+  member    Owner             @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  role      ProjectAccessRole @default(VIEWER)
+  createdAt DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime          @updatedAt @db.Timestamptz(3)
+
+  @@unique([projectId, memberId])
+  @@index([memberId, projectId])
+}
+
+enum RequirementKind {
+  REQUIREMENT
+  USER_STORY
+}
+
+enum Priority {
+  P0
+  P1
+  P2
+}
+
+enum RequirementStatus {
+  DRAFT
+  READY
+  IN_DEVELOPMENT
+  DEVELOPED
+  BUILT
+  TESTED
+  RELEASED
+}
+
+model Requirement {
+  id                 String                  @id @default(uuid()) @db.Uuid
+  projectId          String                  @db.Uuid
+  project            Project                 @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  code               String                  @db.VarChar(20)
+  kind               RequirementKind         @default(USER_STORY)
+  title              String                  @db.VarChar(200)
+  description        String                  @default("") @db.VarChar(5000)
+  priority           Priority                @default(P1)
+  status             RequirementStatus       @default(DRAFT)
+  acceptanceCriteria String[]                @default([])
+  flaggedForReview   Boolean                 @default(false)
+  flagReason         String?                 @db.VarChar(500)
+  version            Int                     @default(1)
+  createdAt          DateTime                @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime                @updatedAt @db.Timestamptz(3)
+  dependsOn          RequirementDependency[] @relation("dependent")
+  dependedOnBy       RequirementDependency[] @relation("dependency")
+  versions           RequirementVersion[]
+  links              TraceLink[]
+
+  @@unique([projectId, code])
+  @@index([projectId, status])
+}
+
+/// Dependencies are restricted to the same project by the service layer (US-I03).
+model RequirementDependency {
+  requirementId String      @db.Uuid
+  dependsOnId   String      @db.Uuid
+  requirement   Requirement @relation("dependent", fields: [requirementId], references: [id], onDelete: Cascade)
+  dependsOn     Requirement @relation("dependency", fields: [dependsOnId], references: [id], onDelete: Cascade)
+
+  @@id([requirementId, dependsOnId])
+}
+
+/// Immutable snapshot of every requirement version (US-C02 traceable changes).
+model RequirementVersion {
+  id            String      @id @default(uuid()) @db.Uuid
+  requirementId String      @db.Uuid
+  requirement   Requirement @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+  version       Int
+  snapshot      Json
+  changeNote    String?     @db.VarChar(300)
+  changedAt     DateTime    @default(now()) @db.Timestamptz(3)
+
+  @@unique([requirementId, version])
+}
+
+enum TraceKind {
+  TASK
+  CODE_CHANGE
+  TEST
+  DEFECT
+  DOCUMENTATION
+  RELEASE
+}
+
+enum EvidenceStatus {
+  PLANNED
+  PASSED
+  FAILED
+}
+
+/// Requirement → delivery traceability (US-C04).
+model TraceLink {
+  id             String         @id @default(uuid()) @db.Uuid
+  requirementId  String         @db.Uuid
+  requirement    Requirement    @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+  kind           TraceKind
+  reference      String         @db.VarChar(300)
+  title          String?        @db.VarChar(200)
+  evidenceStatus EvidenceStatus @default(PLANNED)
+  createdAt      DateTime       @default(now()) @db.Timestamptz(3)
+
+  @@index([requirementId, kind])
+}
+
+enum CatalogKind {
+  TEMPLATE
+  COMPONENT
+  DESIGN_ASSET
+  WORKFLOW
+  IMPORTED_PROJECT
+}
+
+enum Lifecycle {
+  DRAFT
+  ACTIVE
+  DEPRECATED
+  RETIRED
+}
+
+enum TrustStatus {
+  UNTRUSTED
+  UNDER_REVIEW
+  TRUSTED
+}
+
+enum SourceType {
+  AUTHORED
+  IMPORTED
+}
+
+/// Private catalog of reusable templates and assets (US-D01, US-D02).
+model CatalogItem {
+  id                    String              @id @default(uuid()) @db.Uuid
+  slug                  String              @unique @db.VarChar(80)
+  title                 String              @db.VarChar(160)
+  description           String              @default("") @db.VarChar(4000)
+  kind                  CatalogKind         @default(TEMPLATE)
+  category              String              @db.VarChar(80)
+  technologies          String[]            @default([])
+  tags                  String[]            @default([])
+  version               String              @db.VarChar(40)
+  lifecycle             Lifecycle           @default(DRAFT)
+  trustStatus           TrustStatus         @default(TRUSTED)
+  sourceType            SourceType          @default(AUTHORED)
+  sourceReference       String?             @db.VarChar(500)
+  license               String              @db.VarChar(80)
+  ownership             String              @db.VarChar(120)
+  dependencies          Json                @default("[]")
+  /// Library template id whose content this record approves for generation (US-E01).
+  contentRef            String?             @db.VarChar(80)
+  /// SHA-256 of the approved template content; generation refuses any other content.
+  contentDigest         String?             @db.Char(64)
+  metadataSchemaVersion Int                 @default(1)
+  createdAt             DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt             DateTime            @updatedAt @db.Timestamptz(3)
+  rowVersion            Int                 @default(1)
+  generations           ProjectGeneration[]
+
+  @@index([category])
+  @@index([lifecycle])
+}
+
+enum GenerationMode {
+  SCRATCH
+  TEMPLATE
+}
+
+enum GenerationStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+}
+
+/// Record of how a project's independent output was generated (US-E01, US-E02).
+/// Kept separate from reusable template definitions: it stores the exact template
+/// id, version and content digest used, the validated inputs and the output digest.
+model ProjectGeneration {
+  id               String           @id @default(uuid()) @db.Uuid
+  projectId        String           @unique @db.Uuid
+  project          Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  mode             GenerationMode
+  status           GenerationStatus @default(PENDING)
+  templateId       String           @db.VarChar(80)
+  templateVersion  String           @db.VarChar(40)
+  templateDigest   String           @db.Char(64)
+  catalogItemId    String?          @db.Uuid
+  catalogItem      CatalogItem?     @relation(fields: [catalogItemId], references: [id], onDelete: SetNull)
+  generatorVersion String           @db.VarChar(20)
+  inputs           Json             @default("{}")
+  requirements     String[]         @default([])
+  inputsHash       String           @db.Char(64)
+  /// Output folder name under the generation root; unique so outputs never collide.
+  outputDir        String           @unique @db.VarChar(80)
+  outputDigest     String?          @db.Char(64)
+  files            String[]         @default([])
+  attempts         Int              @default(1)
+  error            String?          @db.VarChar(500)
+  startedAt        DateTime         @default(now()) @db.Timestamptz(3)
+  completedAt      DateTime?        @db.Timestamptz(3)
+  version          Int              @default(1)
+
+  @@index([status])
+  @@index([catalogItemId])
+}
+
+enum RepositoryProviderKind {
+  LOCAL_GIT
+  GITHUB
+  GITLAB
+  BITBUCKET
+}
+
+/// Source-control metadata for a generated project (US-F01, US-F02). Provider
+/// credentials are never stored here; remotes are recorded, not synchronised.
+model ProjectRepository {
+  id              String                 @id @default(uuid()) @db.Uuid
+  projectId       String                 @unique @db.Uuid
+  project         Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  provider        RepositoryProviderKind @default(LOCAL_GIT)
+  defaultBranch   String                 @db.VarChar(100)
+  /// Branching policy (production/integration/work prefixes, protected branches).
+  policy          Json
+  identityName    String                 @db.VarChar(100)
+  identityEmail   String                 @db.VarChar(254)
+  remoteName      String?                @db.VarChar(40)
+  remoteUrl       String?                @db.VarChar(500)
+  adoptedExisting Boolean                @default(false)
+  initializedAt   DateTime               @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime               @updatedAt @db.Timestamptz(3)
+  version         Int                    @default(1)
+}
+
+/// Reproducible development environment specification (US-F03). Holds tool
+/// versions, commands and variable names/descriptions only, never secret values.
+model ProjectEnvironment {
+  id        String   @id @default(uuid()) @db.Uuid
+  projectId String   @unique @db.Uuid
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  spec      Json
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  version   Int      @default(1)
+}
+
+/// Private saved search definitions. Each record belongs to exactly one owner.
+model SavedSearch {
+  id        String   @id @default(uuid()) @db.Uuid
+  ownerId   String   @db.Uuid
+  owner     Owner    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name      String   @db.VarChar(100)
+  query     String   @db.VarChar(80)
+  filters   Json     @default("{}")
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@unique([ownerId, name])
+  @@index([ownerId, updatedAt])
+}
+
+enum AccessRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+/// Public employee access request; activation secrets are stored only as hashes.
+model AccessRequest {
+  id             String              @id @default(uuid()) @db.Uuid
+  email          String              @db.VarChar(254)
+  displayName    String              @db.VarChar(120)
+  reason         String              @default("") @db.VarChar(1000)
+  status         AccessRequestStatus @default(PENDING)
+  approvedRole   OwnerRole           @default(EMPLOYEE)
+  tokenHash      String?             @unique @db.Char(64)
+  tokenExpiresAt DateTime?           @db.Timestamptz(3)
+  activatedAt    DateTime?           @db.Timestamptz(3)
+  reviewerId     String?             @db.Uuid
+  reviewer       Owner?              @relation("AccessRequestReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  reviewedAt     DateTime?           @db.Timestamptz(3)
+  createdAt      DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime            @updatedAt @db.Timestamptz(3)
+
+  @@index([status, createdAt])
+  @@index([email, status])
+}
+
+enum ReleaseStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED
+  RELEASED
+  DEPRECATED
+}
+
+/// Version ledger for library templates (RG-06): draft -> review -> approved -> released (immutable) -> deprecated.
+/// Released rows can never change identity, digest or manifest; the database enforces this with a trigger.
+model TemplateRelease {
+  id                String        @id @default(uuid()) @db.Uuid
+  templateId        String        @db.VarChar(80)
+  version           String        @db.VarChar(40)
+  status            ReleaseStatus @default(DRAFT)
+  /// SHA-256 of the library content captured when the draft was created.
+  contentDigest     String        @db.Char(64)
+  /// Snapshot of the validated manifest at draft time.
+  manifest          Json
+  notes             String        @default("") @db.VarChar(500)
+  reviewNote        String        @default("") @db.VarChar(500)
+  createdById       String        @db.Uuid
+  submittedById     String?       @db.Uuid
+  approvedById      String?       @db.Uuid
+  releasedById      String?       @db.Uuid
+  createdAt         DateTime      @default(now()) @db.Timestamptz(3)
+  submittedAt       DateTime?     @db.Timestamptz(3)
+  approvedAt        DateTime?     @db.Timestamptz(3)
+  releasedAt        DateTime?     @db.Timestamptz(3)
+  deprecatedAt      DateTime?     @db.Timestamptz(3)
+  deprecationReason String?       @db.VarChar(500)
+  replacedByVersion String?       @db.VarChar(40)
+  rowVersion        Int           @default(1)
+
+  @@unique([templateId, version])
+  @@index([status])
+}
+
+/// Shared fixed-window rate-limit counters (replaces per-process memory so limits survive restarts and span instances).
+model RateLimitBucket {
+  key     String   @id @db.VarChar(240)
+  count   Int
+  resetAt DateTime @db.Timestamptz(3)
+
+  @@index([resetAt])
+}
+
+enum ExecutionJobStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+  TIMED_OUT
+  LIMIT_EXCEEDED
+}
+
+/// Build/test job executed by the isolated worker against a disposable copy of a project folder.
+model ExecutionJob {
+  id            String             @id @default(uuid()) @db.Uuid
+  projectId     String             @db.Uuid
+  project       Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  requestedById String             @db.Uuid
+  task          String             @db.VarChar(40)
+  target        String             @default("") @db.VarChar(240)
+  isolation     String             @db.VarChar(20)
+  status        ExecutionJobStatus @default(QUEUED)
+  exitCode      Int?
+  stdout        String             @default("") @db.Text
+  stderr        String             @default("") @db.Text
+  truncated     Boolean            @default(false)
+  reason        String?            @db.VarChar(300)
+  createdAt     DateTime           @default(now()) @db.Timestamptz(3)
+  startedAt     DateTime?          @db.Timestamptz(3)
+  finishedAt    DateTime?          @db.Timestamptz(3)
+
+  @@index([projectId, createdAt])
+  @@index([status])
+}
+
+enum CommentTarget {
+  PROJECT
+  TEMPLATE
+  FILE
+}
+
+/// Threaded comment on a project, a template version or a workspace file. Deleting keeps the thread shape (soft delete).
+model ProjectComment {
+  id           String           @id @default(uuid()) @db.Uuid
+  projectId    String           @db.Uuid
+  project      Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  targetType   CommentTarget
+  /// File path, template id@version, or empty for the project itself.
+  targetRef    String           @default("") @db.VarChar(300)
+  parentId     String?          @db.Uuid
+  parent       ProjectComment?  @relation("CommentThread", fields: [parentId], references: [id], onDelete: Cascade)
+  replies      ProjectComment[] @relation("CommentThread")
+  authorId     String           @db.Uuid
+  author       Owner            @relation("CommentAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  body         String           @db.VarChar(4000)
+  /// Member ids mentioned in the body (project members only).
+  mentions     String[]         @default([])
+  createdAt    DateTime         @default(now()) @db.Timestamptz(3)
+  editedAt     DateTime?        @db.Timestamptz(3)
+  deletedAt    DateTime?        @db.Timestamptz(3)
+  resolvedAt   DateTime?        @db.Timestamptz(3)
+  resolvedById String?          @db.Uuid
+  resolvedBy   Owner?           @relation("CommentResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+
+  @@index([projectId, targetType, targetRef, createdAt])
+  @@index([parentId])
+}
+
+enum PresenceMode {
+  VIEWING
+  EDITING
+}
+
+/// Heartbeat-based presence: one current location per member per project.
+model ProjectPresence {
+  projectId String       @db.Uuid
+  project   Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  memberId  String       @db.Uuid
+  member    Owner        @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  filePath  String       @default("") @db.VarChar(400)
+  mode      PresenceMode @default(VIEWING)
+  seenAt    DateTime     @default(now()) @db.Timestamptz(3)
+
+  @@id([projectId, memberId])
+  @@index([projectId, seenAt])
+}
+
+enum AsaaEventStatus {
+  PENDING
+  DELIVERED
+  DEAD
+}
+
+/// Durable outbox for ASAA ecosystem events (asaa.event.v1). The row id is the envelope id (idempotency key).
+/// The envelope never contains secrets, file contents or paths; lastError holds an HTTP status or error class only.
+model AsaaEventOutbox {
+  id            String          @id @db.Uuid
+  type          String          @db.VarChar(80)
+  envelope      Json
+  status        AsaaEventStatus @default(PENDING)
+  attempts      Int             @default(0)
+  nextAttemptAt DateTime        @default(now()) @db.Timestamptz(3)
+  deliveredAt   DateTime?       @db.Timestamptz(3)
+  lastError     String?         @db.VarChar(120)
+  createdAt     DateTime        @default(now()) @db.Timestamptz(3)
+
+  @@index([status, nextAttemptAt])
+  @@index([status, createdAt])
+}

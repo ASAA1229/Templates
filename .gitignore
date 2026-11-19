@@ -16,3 +16,46 @@ coverage/
 .cache/
 .DS_Store
 Thumbs.db
+
+# Local runtime data (project-local PostgreSQL cluster, logs, test artefacts)
+.local/
+*.log
+playwright-report/
+test-results/
+*.tsbuildinfo
+
+# Python hygiene
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Jenkins/CI scratch output
+.jenkins-temp/
+.playwright-browsers/
+templates-dependencies.cdx.json
+
+# Local production secrets and backups
+deploy/local-prod/.env.local-prod
+deploy/local-prod/backups/
+
+# npm dependency lockfile (repository policy)
+package-lock.json
+
+# Organization policy: editor state, local databases, release artefacts
+dist-ssr/
+.idea/
+.vscode/
+*.db
+*.sqlite3
+*.tar.gz
+*.sha256
+*.cdx.json
+customer-release-report.json

@@ -1,0 +1,5 @@
+Filesystem                 1024-blocks     Used Available Capacity Mounted on
+/dev/mapper/rhel-root         83871744 21004444  62867300      26% /
+devtmpfs                       8147204        0   8147204       0% /dev
+tmpfs                          8157260        0   8157260       0% /dev/shm
+/dev/sda1                      1038336   224332    814004      22% /boot

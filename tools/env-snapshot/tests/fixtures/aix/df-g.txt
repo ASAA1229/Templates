@@ -1,0 +1,4 @@
+Filesystem    GB blocks      Free %Used    Iused %Iused Mounted on
+/dev/hd4           2.00      1.40   30%    10567     4% /
+/dev/hd2           5.00      1.25   75%    50123    10% /usr
+/dev/hd9var        1.00      0.40   60%     8000     3% /var

@@ -1,0 +1,3 @@
+NAME="sda" TYPE="disk" SIZE="100G" FSTYPE="" MOUNTPOINT=""
+NAME="sda1" TYPE="part" SIZE="1G" FSTYPE="xfs" MOUNTPOINT="/boot"
+NAME="rhel-root" TYPE="lvm" SIZE="80G" FSTYPE="xfs" MOUNTPOINT="/"

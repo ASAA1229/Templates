@@ -1,0 +1,31 @@
+# Fly.io API config. Create nothing until you run `fly launch --copy-config --no-deploy` yourself.
+# Secrets (never in this file):  fly secrets set DATABASE_URL=... WEB_ORIGIN=https://<web-host> MFA_ENCRYPTION_KEY=...
+app = "asaa-templates-api"
+primary_region = "iad"
+
+[build]
+  dockerfile = "../local-prod/Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+  HOST = "0.0.0.0"
+  PORT = "8080"
+  COOKIE_SECURE = "true"
+  TRUST_PROXY = "uniquelocal"
+  JOB_ISOLATION = "process"
+  AI_ENABLED = "false"
+
+[deploy]
+  release_command = "npx prisma migrate deploy --schema prisma/schema.prisma"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  [[http_service.checks]]
+    path = "/api/health/ready"
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "20s"

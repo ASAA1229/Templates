@@ -1,0 +1,30 @@
+# Render free-tier blueprint (API). Nothing is created until you connect the repo in Render yourself.
+# DATABASE_URL: a free Neon or Supabase Postgres connection string (use the pooled/direct URL with sslmode=require).
+services:
+  - type: web
+    name: asaa-templates-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./deploy/local-prod/Dockerfile
+    dockerContext: .
+    dockerCommand: sh -c "npx prisma migrate deploy --schema prisma/schema.prisma && node dist/server.js"
+    healthCheckPath: /api/health/ready
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: TRUST_PROXY
+        value: uniquelocal
+      - key: JOB_ISOLATION
+        value: process
+      - key: AI_ENABLED
+        value: "false"
+      - key: WEB_ORIGIN
+        sync: false # the public https URL of the static web site
+      - key: DATABASE_URL
+        sync: false
+      - key: MFA_ENCRYPTION_KEY
+        generateValue: true

@@ -1,0 +1,4 @@
+System configuration: lcpu=16 drives=2 paths=4 vdisks=0
+
+tty:      tin         tout   avg-cpu: % user % sys % idle % iowait
+          0.0          0.1               3.0   1.0   96.0      0.0

@@ -1,0 +1,2 @@
+/dev/mapper/rhel-root on / type xfs (rw,relatime,attr2)
+/dev/sda1 on /boot type xfs (rw,relatime)

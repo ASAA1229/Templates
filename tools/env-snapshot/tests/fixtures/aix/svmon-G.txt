@@ -1,0 +1,7 @@
+               size       inuse        free         pin     virtual  available   mmode
+memory      8388608     6200123     2188485     1151224     5994160   2188485     Ded
+pg space    1048576        32012
+
+               work        pers        clnt       other
+pin         995944           0           0      155280
+in use     5994160           0      205963

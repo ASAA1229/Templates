@@ -1,0 +1,2 @@
+root id=0 pgrp=system fsize=-1
+svcapp id=205 pgrp=staff fsize=2097151
