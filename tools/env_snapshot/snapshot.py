@@ -40,7 +40,7 @@ def _command_output(argv: list[str], timeout: int = 4) -> str | None:
     return result.stdout.strip()[:12000] or None
 
 
-def _memory_bytes() -> dict[str, int] | None:
+def _memory_bytes() -> dict[str, Any] | None:
     """Read total/available memory from procfs (Linux); no external command."""
     proc_mem = Path("/proc/meminfo")
     if proc_mem.is_file():
@@ -61,7 +61,7 @@ def _memory_bytes() -> dict[str, int] | None:
     # AIX commonly exposes memory through lsattr; retain raw output rather than
     # guessing a byte conversion from platform-specific units.
     aix_memory = _command_output(["lsattr", "-El", "sys0"])
-    return {"aix_sys0_attributes": aix_memory} if aix_memory else None  # type: ignore[dict-item]
+    return {"aix_sys0_attributes": aix_memory} if aix_memory else None
 
 
 def _filesystem_root() -> dict[str, int] | None:
