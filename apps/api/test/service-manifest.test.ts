@@ -3,8 +3,9 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
+import { MANIFEST_RATE_LIMIT, READINESS_CACHE_MS } from "../src/modules/integration/manifest.js";
 import { createHarness } from "./helpers.js";
 
 const contractsDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../contracts/asaa-ecosystem/v1");
@@ -56,6 +57,36 @@ describe("ASAA service manifest (/.well-known/asaa-service)", () => {
     const text = JSON.stringify(response.body);
     expect(text).not.toContain(scratch);
     expect(text).not.toMatch(/postgres(ql)?:\/\//);
+  });
+
+  it("caches readiness probes for a few seconds and rate limits per client", async () => {
+    const h = createHarness();
+    try {
+      const spy = vi.spyOn(h.ctx.prisma, "$queryRaw");
+      const agent = h.agent();
+      expect((await agent.get("/.well-known/asaa-service")).status).toBe(200);
+      const afterFirst = spy.mock.calls.length;
+      expect(afterFirst).toBeGreaterThan(0);
+      await agent.get("/.well-known/asaa-service");
+      await agent.get("/.well-known/asaa-service");
+      expect(spy.mock.calls.length).toBe(afterFirst); // served from the cache
+      h.clock.now = new Date(h.clock.now.getTime() + READINESS_CACHE_MS + 1);
+      await agent.get("/.well-known/asaa-service");
+      expect(spy.mock.calls.length).toBe(afterFirst * 2); // refreshed after the cache window
+      // Rate limit: the window allows MANIFEST_RATE_LIMIT.limit requests per client address.
+      let limited = 0;
+      for (let i = 0; i < MANIFEST_RATE_LIMIT.limit + 5; i += 1) {
+        const res = await agent.get("/.well-known/asaa-service");
+        if (res.status === 429) {
+          limited += 1;
+          expect(res.headers["retry-after"]).toBeTruthy();
+        }
+      }
+      expect(limited).toBeGreaterThan(0);
+    } finally {
+      vi.restoreAllMocks();
+      await h.close();
+    }
   });
 
   it("rejects a manifest that violates the schema (guards the validator itself)", () => {
