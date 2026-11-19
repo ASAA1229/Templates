@@ -37,6 +37,11 @@ let ingestStatuses: number[] = [];
 let tokenRequests: string[] = [];
 let tokenCounter = 0;
 let rejectToken: string | null = null;
+let redirectIngestTo: string | null = null;
+let redirectTokenTo: string | null = null;
+let trap: Server;
+let trapHits: { url: string; authorization: string | undefined; body: string }[] = [];
+let trapUrl: string;
 let asaa: Server;
 let keycloak: Server;
 let asaaUrl: string;
@@ -58,6 +63,7 @@ beforeAll(async () => {
         requestId: req.headers["x-request-id"],
         body: JSON.parse(raw) as Record<string, unknown>,
       });
+      if (redirectIngestTo) return void res.writeHead(302, { location: redirectIngestTo }).end();
       const status = authorization === `Bearer ${rejectToken}` ? 401 : (ingestStatuses.shift() ?? 202);
       res.writeHead(status, { "content-type": "application/json" }).end("{}");
     });
@@ -65,21 +71,34 @@ beforeAll(async () => {
   keycloak = createServer((req, res) => {
     void readBody(req).then((raw) => {
       tokenRequests.push(raw);
+      if (redirectTokenTo) return void res.writeHead(307, { location: redirectTokenTo }).end();
       tokenCounter += 1;
       res
         .writeHead(200, { "content-type": "application/json" })
         .end(JSON.stringify({ access_token: `mock-access-token-${tokenCounter}`, expires_in: 300 }));
     });
   });
+  trap = createServer((req, res) => {
+    void readBody(req).then((body) => {
+      trapHits.push({ url: req.url ?? "", authorization: req.headers.authorization, body });
+      res.writeHead(200, { "content-type": "application/json" }).end("{}");
+    });
+  });
   await Promise.all([
+    new Promise<void>((resolve) => trap.listen(0, "127.0.0.1", resolve)),
     new Promise<void>((resolve) => asaa.listen(0, "127.0.0.1", resolve)),
     new Promise<void>((resolve) => keycloak.listen(0, "127.0.0.1", resolve)),
   ]);
   asaaUrl = `http://127.0.0.1:${(asaa.address() as AddressInfo).port}`;
   tokenUrl = `http://127.0.0.1:${(keycloak.address() as AddressInfo).port}/token`;
+  trapUrl = `http://127.0.0.1:${(trap.address() as AddressInfo).port}/trap`;
 });
 afterAll(async () => {
-  await Promise.all([new Promise((resolve) => asaa.close(resolve)), new Promise((resolve) => keycloak.close(resolve))]);
+  await Promise.all([
+    new Promise((resolve) => asaa.close(resolve)),
+    new Promise((resolve) => keycloak.close(resolve)),
+    new Promise((resolve) => trap.close(resolve)),
+  ]);
 });
 beforeEach(() => {
   received = [];
@@ -87,6 +106,9 @@ beforeEach(() => {
   tokenRequests = [];
   tokenCounter = 0;
   rejectToken = null;
+  redirectIngestTo = null;
+  redirectTokenTo = null;
+  trapHits = [];
 });
 
 const credentialsEnv = () => ({
@@ -469,6 +491,43 @@ describe("authentication to ASAA (mocked Keycloak)", () => {
         status: "PENDING",
         lastError: "status 401",
       });
+    } finally {
+      await h.close();
+    }
+  });
+});
+
+describe("redirects are never followed", () => {
+  it("keeps the event retryable and sends nothing to the redirect target", async () => {
+    const h = createHarness(staticEnv());
+    try {
+      await h.reset();
+      redirectIngestTo = trapUrl;
+      const id = (await h.ctx.events!.record({ type: "templates.job.completed", data: {} }))!;
+      expect(await h.ctx.events!.deliverDue()).toBe(0);
+      expect(await h.ctx.prisma.asaaEventOutbox.findUnique({ where: { id } })).toMatchObject({
+        status: "PENDING",
+        lastError: "status 302",
+      });
+      expect(trapHits).toHaveLength(0);
+      expect(h.ctx.events!.manifestStatus()).toBe("degraded");
+    } finally {
+      await h.close();
+    }
+  });
+
+  it("does not forward the client secret when the token endpoint redirects", async () => {
+    const h = createHarness(credentialsEnv());
+    try {
+      await h.reset();
+      redirectTokenTo = trapUrl;
+      const id = (await h.ctx.events!.record({ type: "templates.job.completed", data: {} }))!;
+      expect(await h.ctx.events!.deliverDue()).toBe(0);
+      expect(trapHits).toHaveLength(0);
+      expect(received).toHaveLength(0);
+      const row = await h.ctx.prisma.asaaEventOutbox.findUnique({ where: { id } });
+      expect(row).toMatchObject({ status: "PENDING", lastError: "token endpoint status 307" });
+      expect(JSON.stringify(row)).not.toContain(CLIENT_SECRET);
     } finally {
       await h.close();
     }

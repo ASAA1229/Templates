@@ -163,6 +163,8 @@ export class TokenProvider {
         client_id: this.config.ASAA_EVENTS_CLIENT_ID,
         client_secret: this.config.ASAA_EVENTS_CLIENT_SECRET!,
       }).toString(),
+      // Never follow redirects: the request body carries the client secret.
+      redirect: "manual",
       signal: AbortSignal.timeout(10_000),
     });
     if (!response.ok) throw new Error(`token endpoint status ${response.status}`);
@@ -388,6 +390,8 @@ export class EventService {
           ...(correlation ? { "x-request-id": correlation } : {}),
         },
         body,
+        // Never follow redirects: a 3xx is treated as a retryable routing problem (logged), not as a new target.
+        redirect: "manual",
         signal: AbortSignal.timeout(10_000),
       });
     };
@@ -396,6 +400,11 @@ export class EventService {
       if (response.status === 401 && this.tokens.canRefresh()) {
         this.tokens.invalidate();
         response = await post();
+      }
+      if (response.status >= 300 && response.status < 400) {
+        this.options.logger.error("asaa event endpoint answered with a redirect; not followed", {
+          status: response.status,
+        });
       }
       const result = classifyStatus(response.status);
       // 401/403 after a refresh usually means a credentials or role problem that an operator can fix: keep retrying.
