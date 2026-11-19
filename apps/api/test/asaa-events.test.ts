@@ -183,7 +183,7 @@ describe("event mapping", () => {
     );
     expect(generation?.type).toBe("templates.generation.completed");
     expect(Object.keys(generation!.data).sort()).toEqual(
-      ["actorSub", "fileCount", "generationId", "mode", "outcome", "projectId", "templateId", "templateVersion"].sort(),
+      ["actor", "fileCount", "generationId", "mode", "outcome", "projectId", "templateId", "templateVersion"].sort(),
     );
     const failed = eventFromAudit(
       {
@@ -229,7 +229,15 @@ describe("event mapping", () => {
       },
       null,
     );
-    expect(job).toMatchObject({ type: "templates.job.failed", data: { jobId: "j-1", actorSub: "u-1", exitCode: 1 } });
+    expect(job).toMatchObject({ type: "templates.job.failed", data: { jobId: "j-1", actor: null, exitCode: 1 } });
+    // Internal Owner ids are never emitted; only an SSO subject is.
+    const sso = eventFromAudit(
+      { action: "job.finish", outcome: "SUCCESS", targetId: "j-2", metadata: { requestedById: "u-1" } },
+      { owner: { id: "internal-owner-id", ssoSub: "kc-sub-123" }, requestId: "req-12345678" } as never,
+    );
+    expect(sso?.data.actor).toBe("kc-sub-123");
+    expect(JSON.stringify(sso)).not.toContain("internal-owner-id");
+    expect(JSON.stringify(sso)).not.toContain("u-1");
     expect(eventFromAudit({ action: "catalog.content_approve", outcome: "SUCCESS" }, null)).toBeNull();
     expect(eventFromAudit({ action: "authz.denied", outcome: "DENIED" }, null)).toBeNull();
   });

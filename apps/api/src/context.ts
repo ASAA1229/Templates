@@ -19,6 +19,8 @@ export interface AuthenticatedOwner {
   displayName: string;
   role: "OWNER" | "ADMIN" | "DEVELOPER" | "TESTER" | "EMPLOYEE";
   mfaEnabled?: boolean;
+  /** OIDC `sub` of the SSO identity behind this session, when the owner signed in through SSO. */
+  ssoSub?: string;
 }
 
 declare global {

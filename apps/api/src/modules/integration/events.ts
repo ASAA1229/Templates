@@ -9,7 +9,7 @@ import type { AuditEntry } from "../audit/audit.service.js";
  * ASAA ecosystem event producer (contracts/asaa-ecosystem/v1/event-envelope.schema.json).
  *
  * - Events are written to a durable Postgres outbox (AsaaEventOutbox) and delivered by a background sender.
- * - Payloads are built from explicit allow-lists: ids, outcome and the actor `sub` only. Template content, file
+ * - Payloads are built from explicit allow-lists: ids, outcome and the actor (SSO `sub` or null) only. Template content, file
  *   contents, paths, environment values, secrets and free-text notes never enter an envelope.
  * - Disabled unless ASAA_EVENTS_URL, ASAA_ORG_ID and credentials are configured.
  */
@@ -72,7 +72,8 @@ const RELEASE_ACTIONS: Record<string, EventType> = {
 /** Map an audit entry to an event, or null when the action is not part of the ecosystem contract. */
 export function eventFromAudit(entry: AuditEntry, req: Request | null): EventInput | null {
   const metadata = entry.metadata;
-  const actorSub = req?.owner?.id ?? (typeof metadata?.requestedById === "string" ? metadata.requestedById : null);
+  // The actor is the SSO subject when the session came from SSO; internal Owner ids are never emitted.
+  const actor = req?.owner?.ssoSub ?? null;
   const correlationId = req?.requestId ?? null;
   if (entry.action === "generation.complete") {
     const ok = entry.outcome === "SUCCESS";
@@ -84,7 +85,7 @@ export function eventFromAudit(entry: AuditEntry, req: Request | null): EventInp
       data: {
         outcome: ok ? "success" : "failure",
         projectId: entry.targetId ?? null,
-        actorSub,
+        actor,
         ...pick(metadata, ["generationId", "mode", "templateId", "templateVersion", "attempt"]),
         ...(ok && typeof metadata?.files === "number" ? { fileCount: metadata.files } : {}),
       },
@@ -99,7 +100,7 @@ export function eventFromAudit(entry: AuditEntry, req: Request | null): EventInp
       data: {
         outcome: "success",
         releaseId: entry.targetId ?? null,
-        actorSub,
+        actor,
         ...pick(metadata, ["templateId", "version"]),
       },
     };
@@ -114,7 +115,7 @@ export function eventFromAudit(entry: AuditEntry, req: Request | null): EventInp
       data: {
         outcome: ok ? "success" : "failure",
         jobId: entry.targetId ?? null,
-        actorSub,
+        actor,
         ...pick(metadata, ["projectId", "task", "status", "exitCode", "durationMs", "isolation"]),
       },
     };
