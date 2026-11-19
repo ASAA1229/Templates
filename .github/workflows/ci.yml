@@ -30,7 +30,7 @@ jobs:
     timeout-minutes: 25
     services:
       postgres:
-        image: postgres:18
+        image: postgres:18.7
         env:
           POSTGRES_USER: templates
           POSTGRES_PASSWORD: templates_ci

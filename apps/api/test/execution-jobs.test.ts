@@ -21,7 +21,7 @@ import { createHarness } from "./helpers.js";
 
 /** RG-07: authenticated build/test jobs with process isolation and an optional Docker container boundary. */
 const PASSWORD = "a sufficiently long test password";
-const IMAGE = "node:24-alpine";
+const IMAGE = "node:24.22.3-alpine3.24";
 
 // ---- fake docker -----------------------------------------------------------------------------------------------
 

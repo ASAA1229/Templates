@@ -27,3 +27,30 @@ function Invoke-Compose {
   & docker compose --env-file $script:EnvFile -f $script:Compose @ComposeArgs
   if ($LASTEXITCODE -ne 0) { throw "docker compose $($ComposeArgs -join ' ') failed ($LASTEXITCODE)." }
 }
+
+# Image tags are exact and version-derived: <package.json version>-<short commit> (version only without git).
+# The running and previous tags are remembered in backups\ (git-ignored) so rollback targets an exact tag.
+function Get-ImageVersionTag {
+  $version = (Get-Content (Join-Path $script:RepoRoot 'package.json') -Raw | ConvertFrom-Json).version
+  $sha = ''
+  try { $sha = (& git -C $script:RepoRoot rev-parse --short=7 HEAD 2>$null) } catch { }
+  if ($LASTEXITCODE -eq 0 -and $sha -match '^[0-9a-f]{7}$') { return "$version-$sha" }
+  return "$version"
+}
+
+function Get-StateValue([string]$Name) {
+  $file = Join-Path $script:Here "backups\$Name"
+  if (Test-Path $file) { return (Get-Content $file -Raw).Trim() }
+  return ''
+}
+
+function Set-StateValue([string]$Name, [string]$Value) {
+  New-Item -ItemType Directory -Force (Join-Path $script:Here 'backups') | Out-Null
+  Set-Content (Join-Path $script:Here "backups\$Name") $Value -Encoding ascii
+}
+
+# docker-compose.yml resolves ${TEMPLATES_IMAGE_TAG}: the running deployment's tag, else the version-derived one.
+if (-not $env:TEMPLATES_IMAGE_TAG) {
+  $runningTag = Get-StateValue 'IMAGE_TAG'
+  $env:TEMPLATES_IMAGE_TAG = if ($runningTag) { $runningTag } else { Get-ImageVersionTag }
+}

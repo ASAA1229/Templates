@@ -2,7 +2,7 @@
 .SYNOPSIS
   Build, migrate, start and smoke-check the local production stack. Rolls back automatically on failure.
 .DESCRIPTION
-  1. keeps the running image as templates-local-prod:previous
+  1. remembers the running image tag (templates-local-prod:<version>-<commit>) as the rollback target
   2. dumps the database (pg_dump, custom format) to backups\ using the migrator role
   3. builds the new image, runs `prisma migrate deploy`, starts web (8200) and API (8201)
   4. runs scripts/smoke.mjs against http://localhost:8200
@@ -16,8 +16,11 @@ $pgBin = Find-PgBin
 $backups = Join-Path $PSScriptRoot 'backups'
 New-Item -ItemType Directory -Force $backups | Out-Null
 
-$hadCurrent = [bool](docker image ls -q templates-local-prod:current)
-if ($hadCurrent) { docker tag templates-local-prod:current templates-local-prod:previous | Out-Null }
+$newTag = Get-ImageVersionTag
+$runningTag = Get-StateValue 'IMAGE_TAG'
+$hadCurrent = [bool]$runningTag -and [bool](docker image ls -q "templates-local-prod:$runningTag")
+if ($hadCurrent -and $runningTag -ne $newTag) { Set-StateValue 'PREVIOUS_IMAGE_TAG' $runningTag }
+$env:TEMPLATES_IMAGE_TAG = $newTag
 
 try {
   if ($hadCurrent) {
@@ -40,6 +43,7 @@ try {
   if (-not $ok) { throw 'API did not become ready.' }
   & node scripts/smoke.mjs --url $script:WebUrl
   if ($LASTEXITCODE -ne 0) { throw 'smoke test failed.' }
+  Set-StateValue 'IMAGE_TAG' $newTag
   Write-Host "Deploy OK: $script:WebUrl (API $script:ApiUrl)"
 }
 catch {

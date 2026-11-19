@@ -3,7 +3,7 @@
 # Secrets come from the git-ignored .env.local-prod next to this file; nothing secret is stored here.
 name: templates-local-prod
 x-app: &app
-  image: templates-local-prod:current
+  image: templates-local-prod:${TEMPLATES_IMAGE_TAG:?set by common.ps1 (version-derived tag)}
   build:
     context: ../..
     dockerfile: deploy/local-prod/Dockerfile

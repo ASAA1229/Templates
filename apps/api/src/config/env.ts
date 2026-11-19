@@ -63,7 +63,7 @@ const envSchema = z.object({
     .string()
     .trim()
     .regex(/^[A-Za-z0-9][A-Za-z0-9._/:@-]{0,199}$/, "Invalid image reference.")
-    .default("node:24-alpine"),
+    .default("node:24.22.3-alpine3.24"),
   /** Where independent project outputs are written; never inside the platform source. */
   GENERATION_OUTPUT_DIR: z
     .string()
