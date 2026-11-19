@@ -1,0 +1,5 @@
+frequency   3000000000     Processor Speed       False
+smt_enabled true           Processor SMT enabled False
+smt_threads 4              Processor SMT threads False
+state       enable         Processor state       False
+type        PowerPC_POWER9 Processor type        False

@@ -1,0 +1,8 @@
+  UNIT                      LOAD   ACTIVE SUB     DESCRIPTION
+  crond.service             loaded active running Command Scheduler
+  sshd.service              loaded active running OpenSSH server daemon
+● kdump.service           loaded failed failed  Crash recovery kernel arming
+  postgresql.service        loaded active running PostgreSQL database server
+
+LOAD   = Reflects whether the unit definition was properly loaded.
+4 loaded units listed.

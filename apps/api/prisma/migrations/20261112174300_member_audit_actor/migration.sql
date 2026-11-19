@@ -1,0 +1,1 @@
+ALTER TYPE "AuditActorType" ADD VALUE 'MEMBER';

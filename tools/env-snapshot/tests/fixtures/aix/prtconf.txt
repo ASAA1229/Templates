@@ -1,0 +1,19 @@
+System Model: IBM,9009-42A
+Machine Serial Number: 7890ABC
+Processor Type: PowerPC_POWER9
+Processor Implementation Mode: POWER 9
+Processor Version: PV_9_Compat
+Number Of Processors: 4
+Processor Clock Speed: 3000 MHz
+CPU Type: 64-bit
+Kernel Type: 64-bit
+LPAR Info: 12 aixprod01
+Memory Size: 32768 MB
+Good Memory Size: 32768 MB
+Platform Firmware level: VL940_027
+Firmware Version: IBM,FW940.30 (VL940_027)
+Console Login: enable
+
+Network Information
+	Host Name: aixprod01
+	IP Address: 10.1.2.3

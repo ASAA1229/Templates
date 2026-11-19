@@ -1,0 +1,11 @@
+  Fileset                      Level  State  Type  Description (Uninstaller)
+  ----------------------------------------------------------------------------
+  Java8_64.jre               8.0.0.620    C     F    Java SDK 64-bit Runtime Environment
+  bos.64bit                  7.2.5.100    C     F    Base Operating System 64 bit Runtime
+  bos.rte                    7.2.5.101    C     F    Base Operating System Runtime
+  openssh.base.server        8.1.102.2101 C     F    Open Secure Shell Server
+  rpm.rte                    4.15.1.5     C     F    RPM Package Manager
+
+State codes:
+ A -- Applied.
+ C -- Committed.

@@ -1,0 +1,7 @@
+{
+  "name": "{{projectName}}",
+  "headline": "{{headline}}",
+  "tagline": "{{tagline}}",
+  "accentColor": "{{accentColor}}",
+  "contactEmail": "{{contactEmail}}"
+}

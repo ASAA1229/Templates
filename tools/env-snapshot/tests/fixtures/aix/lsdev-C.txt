@@ -1,0 +1,5 @@
+hdisk0   Available 00-08-00     SAS Disk Drive
+hdisk1   Available 00-09-00     SAS Disk Drive
+ent0     Available 01-00       2-Port Gigabit Ethernet Adapter (e414571614102004)
+proc0    Available 00-00       Processor
+sys0     Available             System Object

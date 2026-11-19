@@ -1,0 +1,154 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://asaa.local/schemas/env-snapshot-report-1.0.json",
+  "title": "env-snapshot report",
+  "description": "JSON report written by env_snapshot.py (schema_version 1.0).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "tool",
+    "generated_at",
+    "host",
+    "python_version",
+    "platform",
+    "redaction",
+    "context",
+    "profile",
+    "collectors",
+    "sections"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "enum": ["1.0"] },
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "type": "string", "enum": ["env-snapshot"] },
+        "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" }
+      }
+    },
+    "generated_at": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$" },
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hostname", "host_id"],
+      "properties": {
+        "hostname": { "type": "string", "minLength": 1 },
+        "host_id": { "type": "string", "pattern": "^[0-9a-f]{16}$" }
+      }
+    },
+    "python_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+" },
+    "platform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["system", "release", "machine", "family"],
+      "properties": {
+        "system": { "type": "string" },
+        "release": { "type": "string" },
+        "machine": { "type": "string" },
+        "family": { "type": "string", "enum": ["linux", "aix", "other"] }
+      }
+    },
+    "redaction": { "type": "boolean" },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["context", "context_explicit", "project", "environment"],
+      "properties": {
+        "context": { "type": "string", "enum": ["ICG", "ACQ", "ISS"] },
+        "context_explicit": { "type": "boolean" },
+        "project": { "type": "string", "maxLength": 64 },
+        "environment": { "type": "string", "maxLength": 64 }
+      }
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "collectors", "modes"],
+      "properties": {
+        "name": { "type": "string", "enum": ["ICG", "ACQ", "ISS"] },
+        "collectors": { "type": "array", "items": { "$ref": "#/definitions/collectorId" } },
+        "modes": {
+          "type": "object",
+          "additionalProperties": { "type": "string", "enum": ["full", "metadata", "summary", "listening", "names"] }
+        }
+      }
+    },
+    "collectors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "status", "message", "duration_ms"],
+        "properties": {
+          "id": { "$ref": "#/definitions/collectorId" },
+          "title": { "type": "string" },
+          "status": { "$ref": "#/definitions/status" },
+          "message": { "type": "string" },
+          "duration_ms": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "sections": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/definitions/section" }
+    }
+  },
+  "definitions": {
+    "status": {
+      "type": "string",
+      "enum": ["ok", "unsupported", "unavailable", "permission_denied", "timeout", "error"]
+    },
+    "collectorId": {
+      "type": "string",
+      "enum": [
+        "system",
+        "os",
+        "kernel",
+        "hardware",
+        "disks",
+        "packages",
+        "runtimes",
+        "environment",
+        "network",
+        "users_limits",
+        "services",
+        "resources",
+        "processes"
+      ]
+    },
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "source", "target", "status", "message", "exit_code", "truncated", "duration_ms", "output"],
+      "properties": {
+        "name": { "type": "string" },
+        "source": { "type": "string", "enum": ["command", "file", "environment"] },
+        "target": { "type": "string" },
+        "status": { "$ref": "#/definitions/status" },
+        "message": { "type": "string" },
+        "exit_code": { "type": ["integer", "null"] },
+        "truncated": { "type": "boolean" },
+        "duration_ms": { "type": "integer", "minimum": 0 },
+        "output": { "type": "string" }
+      }
+    },
+    "section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "status", "message", "mode", "items", "data", "duration_ms"],
+      "properties": {
+        "id": { "$ref": "#/definitions/collectorId" },
+        "title": { "type": "string" },
+        "status": { "$ref": "#/definitions/status" },
+        "message": { "type": "string" },
+        "mode": { "type": "string", "enum": ["full", "metadata", "summary", "listening", "names"] },
+        "items": { "type": "array", "items": { "$ref": "#/definitions/item" } },
+        "data": { "type": "object" },
+        "duration_ms": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

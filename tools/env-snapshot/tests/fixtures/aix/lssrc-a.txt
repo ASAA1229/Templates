@@ -1,0 +1,5 @@
+Subsystem         Group            PID          Status
+ syslogd          ras              4260310      active
+ sendmail         mail             5112122      active
+ biod             nfs                           inoperative
+ sshd             ssh              3670356      active

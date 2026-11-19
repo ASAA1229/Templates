@@ -1,0 +1,6 @@
+Routing tables
+Destination        Gateway           Flags   Refs     Use  If   Exp  Groups
+
+Route Tree for Protocol Family 2 (Internet):
+default            10.1.2.1          UG        2     4000 en0      -      -
+10.1.2.0           10.1.2.3          UHSb      0        0 en0      -      -

@@ -1,0 +1,2 @@
+Page Space      Physical Volume   Volume Group    Size %Used Active  Auto  Type Chksum
+hd6             hdisk0            rootvg        4096MB     3   yes   yes    lv     0

@@ -1,0 +1,11 @@
+node_modules
+dist
+coverage
+.local
+package-lock.json
+apps/api/prisma/migrations
+playwright-report
+test-results
+*.md
+apps/api/template-library
+catalog/template-coverage.json

@@ -1,0 +1,9 @@
+kernel.hostname = rhel8-app01
+kernel.pid_max = 4194304
+kernel.threads-max = 127000
+kernel.shmmax = 18446744073692774399
+kernel.random.boot_id = 5c2b9d1e-0000-0000-0000-000000000000
+vm.swappiness = 10
+vm.max_map_count = 262144
+fs.file-max = 9223372036854775807
+net.core.somaxconn = 4096

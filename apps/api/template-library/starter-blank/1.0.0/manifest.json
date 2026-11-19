@@ -1,0 +1,85 @@
+{
+  "manifestVersion": 1,
+  "id": "starter-blank",
+  "version": "1.0.0",
+  "kind": "starter",
+  "projectType": "blank",
+  "title": "Blank project",
+  "category": "Starter",
+  "description": "Minimal repository skeleton with conventions only: editor settings, ignore rules, project metadata and empty docs and src folders.",
+  "technologies": [
+    {
+      "name": "Git",
+      "version": "2"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "summary",
+      "label": "Short summary",
+      "type": "text",
+      "maxLength": 500,
+      "description": "One or two sentences saved in README.txt."
+    }
+  ],
+  "files": [
+    {
+      "source": "README.txt",
+      "target": "README.txt",
+      "substitute": "text"
+    },
+    {
+      "source": "gitignore",
+      "target": ".gitignore",
+      "substitute": "none"
+    },
+    {
+      "source": "editorconfig",
+      "target": ".editorconfig",
+      "substitute": "none"
+    },
+    {
+      "source": "project.json",
+      "target": "project.json",
+      "substitute": "json"
+    }
+  ],
+  "directories": [
+    "docs",
+    "src"
+  ],
+  "compatibility": {
+    "generator": 1,
+    "adapter": "blank"
+  },
+  "license": {
+    "spdx": "MIT",
+    "notice": "Generated starter content may be used without attribution."
+  },
+  "provenance": {
+    "origin": "local",
+    "maintainer": "ASAA platform owner",
+    "repository": "ASAA1229/Templates"
+  },
+  "validation": {
+    "requiredOutputs": [
+      "README.txt",
+      "project.json"
+    ],
+    "maxFiles": 20,
+    "maxTotalBytes": 65536
+  },
+  "blueprint": {
+    "family": "general",
+    "architecture": "minimal",
+    "runtimes": [],
+    "languages": [],
+    "frameworks": [],
+    "databases": [],
+    "apis": [],
+    "infrastructure": [],
+    "operatingSystems": [
+      "cross-platform"
+    ]
+  }
+}

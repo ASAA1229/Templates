@@ -1,0 +1,23 @@
+{
+  "name": "{{projectSlug}}",
+  "private": true,
+  "version": "0.1.0",
+  "description": "{{projectPurpose}}",
+  "type": "module",
+  "engines": { "node": ">={{nodeVersion}}" },
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=.env src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node --env-file-if-exists=.env dist/server.js"
+  },
+  "dependencies": {
+    "express": "5.3.0",
+    "helmet": "8.3.0"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.6",
+    "@types/node": "24.19.2",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3"
+  }
+}

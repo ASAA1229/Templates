@@ -1,0 +1,6 @@
+CREATE TYPE "OwnerRole" AS ENUM ('OWNER', 'ADMIN', 'DEVELOPER', 'TESTER', 'EMPLOYEE');
+ALTER TABLE "Owner" DROP COLUMN "singleton";
+ALTER TABLE "Owner" ADD COLUMN "role" "OwnerRole" NOT NULL DEFAULT 'EMPLOYEE';
+ALTER TABLE "Owner" ADD COLUMN "isActive" BOOLEAN NOT NULL DEFAULT TRUE;
+UPDATE "Owner" SET "role" = 'OWNER';
+CREATE UNIQUE INDEX "Owner_single_owner_role_key" ON "Owner" ("role") WHERE "role" = 'OWNER';

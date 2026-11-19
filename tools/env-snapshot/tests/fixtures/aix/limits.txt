@@ -1,0 +1,3 @@
+default:
+	fsize = 2097151
+	core = 2097151

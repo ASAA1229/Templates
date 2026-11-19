@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "packages": {
+    "clinic-booking@1.0.0": {
+      "contentDigest": "1ad0c9df5cc4501bd98e4c210d955630e15593446b613d368a12824dae6e2bb1",
+      "outputDigest": "27eb4512f00fe02392a29fc2c9d6153124c316e0f9017dfa05c8cb772f7c48aa"
+    },
+    "clinic-catalog@1.0.0": {
+      "contentDigest": "f05334648c90e3f219cba122ae8cb5d2f01ce03b79469480ea7b8739d64c6a23",
+      "outputDigest": "dfee3f6ebcca97fe1a14385ee0c9e270d777276ef0f79d4cfd27b0d0f904e78b"
+    },
+    "clinic-editorial@1.0.0": {
+      "contentDigest": "8de7d003306d1aa8009ce9962cf06ec7ea0c0c5260b123d0d14081177c881085",
+      "outputDigest": "c95d027a9a1710174552d2584b0bcc51f4e16437f6f2e6ffe7f0a2c3928fcaf7"
+    },
+    "clinic-essential@1.0.0": {
+      "contentDigest": "c82734e5bad8029e8a2fe236198b4eaa0798689920881000a5e87f521e60b84d",
+      "outputDigest": "f55817f013b0a091d31ea984cc07c6a8fd565c96e9ee7f1db328961497d95fe2"
+    },
+    "clinic-multisite@1.0.0": {
+      "contentDigest": "66f520756289e88e9faf2f35643ed4a9e27ffde8de190c0846ab02feb360c139",
+      "outputDigest": "65bdc29985a12483fc7313dd6982a3ec54ed877f5c230b89edaf273af0457af1"
+    },
+    "education-booking@1.0.0": {
+      "contentDigest": "d56456d01c6d3dbbc2674d3ca082d0a67b9c33994b39e9fc125d6e915197b059",
+      "outputDigest": "b6118e5c17fc0f9fb5681abb93dabda09ab8cccdf1e06553519a41de5b9d801e"
+    },
+    "education-catalog@1.0.0": {
+      "contentDigest": "872fa04c197d974eb74156bfafea0b50db3dad3edff48484929a8a528d5cee2c",
+      "outputDigest": "0d2b60bc10fbec027b15c772c38cd80b968d6157851d85dff89f68b6d41b5e76"
+    },
+    "education-editorial@1.0.0": {
+      "contentDigest": "4cd4c04324fed3673176be92c6f59c1558a51d3ae97d4aa85f72210a6d632555",
+      "outputDigest": "ea21125a860c894b2d5233a0ebec7e5f94d88714be5ac30777d06079806db866"
+    },
+    "education-essential@1.0.0": {
+      "contentDigest": "89940ba60123501fa3026fad355c5a6ab84a65cdc131fc3e26c1fd2e3f060af1",
+      "outputDigest": "59c9755427993542b129dfafeceaa63fa19d022891e59e9ee0548234fa744b0d"
+    },
+    "education-multisite@1.0.0": {
+      "contentDigest": "06b61b0bdd3f4cdfc97deeaa3149791cda5b1c237bdfbf872ae2b9011592af42",
+      "outputDigest": "fcd5dd2ad3c719597b8d2c3d0f521df7d7f816e7babf55effbe0cd3ce25c2d14"
+    },
+    "landing-page@1.0.0": {
+      "contentDigest": "f973f59eaaca735907df22e979601c66a4871dcc4ba6e64a6d3feaae2bcf630c",
+      "outputDigest": "d179e675ed0c213f10c4ddfd2f763fffc6d82e866ebf65efdcb59a7cfa7aa898"
+    },
+    "professional-booking@1.0.0": {
+      "contentDigest": "631aad9059ced6ae7506cbd13a891ef04f712436bea2699a126a60f9cb6d9b17",
+      "outputDigest": "4d8bf6ab7dd53028e6397c917b67a2eb0bb73e02bddfe26c0fbfcc5e4bf74ebe"
+    },
+    "professional-catalog@1.0.0": {
+      "contentDigest": "e7e90c00bf0da658901a8603b013f925e58a5524ea492035ba3b8e87fd866231",
+      "outputDigest": "3acb779b92054f238abb322c89e9baa94ea53807d4a3009f7e05707b4db36c9f"
+    },
+    "professional-editorial@1.0.0": {
+      "contentDigest": "4febfa674ee22db6706836738166809df91501a855868f4923d77df9058755a0",
+      "outputDigest": "2eab7abeb93ac81c4e2b2a2bbf65cf0b9a1db2003af8684dc1a419b84be27272"
+    },
+    "professional-essential@1.0.0": {
+      "contentDigest": "b09402d79c785d95eec6eca515741365fb88c0b6bac5c1d58b33b82303182d16",
+      "outputDigest": "622a68ae69581a69e6bdcb4687a2107f696cf21fcb7f875ee83304772853d3ee"
+    },
+    "professional-multisite@1.0.0": {
+      "contentDigest": "6659a18812a92628a56beb120f7bd8b61cd698fccaae74504552cefa6a16b43e",
+      "outputDigest": "53119d7cf5a0232afb45bdebac073b10064f64de2934ae512962fbbdbf78c620"
+    },
+    "restaurant-booking@1.0.0": {
+      "contentDigest": "dc98e92ed75fbe1f65d140aa04584d6919369ac97bad5c3f724e1ddd45da25d6",
+      "outputDigest": "47d8e8e188d5fc43c32dc2b1b7266783b0e3134ff6a6cc2ecaa040a45a09a198"
+    },
+    "restaurant-catalog@1.0.0": {
+      "contentDigest": "c447b5dd0e058dea8f32f3ed5e747fdcdec92791acf618e9298aee6646e09e7e",
+      "outputDigest": "7f0147506b2b8b077e9f9f7f7bcd5e593919de017e1b06bdebb6b37418bfc8b3"
+    },
+    "restaurant-editorial@1.0.0": {
+      "contentDigest": "1024cde2b66bd35f00bbd05dfa31f8620dfc85e75caf8a01e541331798188a33",
+      "outputDigest": "5faf377178a15519966bdd4d83b7f959f798b4e98add5ab382454e0b0e66a065"
+    },
+    "restaurant-essential@1.0.0": {
+      "contentDigest": "d1f38bd84a5da0c0ac2ce5501824012c0e8c26cb10ddb46e5197c1a676d2bc9d",
+      "outputDigest": "b47d43fa50829e831f0740880a6fe5b37b8410c35d6c9480063406ffdd836ffb"
+    },
+    "restaurant-multisite@1.0.0": {
+      "contentDigest": "7dfb381d40bafc930824ac8f9438db2349daba2cd18c520e1f65872fd3957101",
+      "outputDigest": "a146c34bc36b5d79f77458bdb7f3ca89f58b543e274e8de6c07e4ac61c8d9979"
+    },
+    "retail-booking@1.0.0": {
+      "contentDigest": "1c185a5681c761b5b4e27add9c50f2054c71be77ffcfbf988e1e757801361b0f",
+      "outputDigest": "51711a1bd084f2a2d6328c8f7d5a608198287f7d96d52d8e439c20084ecc660a"
+    },
+    "retail-catalog@1.0.0": {
+      "contentDigest": "cb0bf3e4163bf883b1152dfa413cf99c0496ce182d98701be1bf18e91dcb016c",
+      "outputDigest": "28e14b6b68d0a080de77b4960601940986e6c12bff4d3cf1e00caff700f22756"
+    },
+    "retail-editorial@1.0.0": {
+      "contentDigest": "d0d7ba5a0604afe83d517aa0c40b80cdaff0b1d856299cc79b4d38f1af80b618",
+      "outputDigest": "a5e2288235c489237ab7fb8ab7d778a804014662f53fb6ed0daaa6c277b41337"
+    },
+    "retail-essential@1.0.0": {
+      "contentDigest": "3f0d898ff60514e1f7393907c6d7000b6b0ccf67df3aca386239c156d4d3d666",
+      "outputDigest": "5a71b5190646d542de156197c5d86f8d4d679e41de2d7b35f08ad14aa2cca18e"
+    },
+    "retail-multisite@1.0.0": {
+      "contentDigest": "e35e009c7740f1fc11d9358c9bf077d37db45f0936ba974f003ae11bf015a67d",
+      "outputDigest": "a0bb94e7b6577e302a5b0dc31dde9c612441623b657db2ac52bc8531066ad7b1"
+    },
+    "starter-api-service@1.0.0": {
+      "contentDigest": "90f48d910e9a9072ad5f67270fd0c9beed5a01fca23286f4ad328c610c79bfa7",
+      "outputDigest": "ad333d74c668bf425652f77da53c909bd9f824fcbd694ef1681e4aca0530503b"
+    },
+    "starter-blank@1.0.0": {
+      "contentDigest": "699ad6e9454dc5a9fba923804db35ced3eb3aa7270546cf8db6d61ac2227862e",
+      "outputDigest": "33cb1391fe3290c82481b9ebb9257913ed895c86d62ac76df4a9428911a4333c"
+    },
+    "starter-web-app@1.0.0": {
+      "contentDigest": "65a027331d2d17b79de6d4577cee8450675a42536706717a95e172b04db41d35",
+      "outputDigest": "157cc6a67c50339b7db899480ff2ca50f4c900c403d443e7e390e62363d432c6"
+    }
+  }
+}

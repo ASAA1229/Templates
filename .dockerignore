@@ -1,0 +1,12 @@
+node_modules
+**/node_modules
+.git
+.local
+.jenkins-temp
+**/dist
+**/test-results
+**/playwright-report
+deploy/local-prod/.env.local-prod
+deploy/local-prod/backups
+**/__pycache__
+*.log
