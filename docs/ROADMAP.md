@@ -82,3 +82,14 @@ See `docs/ASAA_MASTER_REQUIREMENTS_BASELINE.md`, `docs/PROJECT_SCOPE.md` and `do
 ## Baseline alignment — 2026-11-14
 
 This roadmap is subordinate to the approved ASAA Master Requirements Baseline v1.0. Round 6 is complete at framework level; detailed requirement population, applicability, ownership, dependencies, evidence-based gap scoring and delivery estimates remain pending. See the project scope and epic register documents in this branch. Do not infer completion from plans or source presence. No implementation, testing, deployment, paid-service, merge or release authorization is implied.
+
+
+---
+
+## Discovery reconciliation work — 2026-11-19
+
+1. Reconcile Sets 1–12 candidate requirements with the approved Master Requirements Baseline v1.0 and existing TMP-E01–TMP-E11.
+2. Decompose applicable requirements into sub-epics/features/stories/tasks with dependencies, owners and measurable acceptance criteria.
+3. Verify exact-head CI, coordinator validation, accessibility, container isolation, live connector and Environment Snapshot evidence.
+4. Resolve external decisions for zero-cost topology, RPO/RTO, rollback, incident ownership and release acceptance.
+5. Prepare a prioritized, evidence-backed roadmap for owner review. No implementation, testing, deployment, merge, paid service or release is authorized by this planning update.
