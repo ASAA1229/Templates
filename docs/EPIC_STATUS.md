@@ -19,3 +19,10 @@
 **Reconciled 2026-11-14 (documentation owner):** development, testing, integration and acceptance columns updated to the verified evidence in PROJECT_STATUS.md. Local evidence is not CI evidence (no GitHub Actions run observed; `gh` unauthenticated) and nothing here is CI VERIFIED.
 
 **Reconciled 2026-11-15 (documentation owner):** development, testing, integration and acceptance columns updated to the verified evidence in PROJECT_STATUS.md. Local evidence is not CI evidence (no GitHub Actions run observed; `gh` unauthenticated) and nothing here is CI VERIFIED.
+
+
+---
+
+## 2026-11-19 discovery reconciliation
+
+Sets 1–12 are closed. New selections are candidate requirements only; existing development, testing, integration and acceptance statuses remain unchanged until verified evidence is recorded. Pending mapping includes template taxonomy/catalogue, authoring/generation, customization/export, lifecycle/versioning, collaboration, AI/JARVIS mini-features, security/isolation, deployment/connectors, offline Linux/AIX snapshot, and cross-project data/security/DevOps/quality requirements. See [PENDING_WORK_REGISTER.md](PENDING_WORK_REGISTER.md). Current release remains NO-GO.
