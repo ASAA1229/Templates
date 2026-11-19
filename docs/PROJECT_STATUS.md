@@ -125,3 +125,13 @@ The coordinator's rerun of `npm run validate` failed at the API typecheck with a
 ## 2026-11-15 reconciliation (documentation owner)
 
 Head at time of writing: `d3dcadb` (test-only: de-flaked job authorization test, longer `node --test` job timeout, 10 s async query timeout for web tests). The RG-06 release lifecycle UI with version pinning, RG-07 authenticated job API with optional Docker boundary, database-backed shared rate limiter, load baseline and reflow/zoom checks documented above are agent-reported and not yet coordinator-verified (status: IMPLEMENTED — NOT FULLY TESTED until the testing phase). The Environment Snapshot (TMP-E10) is IN DEVELOPMENT with uncommitted work and is not documented as done. The coordinator's `npm run validate` rerun (Windows EPERM) is deferred to the test phase; it is not recorded as a product failure. No GitHub Actions run observed (deferred to test phase). Release decision NO-GO (deployment phase items deferred).
+
+
+## 2026-11-19 CI follow-up
+
+The first post-initialization organization audit inspected GitHub Actions run **44520937403** on `new` at SHA `417e7b1c`. It failed two jobs:
+
+- **Playwright / 320px reflow:** `/projects` overflowed to 338px at a 320px viewport because long generated project keys were unbroken. The key label now uses `min-w-0 break-all` in `apps/web/src/features/projects/ProjectsPage.tsx` (commit `c98d390a667e968dd1bcd684d9cb645346f99e44`).
+- **Generated-project validation:** all 35 generated variants failed because the shared `@asaa/contracts` package had not been built in that separate CI job before invoking the generator. The workflow now runs `npm run build:contracts` before generated validation (commit `c6a64916cfb9139c0b3128a9111e6a0d204d2ea6`).
+
+A rerun was triggered as GitHub Actions run **44524041362** on `new`, SHA `c98d390a`. At the time of this update, both validation jobs were still in progress. The fixes are therefore **implemented; CI verification pending**. Do not mark the reflow or generated-project acceptance as passed until the rerun completes successfully.

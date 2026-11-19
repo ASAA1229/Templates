@@ -126,16 +126,18 @@ export function ProjectsPage() {
             }
           />
         ) : (
-          <ul className="grid gap-3 md:grid-cols-2" aria-label="Projects">
+          <ul className="grid min-w-0 gap-3 md:grid-cols-2" aria-label="Projects">
             {projects.data.projects.map((project) => (
-              <li key={project.id}>
+              <li key={project.id} className="min-w-0">
                 <Link
                   to={`/projects/${project.id}`}
-                  className="block rounded-xl border bg-card p-4 transition-colors hover:border-primary/50 hover:bg-accent/40"
+                  className="block min-w-0 max-w-full rounded-xl border bg-card p-4 transition-colors hover:border-primary/50 hover:bg-accent/40"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold tracking-wide text-muted-foreground">{project.key}</p>
+                      <p className="min-w-0 break-all text-xs font-semibold tracking-wide text-muted-foreground">
+                        {project.key}
+                      </p>
                       <h2 className="truncate font-semibold">{project.name}</h2>
                     </div>
                     <div className="flex shrink-0 gap-1">

@@ -90,6 +90,8 @@ jobs:
           cache: npm
           cache-dependency-path: package.json
       - run: npm install --no-audit --no-fund
+      - name: Build shared contracts for template generation
+        run: npm run build:contracts
       - name: Generate starters, install dependencies, build and test them
         run: npm run validate:generated
       - name: Upload generated-project validation report
