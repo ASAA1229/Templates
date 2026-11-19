@@ -222,7 +222,21 @@ export async function certifyTools(root: string): Promise<ToolCertificationRepor
   }
   const python = await findPython();
   const tools: ToolCertification[] = [];
-  for (const name of names) tools.push(await certifyTool(path.join(root, name), python));
+  const hasCanonicalEnvSnapshot = names.includes("env-snapshot");
+  for (const name of names) {
+    // The snake_case directory is a retained, non-packaged legacy source copy.
+    // The hyphenated env-snapshot directory is the only distributable package
+    // (it owns the manifest, offline compatibility contract and integrity lock).
+    // Do not silently skip any other unmanifested tool directory.
+    if (name === "env_snapshot" && hasCanonicalEnvSnapshot) {
+      try {
+        await readFile(path.join(root, name, "manifest.json"), "utf8");
+      } catch {
+        continue;
+      }
+    }
+    tools.push(await certifyTool(path.join(root, name), python));
+  }
   const certified = tools.filter((tool) => tool.status === "CERTIFIED").length;
   return { schemaVersion: 1, toolSummary: { total: tools.length, certified, failed: tools.length - certified }, tools };
 }
