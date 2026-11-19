@@ -6,7 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { z } from "zod";
-import { loadConfig } from "../src/config/env.js";
+import { configWarnings, loadConfig } from "../src/config/env.js";
 import {
   classifyStatus,
   createEventService,
@@ -44,6 +44,7 @@ let tokenCounter = 0;
 let rejectToken: string | null = null;
 let redirectIngestTo: string | null = null;
 let redirectTokenTo: string | null = null;
+let tokenBody: "normal" | "huge" | "no-token" = "normal";
 let trap: Server;
 let trapHits: { url: string; authorization: string | undefined; body: string }[] = [];
 let trapUrl: string;
@@ -77,6 +78,9 @@ beforeAll(async () => {
     void readBody(req).then((raw) => {
       tokenRequests.push(raw);
       if (redirectTokenTo) return void res.writeHead(307, { location: redirectTokenTo }).end();
+      if (tokenBody === "huge")
+        return void res.writeHead(200, { "content-type": "application/json" }).end("x".repeat(200_000));
+      if (tokenBody === "no-token") return void res.writeHead(200, { "content-type": "application/json" }).end("{}");
       tokenCounter += 1;
       res
         .writeHead(200, { "content-type": "application/json" })
@@ -113,6 +117,7 @@ beforeEach(() => {
   rejectToken = null;
   redirectIngestTo = null;
   redirectTokenTo = null;
+  tokenBody = "normal";
   trapHits = [];
 });
 
@@ -151,13 +156,47 @@ describe("configuration gating", () => {
         ...base,
         ASAA_EVENTS_URL: "https://asaa.example.com",
         ASAA_EVENTS_TOKEN_URL: "http://kc.example.com/t",
+        ASAA_EVENTS_CLIENT_SECRET: "s",
       }),
-    ).toThrow(/ASAA_EVENTS_TOKEN_URL/);
+    ).toThrow(/ASAA_EVENTS_TOKEN_URL must use HTTPS/);
     expect(loadConfig({ ...base, ASAA_EVENTS_URL: "http://[::1]:8001" }).ASAA_EVENTS_URL).toBe("http://[::1]:8001");
     expect(loadConfig({ ...base, ASAA_EVENTS_URL: "https://asaa.example.com" }).ASAA_EVENTS_CLIENT_ID).toBe(
       "templates-events",
     );
     expect(loadConfig({ ...base, ASAA_EVENTS_URL: "" }).ASAA_EVENTS_URL).toBeUndefined();
+  });
+
+  it("fails closed on partial client credentials and warns when two credentials are set", () => {
+    const url = { ASAA_EVENTS_URL: "https://asaa.example.com", ASAA_ORG_ID: "asaa" };
+    const kc = "https://kc.example.com/token";
+    expect(() => loadConfig({ ...base, ...url, ASAA_EVENTS_TOKEN_URL: kc })).toThrow(/must be set together/);
+    expect(() => loadConfig({ ...base, ...url, ASAA_EVENTS_CLIENT_SECRET: "s", ASAA_EVENTS_TOKEN: "t" })).toThrow(
+      /must be set together/,
+    );
+    const both = loadConfig({
+      ...base,
+      ...url,
+      ASAA_EVENTS_TOKEN_URL: kc,
+      ASAA_EVENTS_CLIENT_SECRET: "s",
+      ASAA_EVENTS_TOKEN: "t",
+    });
+    expect(configWarnings(both)).toHaveLength(1);
+    expect(configWarnings(both).join(" ")).not.toContain("t".repeat(3));
+    expect(configWarnings(loadConfig({ ...base, ...url, ASAA_EVENTS_TOKEN: "t" }))).toHaveLength(0);
+  });
+
+  it("rejects credentials in URLs and over-long secrets", () => {
+    expect(() => loadConfig({ ...base, ASAA_EVENTS_URL: "https://user:pw@asaa.example.com" })).toThrow(
+      /must not contain credentials/,
+    );
+    expect(() =>
+      loadConfig({
+        ...base,
+        ASAA_EVENTS_TOKEN_URL: "https://kc.example.com/token",
+        ASAA_EVENTS_CLIENT_SECRET: "x".repeat(513),
+      }),
+    ).toThrow(/ASAA_EVENTS_CLIENT_SECRET/);
+    expect(() => loadConfig({ ...base, ASAA_EVENTS_TOKEN: "x".repeat(8193) })).toThrow(/ASAA_EVENTS_TOKEN/);
   });
 
   it("appends the contract path to an origin and keeps an explicit path", () => {
@@ -490,6 +529,30 @@ describe("authentication to ASAA (mocked Keycloak)", () => {
         "Bearer mock-access-token-1",
         "Bearer mock-access-token-2",
       ]);
+    } finally {
+      await h.close();
+    }
+  });
+
+  it("refuses an oversized or token-less token response without losing the event", async () => {
+    const h = createHarness(credentialsEnv());
+    try {
+      await h.reset();
+      const id = (await h.ctx.events!.record({ type: "templates.job.completed", data: {} }))!;
+      tokenBody = "huge";
+      expect(await h.ctx.events!.deliverDue()).toBe(0);
+      expect((await h.ctx.prisma.asaaEventOutbox.findUnique({ where: { id } }))?.lastError).toBe(
+        "token endpoint response too large",
+      );
+      h.clock.now = new Date(h.clock.now.getTime() + 16 * 60_000);
+      tokenBody = "no-token";
+      expect(await h.ctx.events!.deliverDue()).toBe(0);
+      expect(await h.ctx.prisma.asaaEventOutbox.findUnique({ where: { id } })).toMatchObject({
+        status: "PENDING",
+        attempts: 0,
+        lastError: "token endpoint gave no usable token",
+      });
+      expect(received).toHaveLength(0);
     } finally {
       await h.close();
     }

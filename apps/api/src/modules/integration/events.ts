@@ -169,9 +169,15 @@ export class TokenProvider {
       signal: AbortSignal.timeout(10_000),
     });
     if (!response.ok) throw new TokenError(`token endpoint status ${response.status}`);
-    const body = (await response.json()) as { access_token?: unknown; expires_in?: unknown };
-    if (typeof body.access_token !== "string" || !body.access_token)
-      throw new TokenError("token endpoint gave no token");
+    let body: { access_token?: unknown; expires_in?: unknown };
+    try {
+      body = JSON.parse(await readLimited(response, MAX_TOKEN_RESPONSE_BYTES)) as typeof body;
+    } catch (error) {
+      throw error instanceof TokenError ? error : new TokenError("token endpoint gave an unreadable answer");
+    }
+    if (typeof body.access_token !== "string" || !body.access_token || body.access_token.length > 8192) {
+      throw new TokenError("token endpoint gave no usable token");
+    }
     const seconds = typeof body.expires_in === "number" && body.expires_in > 0 ? body.expires_in : 60;
     this.cached = { value: body.access_token, expiresAt: this.nowMs() + seconds * 1000 };
     return this.cached.value;
@@ -218,6 +224,29 @@ export function classifyStatus(status: number): DeliveryOutcome {
   if (status === 404 || status === 405 || status === 410) return "routing";
   if (status === 400 || status === 413 || status === 422) return "dead";
   return "retry";
+}
+
+const MAX_TOKEN_RESPONSE_BYTES = 64 * 1024;
+
+/** Read a response body, refusing more than maxBytes (declared or actual). */
+async function readLimited(response: Response, maxBytes: number): Promise<string> {
+  const declared = Number(response.headers.get("content-length") ?? 0);
+  if (declared > maxBytes) throw new TokenError("token endpoint response too large");
+  const reader = response.body?.getReader();
+  if (!reader) return "";
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel().catch(() => undefined);
+      throw new TokenError("token endpoint response too large");
+    }
+    chunks.push(value);
+  }
+  return Buffer.concat(chunks).toString("utf8");
 }
 
 /** A token endpoint failure (rejected client, redirect, malformed answer); never carries the secret. */

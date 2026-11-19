@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { createApp } from "./app.js";
-import { loadConfig } from "./config/env.js";
+import { configWarnings, loadConfig } from "./config/env.js";
 import { createLogger } from "./lib/logger.js";
 import { recoverInterruptedJobs } from "./modules/execution/jobs.js";
 import { createEventService } from "./modules/integration/events.js";
@@ -16,6 +16,7 @@ void recoverInterruptedJobs(ctx).catch((error: unknown) =>
   logger.error("job recovery failed", { error: String(error) }),
 );
 
+for (const warning of configWarnings(config)) logger.warn(warning);
 events.start();
 if (events.isEnabled) logger.info("asaa event producer enabled");
 

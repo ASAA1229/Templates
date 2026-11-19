@@ -116,12 +116,14 @@ const envSchema = z.object({
   ASAA_EVENTS_CLIENT_SECRET: z
     .string()
     .min(1)
+    .max(512)
     .optional()
     .or(z.literal("").transform(() => undefined)),
   /** Static bearer token fallback when client credentials are not configured. */
   ASAA_EVENTS_TOKEN: z
     .string()
     .min(1)
+    .max(8192)
     .optional()
     .or(z.literal("").transform(() => undefined)),
 });
@@ -136,6 +138,17 @@ function isLoopbackHost(hostname: string): boolean {
 function secureOrLoopback(url: string): boolean {
   const parsed = new URL(url);
   return parsed.protocol === "https:" || (parsed.protocol === "http:" && isLoopbackHost(parsed.hostname));
+}
+
+/** Non-fatal configuration notes for the operator (logged at startup; never contain values). */
+export function configWarnings(config: AppConfig): string[] {
+  const warnings: string[] = [];
+  if (config.ASAA_EVENTS_TOKEN && config.ASAA_EVENTS_TOKEN_URL && config.ASAA_EVENTS_CLIENT_SECRET) {
+    warnings.push(
+      "Both ASAA_EVENTS_TOKEN and client credentials are set; the client credentials are used and the static token is ignored.",
+    );
+  }
+  return warnings;
 }
 
 /** True only when the producer is fully configured; partial configuration leaves it disabled. */
@@ -165,11 +178,18 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
       throw new Error("OLLAMA_URL must point to this machine (localhost, 127.0.0.1 or ::1); remote AI is not allowed.");
     }
   }
+  // Fail closed: half-configured client credentials must not silently fall back to another credential.
+  if (Boolean(config.ASAA_EVENTS_TOKEN_URL) !== Boolean(config.ASAA_EVENTS_CLIENT_SECRET)) {
+    throw new Error("ASAA_EVENTS_TOKEN_URL and ASAA_EVENTS_CLIENT_SECRET must be set together.");
+  }
   for (const [name, value] of [
     ["ASAA_EVENTS_URL", config.ASAA_EVENTS_URL],
     ["ASAA_EVENTS_TOKEN_URL", config.ASAA_EVENTS_TOKEN_URL],
   ] as const) {
-    if (value && !secureOrLoopback(value)) throw new Error(`${name} must use HTTPS unless it is a loopback address.`);
+    if (!value) continue;
+    if (!secureOrLoopback(value)) throw new Error(`${name} must use HTTPS unless it is a loopback address.`);
+    const parsed = new URL(value);
+    if (parsed.username || parsed.password) throw new Error(`${name} must not contain credentials.`);
   }
   const jarvisUrl = new URL(config.JARVIS_AI_URL);
   if (
