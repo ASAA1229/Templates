@@ -19,3 +19,10 @@ User-reported basic platform completion is retained as a report, not upgraded to
 **Reconciled 2026-11-14 (documentation owner):** development, testing, integration and acceptance columns updated to the verified evidence in PROJECT_STATUS.md. Local evidence is not CI evidence (no GitHub Actions run observed; `gh` unauthenticated) and nothing here is CI VERIFIED.
 
 **Reconciled 2026-11-15 (documentation owner):** development, testing, integration and acceptance columns updated to the verified evidence in PROJECT_STATUS.md. Local evidence is not CI evidence (no GitHub Actions run observed; `gh` unauthenticated) and nothing here is CI VERIFIED.
+
+
+---
+
+## Discovery expansion — Sets 1–12 (2026-11-19)
+
+All questions in Sets 1–12 were answered “all of the above”. Treat these as candidate requirements for reconciliation, not implementation evidence or a delivery commitment. Preserve TMP-E01–TMP-E11 and their existing evidence/status values. Map applicable additions as sub-epics/features: expanded template categories and industry taxonomy; scratch/import/GitHub/AI/visual authoring; customization and generated outputs; lifecycle/versioning/compatibility; collaboration; AI/JARVIS mini-features; validation and quality; deployment; assets/connectors; and offline Linux/AIX Environment Snapshot. Also map cross-cutting shared architecture, APIs/events, data governance, security/privacy, CI/CD/infrastructure, and quality engineering/testing. No status promotion from questionnaire answers.
