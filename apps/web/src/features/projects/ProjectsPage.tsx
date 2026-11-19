@@ -135,7 +135,7 @@ export function ProjectsPage() {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold tracking-wide text-muted-foreground">{project.key}</p>
+                      <p className="min-w-0 break-all text-xs font-semibold tracking-wide text-muted-foreground">{project.key}</p>
                       <h2 className="truncate font-semibold">{project.name}</h2>
                     </div>
                     <div className="flex shrink-0 gap-1">
