@@ -168,9 +168,10 @@ export class TokenProvider {
       redirect: "manual",
       signal: AbortSignal.timeout(10_000),
     });
-    if (!response.ok) throw new Error(`token endpoint status ${response.status}`);
+    if (!response.ok) throw new TokenError(`token endpoint status ${response.status}`);
     const body = (await response.json()) as { access_token?: unknown; expires_in?: unknown };
-    if (typeof body.access_token !== "string" || !body.access_token) throw new Error("token endpoint gave no token");
+    if (typeof body.access_token !== "string" || !body.access_token)
+      throw new TokenError("token endpoint gave no token");
     const seconds = typeof body.expires_in === "number" && body.expires_in > 0 ? body.expires_in : 60;
     this.cached = { value: body.access_token, expiresAt: this.nowMs() + seconds * 1000 };
     return this.cached.value;
@@ -189,17 +190,31 @@ export interface EventServiceOptions {
   baseBackoffMs?: number;
   maxBackoffMs?: number;
   maxAttempts?: number;
+  /** Wait after a credential or routing problem (auth/routing outcomes). */
+  outageBackoffMs?: number;
   batchSize?: number;
 }
 
-export type DeliveryOutcome = "delivered" | "retry" | "dead";
+/**
+ * delivered: accepted (2xx) or already known (409).
+ * retry: transient (3xx, 408, 429, 5xx, unknown 4xx); counts toward maxAttempts.
+ * dead: the event itself is bad (400, 413, 422); dead-lettered at once.
+ * auth: credentials rejected (401/403, token endpoint failures); an operator fixes it, so the event is kept.
+ * routing: wrong URL or method (404/405/410); an operator fixes it, so the event is kept.
+ * auth and routing never count toward maxAttempts, wait the long outage backoff and pause the whole batch.
+ */
+export type DeliveryOutcome = "delivered" | "retry" | "dead" | "auth" | "routing";
 
-/** Classify an HTTP status: 2xx/409 delivered; 408/429/5xx retry; other 4xx dead-letter. */
 export function classifyStatus(status: number): DeliveryOutcome {
   if ((status >= 200 && status < 300) || status === 409) return "delivered";
-  if (status === 408 || status === 429 || status >= 500) return "retry";
-  return status >= 400 && status < 500 ? "dead" : "retry";
+  if (status === 401 || status === 403) return "auth";
+  if (status === 404 || status === 405 || status === 410) return "routing";
+  if (status === 400 || status === 413 || status === 422) return "dead";
+  return "retry";
 }
+
+/** A token endpoint failure (rejected client, redirect, malformed answer); never carries the secret. */
+export class TokenError extends Error {}
 
 export class EventService {
   private readonly enabled: boolean;
@@ -209,6 +224,7 @@ export class EventService {
   private timer: NodeJS.Timeout | null = null;
   private running = false;
   private degraded = false;
+  private pausedUntil = 0;
   private denied = { count: 0, since: 0, permissions: new Map<string, number>() };
 
   constructor(private readonly options: EventServiceOptions) {
@@ -318,6 +334,7 @@ export class EventService {
   /** Deliver due outbox rows once. Returns the number delivered. */
   async deliverDue(): Promise<number> {
     if (!this.enabled || this.running) return 0;
+    if (this.options.now().getTime() < this.pausedUntil) return 0;
     this.running = true;
     let delivered = 0;
     try {
@@ -346,6 +363,17 @@ export class EventService {
           continue;
         }
         this.degraded = true;
+        if (outcome.result === "auth" || outcome.result === "routing") {
+          // An operator problem, not a bad event: keep the event, do not count the attempt, pause the batch.
+          const wait = this.options.outageBackoffMs ?? 15 * 60_000;
+          this.pausedUntil = this.options.now().getTime() + wait;
+          await this.options.prisma.asaaEventOutbox.update({
+            where: { id: row.id },
+            data: { lastError: outcome.error.slice(0, 120), nextAttemptAt: new Date(this.pausedUntil) },
+          });
+          this.options.logger.error("asaa event delivery paused", { reason: outcome.result, detail: outcome.error });
+          break;
+        }
         const exhausted = attempts >= (this.options.maxAttempts ?? 12);
         const dead = outcome.result === "dead" || exhausted;
         await this.options.prisma.asaaEventOutbox.update({
@@ -408,12 +436,12 @@ export class EventService {
         });
       }
       const result = classifyStatus(response.status);
-      // 401/403 after a refresh usually means a credentials or role problem that an operator can fix: keep retrying.
-      const authProblem = response.status === 401 || response.status === 403;
       if (result === "delivered") return { result, error: "" };
-      return { result: authProblem ? "retry" : result, error: `status ${response.status}` };
+      return { result, error: `status ${response.status}` };
     } catch (error) {
-      // Network, timeout and token-endpoint failures are transient. Messages carry no secrets.
+      // Token endpoint failures are credential problems; network and timeout errors are transient.
+      // Messages carry no secrets.
+      if (error instanceof TokenError) return { result: "auth", error: error.message.slice(0, 100) };
       return { result: "retry", error: (error instanceof Error ? error.message : "network error").slice(0, 100) };
     }
   }

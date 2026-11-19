@@ -7,7 +7,12 @@ import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { z } from "zod";
 import { loadConfig } from "../src/config/env.js";
-import { classifyStatus, eventFromAudit, eventsEndpoint } from "../src/modules/integration/events.js";
+import {
+  classifyStatus,
+  createEventService,
+  eventFromAudit,
+  eventsEndpoint,
+} from "../src/modules/integration/events.js";
 import { hashPassword } from "../src/lib/password.js";
 import { createHarness, OWNER_PASSWORD } from "./helpers.js";
 
@@ -244,8 +249,10 @@ describe("event mapping", () => {
 
   it("classifies delivery statuses", () => {
     for (const status of [200, 202, 204, 409]) expect(classifyStatus(status)).toBe("delivered");
-    for (const status of [408, 429, 500, 502, 503]) expect(classifyStatus(status)).toBe("retry");
-    for (const status of [400, 401, 403, 404, 413, 422]) expect(classifyStatus(status)).toBe("dead");
+    for (const status of [301, 302, 307, 408, 418, 429, 500, 502, 503]) expect(classifyStatus(status)).toBe("retry");
+    for (const status of [400, 413, 422]) expect(classifyStatus(status)).toBe("dead");
+    for (const status of [401, 403]) expect(classifyStatus(status)).toBe("auth");
+    for (const status of [404, 405, 410]) expect(classifyStatus(status)).toBe("routing");
   });
 });
 
@@ -499,6 +506,79 @@ describe("authentication to ASAA (mocked Keycloak)", () => {
         status: "PENDING",
         lastError: "status 401",
       });
+    } finally {
+      await h.close();
+    }
+  });
+});
+
+describe("credential and routing outages (mocked ASAA)", () => {
+  for (const [label, status] of [
+    ["credentials rejected (401)", 401],
+    ["credentials rejected (403)", 403],
+    ["wrong route (404)", 404],
+    ["gone (410)", 410],
+  ] as const) {
+    it(`keeps events, does not count attempts and pauses the batch: ${label}`, async () => {
+      const h = createHarness(staticEnv());
+      try {
+        await h.reset();
+        // maxAttempts 1 would dead-letter on the first counted failure.
+        const events = createEventService({
+          prisma: h.ctx.prisma,
+          config: h.ctx.config,
+          logger: h.ctx.logger,
+          now: h.ctx.now,
+          maxAttempts: 1,
+          outageBackoffMs: 60_000,
+        });
+        const ids = [
+          (await events.record({ type: "templates.job.completed", data: {} }))!,
+          (await events.record({ type: "templates.job.completed", data: {} }))!,
+        ];
+        ingestStatuses = [status, status];
+        expect(await events.deliverDue()).toBe(0);
+        expect(received).toHaveLength(1); // the batch stopped after the first failure
+        const rows = await h.ctx.prisma.asaaEventOutbox.findMany({ where: { id: { in: ids } } });
+        expect(rows.every((row) => row.status === "PENDING" && row.attempts === 0)).toBe(true);
+        expect(rows.some((row) => row.lastError === `status ${status}`)).toBe(true);
+        expect(events.manifestStatus()).toBe("degraded");
+        // Paused: nothing more is sent until the outage backoff has elapsed.
+        expect(await events.deliverDue()).toBe(0);
+        expect(received).toHaveLength(1);
+        h.clock.now = new Date(h.clock.now.getTime() + 61_000);
+        ingestStatuses = [];
+        expect(await events.deliverDue()).toBe(2);
+        expect(events.manifestStatus()).toBe("ok");
+      } finally {
+        await h.close();
+      }
+    });
+  }
+
+  it("treats unknown 4xx as retryable (counted) and dead-letters only 400, 413 and 422", async () => {
+    const h = createHarness(staticEnv());
+    try {
+      await h.reset();
+      const events = h.ctx.events!;
+      const teapot = (await events.record({ type: "templates.job.completed", data: {} }))!;
+      ingestStatuses = [418];
+      await events.deliverDue();
+      expect(await h.ctx.prisma.asaaEventOutbox.findUnique({ where: { id: teapot } })).toMatchObject({
+        status: "PENDING",
+        attempts: 1,
+      });
+      // Flush the retryable event first so each following status applies to exactly one event.
+      h.clock.now = new Date(h.clock.now.getTime() + 24 * 3600_000);
+      expect(await events.deliverDue()).toBe(1);
+      for (const status of [400, 413, 422]) {
+        const id = (await events.record({ type: "templates.job.completed", data: {} }))!;
+        ingestStatuses = [status];
+        const before = received.length;
+        expect(await events.deliverDue()).toBe(0);
+        expect(received.length).toBe(before + 1);
+        expect(await h.ctx.prisma.asaaEventOutbox.findUnique({ where: { id } })).toMatchObject({ status: "DEAD" });
+      }
     } finally {
       await h.close();
     }
