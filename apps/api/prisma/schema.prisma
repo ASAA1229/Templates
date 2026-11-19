@@ -597,4 +597,5 @@ model AsaaEventOutbox {
   createdAt     DateTime        @default(now()) @db.Timestamptz(3)
 
   @@index([status, nextAttemptAt])
+  @@index([status, createdAt])
 }

@@ -512,6 +512,82 @@ describe("authentication to ASAA (mocked Keycloak)", () => {
   });
 });
 
+describe("outbox retention and cap", () => {
+  const day = 24 * 3600_000;
+  const row = (id: string, status: "PENDING" | "DELIVERED" | "DEAD", ageMs: number, severity = "info") => ({
+    id,
+    type: "templates.job.completed",
+    envelope: { id, severity },
+    status,
+    createdAt: new Date(Date.now() - ageMs),
+    nextAttemptAt: new Date(Date.now() + day),
+  });
+
+  it("purges DELIVERED after 7 days and DEAD after 30 days, keeping newer rows", async () => {
+    const h = createHarness(staticEnv());
+    try {
+      await h.reset();
+      const u = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+      await h.ctx.prisma.asaaEventOutbox.createMany({
+        data: [
+          row(u(1), "DELIVERED", 8 * day),
+          row(u(2), "DELIVERED", 6 * day),
+          row(u(3), "DEAD", 31 * day),
+          row(u(4), "DEAD", 29 * day),
+          row(u(5), "PENDING", 90 * day),
+        ],
+      });
+      h.clock.now = new Date();
+      const result = await h.ctx.events!.maintain();
+      expect(result).toEqual({ purged: 2, evicted: 0 });
+      const left = (await outbox(h)).map((r) => r.id).sort();
+      expect(left).toEqual([u(2), u(4), u(5)]);
+    } finally {
+      await h.close();
+    }
+  });
+
+  it("caps PENDING by evicting the oldest routine events first", async () => {
+    const h = createHarness(staticEnv());
+    try {
+      await h.reset();
+      const events = createEventService({
+        prisma: h.ctx.prisma,
+        config: h.ctx.config,
+        logger: h.ctx.logger,
+        now: h.ctx.now,
+        pendingCap: 3,
+      });
+      const u = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+      await h.ctx.prisma.asaaEventOutbox.createMany({
+        data: [
+          row(u(1), "PENDING", 6 * 3600_000, "critical"), // oldest, but important
+          row(u(2), "PENDING", 5 * 3600_000, "info"),
+          row(u(3), "PENDING", 4 * 3600_000, "warning"),
+          row(u(4), "PENDING", 3 * 3600_000, "info"),
+          row(u(5), "PENDING", 2 * 3600_000, "info"),
+          row(u(6), "PENDING", 1 * 3600_000, "info"),
+        ],
+      });
+      expect(await events.maintain()).toEqual({ purged: 0, evicted: 3 });
+      expect((await outbox(h)).map((r) => r.id).sort()).toEqual([u(1), u(3), u(6)]);
+      // Still over a tighter cap: routine events first, then the oldest of any severity.
+      const tight = createEventService({
+        prisma: h.ctx.prisma,
+        config: h.ctx.config,
+        logger: h.ctx.logger,
+        now: h.ctx.now,
+        pendingCap: 1,
+      });
+      expect((await tight.maintain()).evicted).toBe(2);
+      // u6 (routine) goes first, then the oldest remaining (u1); the warning event survives.
+      expect((await outbox(h)).map((r) => r.id)).toEqual([u(3)]);
+    } finally {
+      await h.close();
+    }
+  });
+});
+
 describe("credential and routing outages (mocked ASAA)", () => {
   for (const [label, status] of [
     ["credentials rejected (401)", 401],

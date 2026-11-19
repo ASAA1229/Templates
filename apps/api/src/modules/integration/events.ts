@@ -192,6 +192,13 @@ export interface EventServiceOptions {
   maxAttempts?: number;
   /** Wait after a credential or routing problem (auth/routing outcomes). */
   outageBackoffMs?: number;
+  /** Retention: DELIVERED rows are purged after 7 days, DEAD rows after 30 days (by creation time). */
+  retentionDeliveredMs?: number;
+  retentionDeadMs?: number;
+  /** Upper bound for PENDING rows; the oldest routine (info) events are evicted first. */
+  pendingCap?: number;
+  /** Minimum time between maintenance runs started by the sender timer. */
+  maintenanceIntervalMs?: number;
   batchSize?: number;
 }
 
@@ -225,6 +232,7 @@ export class EventService {
   private running = false;
   private degraded = false;
   private pausedUntil = 0;
+  private lastMaintenance = 0;
   private denied = { count: 0, since: 0, permissions: new Map<string, number>() };
 
   constructor(private readonly options: EventServiceOptions) {
@@ -446,11 +454,72 @@ export class EventService {
     }
   }
 
+  /**
+   * Outbox housekeeping: purge old DELIVERED/DEAD rows and keep PENDING under the cap.
+   * Eviction removes the oldest routine (info) events first, then the oldest of any severity.
+   */
+  async maintain(): Promise<{ purged: number; evicted: number }> {
+    if (!this.enabled) return { purged: 0, evicted: 0 };
+    const { prisma, logger } = this.options;
+    const now = this.options.now().getTime();
+    this.lastMaintenance = now;
+    const day = 24 * 3600_000;
+    let purged = 0;
+    let evicted = 0;
+    try {
+      const delivered = await prisma.asaaEventOutbox.deleteMany({
+        where: {
+          status: "DELIVERED",
+          createdAt: { lt: new Date(now - (this.options.retentionDeliveredMs ?? 7 * day)) },
+        },
+      });
+      const dead = await prisma.asaaEventOutbox.deleteMany({
+        where: { status: "DEAD", createdAt: { lt: new Date(now - (this.options.retentionDeadMs ?? 30 * day)) } },
+      });
+      purged = delivered.count + dead.count;
+      const cap = this.options.pendingCap ?? 5000;
+      const pending = await prisma.asaaEventOutbox.count({ where: { status: "PENDING" } });
+      let excess = pending - cap;
+      if (excess > 0) {
+        const routine = await prisma.asaaEventOutbox.findMany({
+          where: { status: "PENDING", envelope: { path: ["severity"], equals: "info" } },
+          orderBy: { createdAt: "asc" },
+          take: excess,
+          select: { id: true },
+        });
+        if (routine.length > 0) {
+          evicted += (await prisma.asaaEventOutbox.deleteMany({ where: { id: { in: routine.map((r) => r.id) } } }))
+            .count;
+        }
+        excess -= routine.length;
+        if (excess > 0) {
+          const rest = await prisma.asaaEventOutbox.findMany({
+            where: { status: "PENDING" },
+            orderBy: { createdAt: "asc" },
+            take: excess,
+            select: { id: true },
+          });
+          evicted += (await prisma.asaaEventOutbox.deleteMany({ where: { id: { in: rest.map((r) => r.id) } } })).count;
+        }
+        logger.warn("asaa event outbox over cap; oldest pending events evicted", { cap, evicted });
+      }
+    } catch (error) {
+      logger.error("asaa event maintenance failed", { error: error instanceof Error ? error.message : String(error) });
+    }
+    return { purged, evicted };
+  }
+
   /** Start the background sender (no-op when disabled). The timer never keeps the process alive. */
   start() {
     if (!this.enabled || this.timer) return;
     this.timer = setInterval(() => {
-      void this.flushAccessDenied().then(() => this.deliverDue());
+      void this.flushAccessDenied()
+        .then(() => this.deliverDue())
+        .then(async () => {
+          if (this.options.now().getTime() - this.lastMaintenance >= (this.options.maintenanceIntervalMs ?? 60_000)) {
+            await this.maintain();
+          }
+        });
     }, this.options.pollMs ?? 5_000);
     this.timer.unref();
   }
