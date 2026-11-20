@@ -196,3 +196,8 @@ Authoritative status and evidence: [PROJECT_STATUS.md](PROJECT_STATUS.md). Stori
 Newly implemented beyond the original RLC list: US-A04 (MFA), US-E05 (safe template update), US-D06 (asset resolution), US-F03 (ZIP export).
 
 Delta increment: US-D04/D05 now have a browser UI (release lifecycle and pinning) with E2E; US-G01/US-G02 have a job API with logs, exit codes and cancel (isolation labelled; container path not yet run live). Remaining follow-ups: asset resolution UI, quality-gate waivers, environment profiles (US-H01).
+
+
+## Story evidence reconciliation — 2026-11-20
+
+The observed `new` CI run passed (44729067877); earlier `dev` runs 44589355785 and 44589341247 failed and require a current-head rerun. Native Linux/AIX Environment Snapshot validation, manual screen-reader review, live container isolation, live Jenkins/Nexus, deployment/recovery and owner acceptance remain open. Do not upgrade stories to CI VERIFIED, device/host verified, integrated, accepted or released without corresponding evidence. See [Project Status](PROJECT_STATUS.md) and [Pending Work](PENDING_WORK_REGISTER.md).
