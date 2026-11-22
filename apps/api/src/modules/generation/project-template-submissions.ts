@@ -18,6 +18,7 @@ import { authorize } from "../auth/policy.js";
 import { loadOwnedProject } from "../projects/projects.js";
 import { resolveOutputDir } from "../generation/writer.js";
 import { contentDigest } from "./library.js";
+import { isSecretFileName } from "../export/file-policy.js";
 import { catalogView } from "../catalog/catalog.js";
 import type { GenerationService } from "../generation/generation.service.js";
 
@@ -35,7 +36,8 @@ export const EXCLUDED_DIRS = new Set([
   ".venv",
   "venv",
 ]);
-export const EXCLUDED_FILES = /^(\.env($|\.)|.*\.(pem|key|p12|pfx)$|id_rsa|id_ed25519|credentials(\.json)?$)$/i;
+/** Shared credential file policy plus credentials.json; ".env.local" style names are covered by the shared rule. */
+export const isCredentialFile = (name: string) => isSecretFileName(name) || /^credentials(\.json)?$/i.test(name);
 const TEXT_EXTENSIONS = new Set([
   ".txt",
   ".md",
@@ -182,7 +184,7 @@ async function collectFiles(root: string) {
       const rel = relative ? `${relative}/${entry.name}` : entry.name;
       const unsafe = unsafePathReason(rel);
       if (unsafe) throw validationFailed({ files: `${rel}: ${unsafe}` }, "The project contains an unsafe path.");
-      if (EXCLUDED_FILES.test(entry.name)) continue;
+      if (isCredentialFile(entry.name)) continue;
       const full = path.join(dir, entry.name);
       const stats = await lstat(full);
       if (stats.isSymbolicLink()) throw validationFailed({ files: `${rel}: symbolic links are not accepted.` });

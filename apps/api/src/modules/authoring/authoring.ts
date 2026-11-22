@@ -27,7 +27,7 @@ import { aiComplete, type AiFetch } from "../ai/ai.js";
 import { audit } from "../audit/audit.service.js";
 import { authorize } from "../auth/policy.js";
 import { contentDigest, loadTemplate, TemplateLibrary } from "../generation/library.js";
-import { EXCLUDED_DIRS, EXCLUDED_FILES } from "../generation/project-template-submissions.js";
+import { EXCLUDED_DIRS, isCredentialFile } from "../generation/project-template-submissions.js";
 
 const UUID = /^[0-9a-f-]{36}$/i;
 
@@ -54,7 +54,7 @@ export function unsafeSourcePath(file: string): string | null {
   const parts = file.split("/");
   if (parts.some((part) => EXCLUDED_DIRS.has(part)))
     return "This folder name is reserved and cannot be part of a template.";
-  if (EXCLUDED_FILES.test(parts[parts.length - 1]!)) return "Credential and key files cannot be part of a template.";
+  if (isCredentialFile(parts[parts.length - 1]!)) return "Credential and key files cannot be part of a template.";
   return null;
 }
 
