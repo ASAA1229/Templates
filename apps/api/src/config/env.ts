@@ -69,6 +69,34 @@ const envSchema = z.object({
     .string()
     .optional()
     .transform((value) => path.resolve(value || path.join(API_ROOT, "..", "..", ".local", "generated"))),
+  /**
+   * Local delivery sink: repository handoff copies and deployment bundles are written here by the built-in
+   * local providers. Nothing is ever sent to an external host by default.
+   */
+  DELIVERY_DIR: z
+    .string()
+    .optional()
+    .transform((value) => path.resolve(value || path.join(API_ROOT, "..", "..", ".local", "delivery"))),
+  /** Optional connector endpoints (Jenkins / Nexus). Unset means only the local mock connectors exist. */
+  CONNECTOR_JENKINS_URL: z
+    .string()
+    .trim()
+    .url()
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  CONNECTOR_JENKINS_JOBS: z.string().trim().default(""),
+  CONNECTOR_NEXUS_URL: z
+    .string()
+    .trim()
+    .url()
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  CONNECTOR_NEXUS_REPOSITORIES: z.string().trim().default(""),
+  /** JARVIS mini-features (summaries, classification, review assist). Off unless explicitly enabled. */
+  JARVIS_FEATURES_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
   /** Repository-level packaged tools (tools/<id>/manifest.json). Read-only. */
   TOOLS_DIR: z
     .string()
@@ -210,10 +238,23 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
   ) {
     throw new Error("A valid JARVIS site key is required when AI_PROVIDER=jarvis and AI_ENABLED=true.");
   }
+  if (config.JARVIS_FEATURES_ENABLED && !/^jrv_[a-f0-9]{12}_[A-Za-z0-9_-]{43}$/.test(config.JARVIS_AI_KEY ?? "")) {
+    throw new Error("A valid JARVIS site key (JARVIS_AI_KEY) is required when JARVIS_FEATURES_ENABLED=true.");
+  }
   if (config.SESSION_IDLE_MINUTES > config.SESSION_ABSOLUTE_MINUTES) {
     throw new Error("SESSION_IDLE_MINUTES cannot exceed SESSION_ABSOLUTE_MINUTES.");
   }
   const platformSource = [path.join(API_ROOT, "src"), path.join(API_ROOT, "dist"), config.TEMPLATE_LIBRARY_DIR];
+  const delivery = config.DELIVERY_DIR.toLowerCase();
+  for (const protectedDir of platformSource) {
+    const dir = protectedDir.toLowerCase();
+    if (delivery === dir || delivery.startsWith(dir + path.sep) || dir.startsWith(delivery + path.sep)) {
+      throw new Error("DELIVERY_DIR must not overlap the platform source or template library.");
+    }
+  }
+  if (delivery === config.GENERATION_OUTPUT_DIR.toLowerCase()) {
+    throw new Error("DELIVERY_DIR must differ from GENERATION_OUTPUT_DIR.");
+  }
   const output = config.GENERATION_OUTPUT_DIR.toLowerCase();
   for (const protectedDir of platformSource) {
     const dir = protectedDir.toLowerCase();

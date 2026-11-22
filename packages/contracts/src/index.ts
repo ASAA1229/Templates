@@ -326,6 +326,12 @@ const slugSchema = z
   .toLowerCase()
   .regex(/^[a-z0-9][a-z0-9-]{1,79}$/, "Use 2–80 lowercase letters, digits or hyphens.");
 const tagList = z.array(required(40, "Tag").toLowerCase()).max(20);
+/** Taxonomy key for a category or sector term. */
+export const taxonomyKeySchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .regex(/^[a-z0-9][a-z0-9-]{1,79}$/, "Use 2–80 lowercase letters, digits or hyphens.");
 const semver = z
   .string()
   .trim()
@@ -351,6 +357,7 @@ export const createCatalogItemSchema = z
     sourceReference: trimmed(500).optional(),
     license: required(80, "License"),
     ownership: required(120, "Ownership"),
+    sector: taxonomyKeySchema.nullable().optional(),
     dependencies: z.array(catalogDependencySchema).max(100).default([]),
   })
   .superRefine((value, ctx) => {
@@ -383,6 +390,7 @@ export const updateCatalogItemSchema = z.object({
   trustStatus: z.enum(TRUST_STATUSES).optional(),
   license: required(80, "License").optional(),
   ownership: required(120, "Ownership").optional(),
+  sector: taxonomyKeySchema.nullable().optional(),
   dependencies: z.array(catalogDependencySchema).max(100).optional(),
   expectedVersion: z.number().int().positive(),
 });
@@ -395,6 +403,7 @@ export const catalogQuerySchema = z.object({
   tag: trimmed(40).toLowerCase().optional(),
   lifecycle: z.enum(LIFECYCLES).optional(),
   kind: z.enum(CATALOG_KINDS).optional(),
+  sector: trimmed(80).toLowerCase().optional(),
 });
 
 export interface CatalogItemView {
@@ -413,6 +422,8 @@ export interface CatalogItemView {
   sourceReference: string | null;
   license: string;
   ownership: string;
+  /** Business sector (taxonomy key) or null for cross-sector assets. */
+  sector: string | null;
   dependencies: { name: string; version: string }[];
   /** Approved template content linked to this record (library template id), if any. */
   contentRef: string | null;
@@ -1291,4 +1302,310 @@ export interface EnvironmentCheckView {
   checkedAt: string;
   ok: boolean;
   results: EnvironmentCheckResultView[];
+}
+
+// ───── Taxonomy and sectors (D3.6, D3.7) ─────
+
+export const TAXONOMY_KINDS = ["CATEGORY", "SECTOR"] as const;
+export type TaxonomyKindName = (typeof TAXONOMY_KINDS)[number];
+
+export const createTaxonomyTermSchema = z.object({
+  kind: z.enum(TAXONOMY_KINDS),
+  key: taxonomyKeySchema,
+  label: required(120, "Label"),
+  description: trimmed(500).default(""),
+  parentKey: taxonomyKeySchema.nullable().optional(),
+  stewardId: z.string().uuid().nullable().optional(),
+});
+export type CreateTaxonomyTermInput = z.input<typeof createTaxonomyTermSchema>;
+
+export const updateTaxonomyTermSchema = z.object({
+  label: required(120, "Label").optional(),
+  description: trimmed(500).optional(),
+  parentKey: taxonomyKeySchema.nullable().optional(),
+  stewardId: z.string().uuid().nullable().optional(),
+  active: z.boolean().optional(),
+  expectedVersion: z.number().int().positive(),
+});
+
+export const assignSectorSchema = z.object({
+  sector: taxonomyKeySchema.nullable(),
+  itemIds: z.array(z.string().uuid()).min(1).max(100),
+});
+
+export interface TaxonomyTermView {
+  id: string;
+  kind: TaxonomyKindName;
+  key: string;
+  label: string;
+  description: string;
+  parentKey: string | null;
+  stewardId: string | null;
+  stewardName: string | null;
+  active: boolean;
+  rowVersion: number;
+  /** Catalogue items assigned to this term, and how many of them are ACTIVE. */
+  itemCount: number;
+  activeItemCount: number;
+}
+
+// ───── Delivery: exports, repository handoff, deployment (D3.12–D3.14) ─────
+
+export const DELIVERY_KINDS = ["ZIP_EXPORT", "WORKSPACE_EXPORT", "REPOSITORY_HANDOFF", "DEPLOYMENT"] as const;
+export const DELIVERY_STATUSES = ["REQUESTED", "EXECUTED", "REJECTED", "FAILED", "CANCELLED"] as const;
+export type DeliveryKindName = (typeof DELIVERY_KINDS)[number];
+export type DeliveryStatusName = (typeof DELIVERY_STATUSES)[number];
+
+/** Exports leave the platform, so the requester must explicitly confirm them. */
+export const exportDeliverySchema = z.object({
+  scope: z.enum(["ZIP_EXPORT", "WORKSPACE_EXPORT"]).default("ZIP_EXPORT"),
+  confirm: z.literal(true, {
+    error: "Confirm that you are allowed to take a copy of this project out of the platform.",
+  }),
+  note: trimmed(500).default(""),
+});
+
+export const createDeliveryRequestSchema = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("REPOSITORY_HANDOFF"),
+    provider: z.string().trim().min(1).max(40).default("local-git-host"),
+    target: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .regex(/^[a-z0-9][a-z0-9-]{1,59}$/, "Use a lowercase repository name (2–60 characters)."),
+    note: trimmed(500).default(""),
+  }),
+  z.object({
+    kind: z.literal("DEPLOYMENT"),
+    provider: z.string().trim().min(1).max(40).default("local-bundle"),
+    target: z.string().trim().toLowerCase().min(2, "Choose an environment.").max(40),
+    note: trimmed(500).default(""),
+  }),
+]);
+export type CreateDeliveryRequestInput = z.input<typeof createDeliveryRequestSchema>;
+
+export const deliveryDecisionSchema = z.object({ note: trimmed(500).default("") });
+
+export interface DeliveryRequestView {
+  id: string;
+  projectId: string;
+  projectKey?: string;
+  kind: DeliveryKindName;
+  status: DeliveryStatusName;
+  provider: string;
+  target: string;
+  note: string;
+  requestedById: string;
+  decidedById: string | null;
+  decisionNote: string;
+  result: Record<string, unknown> | null;
+  createdAt: string;
+  decidedAt: string | null;
+  executedAt: string | null;
+}
+
+export interface DeliveryProviderView {
+  id: string;
+  label: string;
+  role: "REPOSITORY_HOST" | "DEPLOYMENT";
+  external: boolean;
+  available: boolean;
+  note: string;
+  environments?: string[];
+}
+
+// ───── Template authoring (D3.1–D3.4) ─────
+
+export const AUTHORING_LIMITS = { files: 200, fileBytes: 256 * 1024, totalBytes: 2 * 1024 * 1024 } as const;
+const semverSchema = z
+  .string()
+  .trim()
+  .regex(/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/, "Use a semantic version such as 1.0.0.");
+
+export const createDraftSchema = z.discriminatedUnion("mode", [
+  z.object({
+    mode: z.literal("blank"),
+    slug: templateIdSchema,
+    title: required(160, "Title"),
+    category: required(80, "Category"),
+    description: trimmed(2000).default(""),
+  }),
+  z.object({
+    mode: z.literal("clone"),
+    slug: templateIdSchema,
+    sourceId: templateIdSchema,
+    sourceVersion: semverSchema,
+    title: required(160, "Title").optional(),
+    version: semverSchema.default("0.1.0"),
+  }),
+  z.object({
+    mode: z.literal("ai"),
+    slug: templateIdSchema,
+    category: required(80, "Category"),
+    brief: required(2000, "Brief"),
+  }),
+]);
+export type CreateDraftInput = z.input<typeof createDraftSchema>;
+
+export const updateDraftMetadataSchema = z.object({
+  title: required(160, "Title").optional(),
+  description: trimmed(2000).optional(),
+  category: required(80, "Category").optional(),
+  version: semverSchema.optional(),
+  license: required(80, "License").optional(),
+  technologies: z
+    .array(z.object({ name: required(80, "Name"), version: required(40, "Version") }))
+    .min(1)
+    .max(20)
+    .optional(),
+  inputs: z.array(templateInputSchema).max(30).optional(),
+  expectedRevision: z.number().int().min(1),
+});
+
+export const putDraftFileSchema = z.object({
+  path: z.string().min(1).max(240),
+  content: z.string().max(AUTHORING_LIMITS.fileBytes),
+  expectedRevision: z.number().int().min(1),
+});
+
+export const deleteDraftFileSchema = z.object({
+  path: z.string().min(1).max(240),
+  expectedRevision: z.number().int().min(1),
+});
+
+/** Advanced editing: replace the whole manifest as JSON. Visual and source editors write the same validated manifest. */
+export const replaceDraftManifestSchema = z.object({
+  manifest: z.unknown(),
+  expectedRevision: z.number().int().min(1),
+});
+
+export const submitDraftSchema = z.object({
+  customerPermission: z.literal(true, {
+    error: "Confirm customer permission or that no customer-owned material is included.",
+  }),
+  rightsConfirmed: z.literal(true, { error: "Confirm you have the rights to contribute this work." }),
+  secretsChecked: z.literal(true, { error: "Confirm the draft was checked for secrets and private data." }),
+  /** Required when the draft contains AI-generated content: a person confirms they read it. */
+  aiReviewed: z.boolean().default(false),
+  expectedRevision: z.number().int().min(1),
+});
+
+export interface DraftSummaryView {
+  id: string;
+  templateId: string;
+  version: string;
+  title: string;
+  category: string;
+  /** True when any content was produced by an AI model; such drafts must be reviewed by a person. */
+  aiGenerated: boolean;
+  status: "DRAFT" | "SUBMITTED";
+  revision: number;
+  createdAt: string;
+  updatedAt: string;
+  ownerId: string;
+}
+
+export interface DraftView extends DraftSummaryView {
+  manifest: unknown;
+  files: { path: string; bytes: number }[];
+  /** Validation problems from the same checks the library applies; empty means it can be submitted. */
+  problems: string[];
+  /** Files an AI model wrote; they need an explicit human review before submission. */
+  aiFiles: string[];
+  submissionId: string | null;
+}
+
+// ───── JARVIS mini-features (D3.5) ─────
+
+export const JARVIS_FEATURES = ["summarize-template", "classify-template", "review-assist"] as const;
+export type JarvisFeature = (typeof JARVIS_FEATURES)[number];
+
+export const jarvisInvokeSchema = z.object({
+  feature: z.enum(JARVIS_FEATURES),
+  /** Free text the feature works on (template description, manifest excerpt, or a file). Capped before sending. */
+  content: required(12_000, "Content"),
+});
+
+export interface JarvisStatusView {
+  enabled: boolean;
+  reachable: boolean | null;
+  features: readonly JarvisFeature[];
+  note: string;
+}
+
+// ───── Connectors (D3.20) ─────
+
+export const connectorTriggerSchema = z.object({
+  job: required(200, "Job"),
+  parameters: z.record(z.string().max(64), z.string().max(500)).optional(),
+});
+export const connectorPublishSchema = z.object({
+  repository: required(120, "Repository"),
+  path: required(240, "Path"),
+  projectId: z.string().uuid(),
+});
+
+export interface ConnectorView {
+  id: string;
+  label: string;
+  kind: "BUILD" | "ARTIFACT_REGISTRY";
+  capabilities: string[];
+  scope: { jobs?: string[]; repositories?: string[] };
+  revoked: boolean;
+  /** Built-in local mock or an owner-configured HTTP endpoint. */
+  origin: "local-mock" | "configured";
+  health: { ok: boolean; status: string; latencyMs: number; detail?: string } | null;
+}
+
+// ───── Operations and assets (D3.21) ─────
+
+export interface OpsOverviewView {
+  generatedAt: string;
+  jobs: { byStatus: Record<string, number>; failedLast24h: number; runningNow: number };
+  delivery: { pending: number; byStatus: Record<string, number> };
+  events: { pending: number; failed: number };
+  templates: { releasesByStatus: Record<string, number>; pendingSubmissions: number };
+  generations: { byStatus: Record<string, number> };
+  integrations: {
+    jarvisEnabled: boolean;
+    aiEnabled: boolean;
+    connectors: { id: string; ok: boolean; status: string }[];
+  };
+  assets: {
+    total: number;
+    byKind: Record<string, number>;
+    byLifecycle: Record<string, number>;
+    byTrust: Record<string, number>;
+    bySector: Record<string, number>;
+    unsectored: number;
+    /** Items needing attention. */
+    attention: { id: string; slug: string; title: string; reason: string }[];
+  };
+}
+
+// ───── Release comparison (D3.10) ─────
+
+export const releaseCompareQuerySchema = z.object({
+  templateId: templateIdSchema,
+  from: semverSchema,
+  to: semverSchema,
+});
+
+interface AddedRemoved {
+  added: string[];
+  removed: string[];
+}
+
+export interface ReleaseComparisonView {
+  templateId: string;
+  from: { version: string; status: string; contentDigest: string };
+  to: { version: string; status: string; contentDigest: string };
+  changes: {
+    fields: { field: string; from: string; to: string }[];
+    inputs: AddedRemoved;
+    files: AddedRemoved;
+    technologies: AddedRemoved;
+    dependencies: AddedRemoved;
+  };
 }

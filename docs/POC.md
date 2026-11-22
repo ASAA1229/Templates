@@ -68,3 +68,8 @@ Authoritative evidence is in [PROJECT_STATUS.md](PROJECT_STATUS.md). The POC is 
 | 8 | Backup and isolated restore, rollback, incident ownership | `backup-restore.test.ts`; owner-approved topology and RPO/RTO pending |
 
 Decision: **NO-GO** until the external items in PROJECT_STATUS.md are closed.
+
+
+## POC reassessment — 2026-11-20
+
+The POC remains **NOT ACCEPTED / NO-GO**. The latest observed `new` CI run passed (44729067877); this is evidence for that workflow run only. Earlier `dev` failures (44589355785 and 44589341247) still require a rerun against the current `dev` head and resolution. Native AIX/Linux execution, manual screen-reader review, live container isolation, live Jenkins/Nexus integration, owner-approved deployment/recovery controls and owner acceptance remain outstanding. No POC acceptance is implied by CI success alone.

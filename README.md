@@ -114,3 +114,10 @@ The authoritative maturity and release record is [PROJECT_STATUS.md](docs/PROJEC
 ## Engineering status — 2026-11-14
 
 All fifteen release gaps (RG-01 to RG-15) have local implementation evidence; see the gap register in [PROJECT_STATUS.md](docs/PROJECT_STATUS.md). The code agent reported `npm run validate`, smoke and Playwright E2E (27/27) green. An independent rerun of `npm run validate` by the coordinator failed at the API typecheck with a Windows `EPERM` on the Prisma query-engine DLL rename (an environment file lock, being fixed), so that rerun is inconclusive rather than a product failure. No GitHub Actions run for these commits has been observed (`gh` is unauthenticated); nothing is CI VERIFIED. The product remains **NO-GO**.
+
+
+## Status and evidence — 2026-11-20
+
+Templates remains **NOT ACCEPTED / NO-GO**. The observed `new` CI run passed (44729067877); earlier `dev` CI runs failed and require current-head reruns. Native Linux/AIX, live isolation, manual accessibility and live Jenkins/Nexus evidence remain open.
+
+See [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md) for the dated evidence, outstanding gates and next actions. Workflow results are specific to their recorded run and commit; missing runs are not passes.

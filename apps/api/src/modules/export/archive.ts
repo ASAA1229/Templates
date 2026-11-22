@@ -23,12 +23,14 @@ export interface ArchiveSource {
   };
   /** Digest of what is on disk now; compared with generation.outputDigest. */
   currentDigest: string | null;
+  /** Extra provenance recorded in the manifest (e.g. workspace repository state for workspace exports). */
+  extra?: Record<string, unknown>;
 }
 
 const sha256 = (value: Buffer | string) => createHash("sha256").update(value).digest("hex");
 
 /** Collect regular files only: symlinks and special files make the export unsafe and are refused. */
-async function collect(root: string): Promise<{ path: string; content: Buffer }[]> {
+export async function collectProjectFiles(root: string): Promise<{ path: string; content: Buffer }[]> {
   const files: { path: string; content: Buffer }[] = [];
   let total = 0;
   const walk = async (dir: string, relative: string) => {
@@ -57,13 +59,14 @@ async function collect(root: string): Promise<{ path: string; content: Buffer }[
 export async function buildProjectArchive(
   source: ArchiveSource,
 ): Promise<{ filename: string; archive: Buffer; manifest: unknown }> {
-  const files = await collect(source.directory);
+  const files = await collectProjectFiles(source.directory);
   const rootName = source.project.key.toLowerCase().replace(/[^a-z0-9._-]/g, "-");
   const manifest = {
     schemaVersion: 1,
     project: source.project,
     generation: source.generation,
     modifiedSinceGeneration: source.currentDigest !== source.generation.outputDigest,
+    ...(source.extra ? { workspace: source.extra } : {}),
     excluded: [...EXCLUDED],
     totals: { files: files.length, bytes: files.reduce((sum, file) => sum + file.content.length, 0) },
     files: files.map((file) => ({ path: file.path, bytes: file.content.length, sha256: sha256(file.content) })),

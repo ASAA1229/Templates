@@ -135,3 +135,18 @@ The first post-initialization organization audit inspected GitHub Actions run **
 - **Generated-project validation:** all 35 generated variants failed because the shared `@asaa/contracts` package had not been built in that separate CI job before invoking the generator. The workflow now runs `npm run build:contracts` before generated validation (commit `c6a64916cfb9139c0b3128a9111e6a0d204d2ea6`).
 
 A rerun was triggered as GitHub Actions run **44524041362** on `new`, SHA `c98d390a`. At the time of this update, both validation jobs were still in progress. The fixes are therefore **implemented; CI verification pending**. Do not mark the reflow or generated-project acceptance as passed until the rerun completes successfully.
+
+
+## Organization verification update — 2026-11-20
+
+**Assessed branch:** `new`. The latest observed Templates CI run on `new` passed: [run 44729067877](https://github.com/ASAA1229/Templates/actions/runs/44729067877). Earlier `dev` CI runs 44589355785 and 44589341247 failed; rerun on the current exact `dev` head is required before classifying the branch as healthy. A later green `new` run does not repair or prove `dev`.
+
+### Repository governance
+- Standard branches `main`, `dev`, `new`, `fix`, and `test` exist; repository visibility remains public by owner decision.
+- Standard branches were observed without branch protection (`protected: false`) in the 2026-11-20 organization audit. Protection is approved but not yet applied/verified.
+- Promotion policy: working branches → `new`; only `new` → `dev`; only `dev` → `main`. No branch promotion or merge was performed.
+
+### Product and release status
+The latest CI result is branch/run-specific. It does not establish manual screen-reader acceptance, live isolated-container boundary enforcement, native Linux/AIX execution for Environment Snapshot, live Jenkins/Nexus integration, approved deployment/recovery topology, or owner acceptance. Environment Snapshot native AIX compatibility and CMM ICG/ACQ/ISS output mapping remain unverified on target hosts.
+
+**Release status: NO-GO / NOT ACCEPTED.** Preserve the zero-operating-cost constraint and internal employee/management access boundary unless the owner explicitly changes them.
