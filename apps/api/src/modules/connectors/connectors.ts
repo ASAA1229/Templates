@@ -4,13 +4,14 @@ import type { AppContext } from "../../context.js";
 import {
   ConnectorManager,
   EnvCredentialProvider,
+  type RevocationStore,
   type CallOptions,
   type ConnectorScope,
   type CredentialProvider,
 } from "../../integrations/connectors.js";
 import { JenkinsConnector, NexusConnector } from "../../integrations/http-connectors.js";
 import { MockBuildConnector, MockRegistryConnector } from "../../integrations/mock-connectors.js";
-import { notFound, validationFailed } from "../../lib/errors.js";
+import { conflict, notFound, validationFailed } from "../../lib/errors.js";
 import { audit } from "../audit/audit.service.js";
 import { authorize } from "../auth/policy.js";
 import { buildArchive } from "../delivery/delivery.js";
@@ -25,6 +26,21 @@ const csv = (value: string) =>
 interface Registered {
   label: string;
   origin: ConnectorView["origin"];
+}
+
+/** Revocations live in the database so they survive restarts; read failures propagate so callers deny. */
+export class PrismaRevocationStore implements RevocationStore {
+  constructor(private readonly ctx: AppContext) {}
+  async isRevoked(connectorId: string) {
+    return (await this.ctx.prisma.connectorRevocation.findUnique({ where: { connectorId } })) !== null;
+  }
+  async revoke(connectorId: string, actor: string) {
+    await this.ctx.prisma.connectorRevocation.upsert({
+      where: { connectorId },
+      create: { connectorId, revokedById: actor },
+      update: {},
+    });
+  }
 }
 
 export interface ConnectorHub {
@@ -50,6 +66,7 @@ export function createConnectorHub(
       targetId: event.connectorId,
       metadata: { actor: event.actor, ...(event.detail ? { detail: event.detail } : {}) },
     }),
+    new PrismaRevocationStore(ctx),
   );
   const info = new Map<string, Registered>();
   const add = (
@@ -114,10 +131,10 @@ export function connectorsRouter(ctx: AppContext, hub: ConnectorHub = createConn
   const router = Router();
   const { manager, info } = hub;
 
-  const describe = (id: string): ConnectorView => {
+  const describe = async (id: string): Promise<ConnectorView> => {
     if (!info.has(id)) throw notFound("Connector");
     const meta = info.get(id)!;
-    const described = manager.describe(id);
+    const described = await manager.describe(id);
     return {
       id,
       label: meta.label,
@@ -135,8 +152,12 @@ export function connectorsRouter(ctx: AppContext, hub: ConnectorHub = createConn
     return id;
   };
 
-  router.get("/", authorize(ctx, "connector:read"), (_req, res) => {
-    res.json({ connectors: [...info.keys()].map(describe) });
+  router.get("/", authorize(ctx, "connector:read"), async (_req, res, next) => {
+    try {
+      res.json({ connectors: await Promise.all([...info.keys()].map(describe)) });
+    } catch (error) {
+      next(error);
+    }
   });
 
   router.get("/:id/health", authorize(ctx, "connector:read"), async (req, res, next) => {
@@ -199,20 +220,69 @@ export function connectorsRouter(ctx: AppContext, hub: ConnectorHub = createConn
       const id = idOf(req);
       const input = connectorPublishSchema.parse(req.body);
       const project = await loadProjectAccess(ctx, req.owner!.id, input.projectId, "write");
-      const built = await buildArchive(ctx, project.id, false);
-      const published = await manager.publish(
-        id,
-        { repository: input.repository, path: input.path },
-        built.archive,
-        built.sha256,
-        actorOf(req),
-      );
+      if (project.archivedAt) throw conflict("Restore the project before publishing it.");
+      let built: Awaited<ReturnType<typeof buildArchive>>;
+      try {
+        built = await buildArchive(ctx, project.id, false);
+      } catch (error) {
+        await audit(ctx, req, {
+          action: "connector.artifact_publish",
+          outcome: "FAILURE",
+          targetType: "project",
+          targetId: project.id,
+          metadata: { connectorId: id, reason: error instanceof Error ? error.message.slice(0, 200) : "failed" },
+        });
+        throw error;
+      }
+      // Publishing leaves the platform, so it is recorded in the delivery ledger with the approving manager
+      // before the connector is called. If the ledger cannot be written, nothing is published.
+      const now = ctx.now();
+      const ledger = await ctx.prisma.deliveryRequest.create({
+        data: {
+          projectId: project.id,
+          kind: "DEPLOYMENT",
+          status: "REQUESTED",
+          provider: id.slice(0, 40),
+          target: `${input.repository}/${input.path}`.slice(0, 120),
+          note: "Artifact registry publish",
+          requestedById: req.owner!.id,
+          decidedById: req.owner!.id,
+          decidedAt: now,
+        },
+      });
+      let published: Awaited<ReturnType<typeof manager.publish>>;
+      try {
+        published = await manager.publish(
+          id,
+          { repository: input.repository, path: input.path },
+          built.archive,
+          built.sha256,
+          actorOf(req),
+        );
+      } catch (error) {
+        await ctx.prisma.deliveryRequest.update({
+          where: { id: ledger.id },
+          data: { status: "FAILED", result: { error: error instanceof Error ? error.message.slice(0, 300) : "failed" } },
+        });
+        throw error;
+      }
+      await ctx.prisma.deliveryRequest.update({
+        where: { id: ledger.id },
+        data: { status: "EXECUTED", executedAt: ctx.now(), result: { sha256: built.sha256, bytes: built.archive.length } },
+      });
       await audit(ctx, req, {
         action: "connector.artifact_publish",
         outcome: "SUCCESS",
         targetType: "project",
         targetId: project.id,
-        metadata: { connectorId: id, repository: input.repository, path: input.path, sha256: built.sha256 },
+        metadata: {
+          connectorId: id,
+          repository: input.repository,
+          path: input.path,
+          sha256: built.sha256,
+          deliveryId: ledger.id,
+          approvedBy: req.owner!.id,
+        },
       });
       res.status(201).json({ artifact: published });
     } catch (error) {
@@ -224,7 +294,7 @@ export function connectorsRouter(ctx: AppContext, hub: ConnectorHub = createConn
     try {
       const id = idOf(req);
       await manager.revoke(id, req.owner!.id);
-      res.json({ connector: describe(id) });
+      res.json({ connector: await describe(id) });
     } catch (error) {
       next(error);
     }
