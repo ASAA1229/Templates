@@ -141,6 +141,7 @@ model Project {
   environment    ProjectEnvironment?
   comments       ProjectComment[]
   presence       ProjectPresence[]
+  deliveries     DeliveryRequest[]
 
   @@index([ownerId, archivedAt])
 }
@@ -311,6 +312,8 @@ model CatalogItem {
   contentRef            String?             @db.VarChar(80)
   /// SHA-256 of the approved template content; generation refuses any other content.
   contentDigest         String?             @db.Char(64)
+  /// Business sector this asset is organised under (taxonomy SECTOR term key); null means cross-sector.
+  sector                String?             @db.VarChar(80)
   metadataSchemaVersion Int                 @default(1)
   createdAt             DateTime            @default(now()) @db.Timestamptz(3)
   updatedAt             DateTime            @updatedAt @db.Timestamptz(3)
@@ -319,6 +322,7 @@ model CatalogItem {
 
   @@index([category])
   @@index([lifecycle])
+  @@index([sector])
 }
 
 enum GenerationMode {
@@ -598,4 +602,68 @@ model AsaaEventOutbox {
 
   @@index([status, nextAttemptAt])
   @@index([status, createdAt])
+}
+
+enum DeliveryKind {
+  ZIP_EXPORT
+  WORKSPACE_EXPORT
+  REPOSITORY_HANDOFF
+  DEPLOYMENT
+}
+
+enum DeliveryStatus {
+  REQUESTED
+  EXECUTED
+  REJECTED
+  FAILED
+  CANCELLED
+}
+
+/// Permission and audit ledger for everything that leaves a project: ZIP/workspace exports, repository
+/// handoff and deployment. Handoff and deployment need a management decision; exports need explicit confirmation.
+model DeliveryRequest {
+  id            String         @id @default(uuid()) @db.Uuid
+  projectId     String         @db.Uuid
+  project       Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  kind          DeliveryKind
+  status        DeliveryStatus @default(REQUESTED)
+  /// Provider id (local implementation ids only unless an owner-approved adapter is registered).
+  provider      String         @db.VarChar(40)
+  /// Repository name or deployment environment; empty for exports.
+  target        String         @default("") @db.VarChar(120)
+  note          String         @default("") @db.VarChar(500)
+  requestedById String         @db.Uuid
+  decidedById   String?        @db.Uuid
+  decisionNote  String         @default("") @db.VarChar(500)
+  /// Provider result (locations, digests); never secrets.
+  result        Json?
+  createdAt     DateTime       @default(now()) @db.Timestamptz(3)
+  decidedAt     DateTime?      @db.Timestamptz(3)
+  executedAt    DateTime?      @db.Timestamptz(3)
+
+  @@index([projectId, createdAt])
+  @@index([status, kind])
+}
+
+enum TaxonomyKind {
+  CATEGORY
+  SECTOR
+}
+
+/// Managed vocabulary for the catalogue: categories and business sectors, each with an optional steward.
+model TaxonomyTerm {
+  id          String       @id @default(uuid()) @db.Uuid
+  kind        TaxonomyKind
+  key         String       @db.VarChar(80)
+  label       String       @db.VarChar(120)
+  description String       @default("") @db.VarChar(500)
+  parentKey   String?      @db.VarChar(80)
+  /// Owner (member) accountable for assets in this term; not a foreign key so member removal never blocks admin.
+  stewardId   String?      @db.Uuid
+  active      Boolean      @default(true)
+  createdAt   DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime     @updatedAt @db.Timestamptz(3)
+  rowVersion  Int          @default(1)
+
+  @@unique([kind, key])
 }

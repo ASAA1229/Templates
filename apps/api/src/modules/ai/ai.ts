@@ -24,6 +24,66 @@ const INSTRUCTIONS: Record<z.infer<typeof suggestSchema>["task"], string> = {
 
 export type AiFetch = typeof fetch;
 
+/**
+ * One text completion against the configured local provider (Ollama or JARVIS gateway). Shared by the workspace
+ * assistant and template authoring. Throws a NOT_ELIGIBLE error when AI is off or the provider does not answer.
+ */
+export async function aiComplete(
+  ctx: AppContext,
+  doFetch: AiFetch,
+  input: { system: string; prompt: string; requestId: string; maxChars: number },
+): Promise<string> {
+  if (!ctx.config.AI_ENABLED) {
+    throw notEligible(
+      "AI assistance is turned off. An administrator can enable the configured local AI provider (AI_ENABLED).",
+    );
+  }
+  const jarvis = ctx.config.AI_PROVIDER === "jarvis";
+  try {
+    const response = await doFetch(
+      new URL(
+        jarvis ? "/v1/chat/completions" : "/api/generate",
+        jarvis ? ctx.config.JARVIS_AI_URL : ctx.config.OLLAMA_URL,
+      ),
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          // requestId is the valid incoming X-Request-ID, or a freshly generated one (see requestId()).
+          ...(jarvis ? { authorization: `Bearer ${ctx.config.JARVIS_AI_KEY}`, "x-request-id": input.requestId } : {}),
+        },
+        body: JSON.stringify(
+          jarvis
+            ? {
+                model: "jarvis",
+                stream: false,
+                messages: [
+                  { role: "system", content: input.system },
+                  { role: "user", content: input.prompt },
+                ],
+              }
+            : { model: ctx.config.OLLAMA_MODEL, stream: false, prompt: input.prompt },
+        ),
+        signal: AbortSignal.timeout(ctx.config.AI_TIMEOUT_MS),
+      },
+    );
+    if (!response.ok) throw new Error(`status ${response.status}`);
+    const body = (await response.json()) as {
+      response?: unknown;
+      choices?: Array<{ message?: { content?: unknown } }>;
+    };
+    const generated = jarvis ? body.choices?.[0]?.message?.content : body.response;
+    if (typeof generated !== "string") throw new Error("unexpected response");
+    return generated.trim().slice(0, input.maxChars);
+  } catch {
+    throw notEligible(
+      jarvis
+        ? "The local JARVIS gateway did not respond. Check that it is running and its model is available."
+        : "The local AI model did not respond. Check that Ollama is running and the model is pulled.",
+    );
+  }
+}
+
 export function aiStatus(ctx: AppContext) {
   const { AI_ENABLED, AI_PROVIDER, OLLAMA_URL, OLLAMA_MODEL, JARVIS_AI_URL } = ctx.config;
   return {
@@ -76,55 +136,22 @@ export function aiRouter(ctx: AppContext, doFetch: AiFetch = fetch) {
       const parsed = suggestSchema.safeParse(req.body);
       if (!parsed.success) throw validationFailed({ content: "Provide a task and 1 to 12000 characters of content." });
       const { task, content, fileName } = parsed.data;
-      let text: string;
-      try {
-        const prompt = `${INSTRUCTIONS[task]}\n\n${fileName ? `File: ${fileName}\n` : ""}---\n${content}\n---`;
-        const jarvis = ctx.config.AI_PROVIDER === "jarvis";
-        const response = await doFetch(
-          new URL(
-            jarvis ? "/v1/chat/completions" : "/api/generate",
-            jarvis ? ctx.config.JARVIS_AI_URL : ctx.config.OLLAMA_URL,
-          ),
-          {
-            method: "POST",
-            headers: {
-              "content-type": "application/json",
-              // req.requestId is the valid incoming X-Request-ID, or a freshly generated one (see requestId()).
-              ...(jarvis ? { authorization: `Bearer ${ctx.config.JARVIS_AI_KEY}`, "x-request-id": req.requestId } : {}),
-            },
-            body: JSON.stringify(
-              jarvis
-                ? {
-                    model: "jarvis",
-                    stream: false,
-                    messages: [
-                      {
-                        role: "system",
-                        content: "You assist with software templates. Follow the user's task and be concise.",
-                      },
-                      { role: "user", content: prompt },
-                    ],
-                  }
-                : { model: ctx.config.OLLAMA_MODEL, stream: false, prompt },
-            ),
-            signal: AbortSignal.timeout(ctx.config.AI_TIMEOUT_MS),
-          },
-        );
-        if (!response.ok) throw new Error(`status ${response.status}`);
-        const body = (await response.json()) as {
-          response?: unknown;
-          choices?: Array<{ message?: { content?: unknown } }>;
-        };
-        const generated = jarvis ? body.choices?.[0]?.message?.content : body.response;
-        if (typeof generated !== "string") throw new Error("unexpected response");
-        text = generated.trim().slice(0, 8000);
-      } catch {
-        throw notEligible(
-          ctx.config.AI_PROVIDER === "jarvis"
-            ? "The local JARVIS gateway did not respond. Check that it is running and its model is available."
-            : "The local AI model did not respond. Check that Ollama is running and the model is pulled.",
-        );
-      }
+      const prompt = `${INSTRUCTIONS[task]}
+
+${
+  fileName
+    ? `File: ${fileName}
+`
+    : ""
+}---
+${content}
+---`;
+      const text = await aiComplete(ctx, doFetch, {
+        system: "You assist with software templates. Follow the user's task and be concise.",
+        prompt,
+        requestId: req.requestId,
+        maxChars: 8000,
+      });
       await audit(ctx, req, {
         action: "ai.suggest",
         outcome: "SUCCESS",

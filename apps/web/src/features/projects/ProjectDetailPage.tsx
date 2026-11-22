@@ -13,6 +13,7 @@ import { RequirementCard } from "./RequirementCard";
 import { RequirementForm } from "./RequirementForm";
 import { ProjectTemplateContribution } from "@/features/templates/ProjectTemplateContribution";
 import { ProjectMembersPanel } from "./ProjectMembersPanel";
+import { DeliveryPanel } from "@/features/delivery/DeliveryPanel";
 
 interface ProjectDetail {
   project: ProjectView;
@@ -245,6 +246,9 @@ export function ProjectDetailPage() {
 
         <div className="space-y-6">
           <ProjectMembersPanel projectId={project.id} />
+          {generations.state === "ready" && generations.data.generations[0]?.status === "SUCCEEDED" && !readOnly && (
+            <DeliveryPanel projectId={project.id} />
+          )}
           <Card className="h-fit">
             <CardHeader>
               <CardTitle>History</CardTitle>
