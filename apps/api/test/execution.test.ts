@@ -5,6 +5,7 @@ import {
   executionConfig,
   getExecutionStats,
   listLeftoverRunDirs,
+  processConfinementBlocksNetwork,
   resetExecutionStats,
   runIsolated,
   type RunOptions,
@@ -55,6 +56,30 @@ describe("runIsolated", () => {
     expect(r.stdout).toContain("hello|");
     expect(r.stdout).toContain("asaa-run-");
     expect(r.stdout.toLowerCase()).toContain(os.tmpdir().slice(0, 3).toLowerCase());
+  });
+
+  it("confines user code to the run folder when asked: no outside files, no child processes", async () => {
+    const outside = os.tmpdir();
+    const r = await run(
+      `const fs=require('fs');const out=[];
+       try{fs.readdirSync(${JSON.stringify(outside)});out.push('READ_OUTSIDE')}catch(e){out.push(e.code)}
+       try{fs.writeFileSync('inside.txt','x');out.push('WRITE_INSIDE_OK')}catch(e){out.push(e.code)}
+       try{require('child_process').execSync('echo hi');out.push('SPAWNED')}catch(e){out.push(e.code)}
+       console.log(out.join(','))`,
+      { confine: true },
+    );
+    expect(r.status).toBe("SUCCEEDED");
+    expect(r.stdout.trim()).toBe("ERR_ACCESS_DENIED,WRITE_INSIDE_OK,ERR_ACCESS_DENIED");
+  });
+
+  it("blocks sockets for confined runs where the Node release can deny network", async () => {
+    const r = await run(
+      "require('net').connect(9,'127.0.0.1').on('error',e=>{console.log(e.code);process.exit(0)}).on('connect',()=>{console.log('CONNECTED');process.exit(0)})",
+      { confine: true, limits: { timeoutMs: 5000 } },
+    );
+    expect(r.status).toBe("SUCCEEDED");
+    if (processConfinementBlocksNetwork()) expect(r.stdout.trim()).toBe("ERR_ACCESS_DENIED");
+    else expect(r.stdout.trim()).not.toBe("");
   });
 
   it("reports non-zero exit as FAILED", async () => {

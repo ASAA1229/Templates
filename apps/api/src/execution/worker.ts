@@ -1,4 +1,4 @@
-import { spawn, type ChildProcess } from "node:child_process";
+import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { lstat, mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import os from "node:os";
@@ -12,6 +12,23 @@ import path from "node:path";
  */
 export const ISOLATION_LEVEL =
   "process-level: temp dir, scrubbed env, time/memory/output/disk limits, tree kill; no network or syscall sandbox";
+
+/**
+ * Whether the running Node can deny network access through its permission model (`--allow-net` exists on
+ * newer Node releases only). Probed once; when false, confined process runs cannot block sockets.
+ */
+let netPermission: boolean | undefined;
+export function processConfinementBlocksNetwork(): boolean {
+  if (netPermission === undefined) {
+    try {
+      const probe = spawnSync(process.execPath, ["--permission", "--allow-net", "-e", ""], { stdio: "ignore", timeout: 5000, windowsHide: true });
+      netPermission = probe.status === 0;
+    } catch {
+      netPermission = false;
+    }
+  }
+  return netPermission;
+}
 
 export const RUN_DIR_PREFIX = "asaa-run-";
 
@@ -31,6 +48,12 @@ export interface RunOptions {
   files?: Record<string, string | Buffer>;
   limits?: Partial<RunLimits>;
   env?: Record<string, string>;
+  /**
+   * Confine a Node child with Node's permission model: file reads/writes only inside the run folder, no child
+   * processes, workers or addons, and no network where the Node release supports denying it. Used for every job
+   * that runs user-supplied code.
+   */
+  confine?: boolean;
   signal?: AbortSignal;
   /** Called once the child is spawned (useful for tests and supervision). */
   onSpawn?: (pid: number) => void;
@@ -253,7 +276,17 @@ function supervise(dir: string, opts: RunOptions, limits: Required<RunLimits>): 
     const started = Date.now();
     const isNode = sameExe(opts.command, process.execPath);
     // Memory cap: V8 heap limit for node children. RSS is additionally polled on Linux only.
-    const args = isNode ? [`--max-old-space-size=${limits.maxMemoryMb}`, ...opts.args] : opts.args;
+    const confine = Boolean(opts.confine) && isNode;
+    const confinement = confine
+      ? [
+          "--permission",
+          `--allow-fs-read=${dir}`,
+          `--allow-fs-write=${dir}`,
+          // The test runner would spawn a child per file, which the permission model denies; run files in-process.
+          ...(opts.args.includes("--test") ? ["--test-isolation=none"] : []),
+        ]
+      : [];
+    const args = isNode ? [`--max-old-space-size=${limits.maxMemoryMb}`, ...confinement, ...opts.args] : opts.args;
 
     let status: RunStatus | undefined;
     let reason: string | undefined;
