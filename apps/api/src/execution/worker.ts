@@ -409,7 +409,10 @@ export async function runIsolated(opts: RunOptions): Promise<RunResult> {
     await writeInputFiles(dir, files);
     return await supervise(dir, opts, limits);
   } finally {
-    if (dir) await rm(dir, { recursive: true, force: true, maxRetries: 30, retryDelay: 100 }).catch(() => undefined);
+    if (dir) {
+      if (process.platform === "win32") await new Promise((resolve) => setTimeout(resolve, 250));
+      await rm(dir, { recursive: true, force: true, maxRetries: 100, retryDelay: 200 }).catch(() => undefined);
+    }
     release();
   }
 }
