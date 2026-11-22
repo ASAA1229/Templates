@@ -26,3 +26,19 @@
 ## 2026-11-19 discovery reconciliation
 
 Sets 1–12 are closed. New selections are candidate requirements only; existing development, testing, integration and acceptance statuses remain unchanged until verified evidence is recorded. Pending mapping includes template taxonomy/catalogue, authoring/generation, customization/export, lifecycle/versioning, collaboration, AI/JARVIS mini-features, security/isolation, deployment/connectors, offline Linux/AIX snapshot, and cross-project data/security/DevOps/quality requirements. See [PENDING_WORK_REGISTER.md](PENDING_WORK_REGISTER.md). Current release remains NO-GO.
+
+
+## Evidence reconciliation — 2026-11-20
+
+| Area | Current verified state | Remaining evidence |
+|---|---|---|
+| CI on `new` | Passed, run 44729067877 | Verify exact current head and rerun before promotion |
+| CI on `dev` | Earlier observed failures, runs 44589355785 and 44589341247 | Rerun current head; resolve failures |
+| Template platform and demo catalogue | Implementation and CI evidence exist | Owner acceptance, full category/quality coverage and generated-project compatibility |
+| Environment Snapshot | Automated tests/feature evidence exist | Native Linux/AIX execution, TXT/JSON and CMM ICG/ACQ/ISS acceptance |
+| Accessibility | Automated axe/reflow evidence exists in prior local records | Manual screen-reader and assistive-technology review |
+| Execution isolation | Test/fake-daemon evidence exists | Live container boundary and resource/network/filesystem enforcement |
+| Jenkins/Nexus and deployment | Contracts/fake-server tests only | Approved live integration and operational recovery evidence |
+| Release acceptance | Not accepted; NO-GO | Close external, device/host, operations and owner gates |
+
+Do not promote local, agent-reported or fake-server evidence to CI VERIFIED or live-integration status. See [Project Status](PROJECT_STATUS.md) and [Pending Work](PENDING_WORK_REGISTER.md).

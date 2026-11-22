@@ -15,6 +15,7 @@ import {
 import { AppError, conflict, notEligible, notFound, validationFailed } from "../../lib/errors.js";
 import { audit } from "../audit/audit.service.js";
 import { authorize } from "../auth/policy.js";
+import { isSecretFileName } from "../export/file-policy.js";
 import { resolveOutputDir } from "../generation/writer.js";
 import { loadProjectAccess, requireProjectAccess } from "../projects/projects.js";
 import {
@@ -130,7 +131,7 @@ export async function collectProjectFiles(root: string): Promise<Record<string, 
   let total = 0;
   const walk = async (dir: string, prefix: string): Promise<void> => {
     for (const entry of (await readdir(dir, { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name))) {
-      if (EXCLUDED.has(entry.name)) continue;
+      if (EXCLUDED.has(entry.name) || (entry.isFile() && isSecretFileName(entry.name))) continue;
       const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
       const full = path.join(dir, entry.name);
       const stats = await lstat(full);

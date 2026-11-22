@@ -18,3 +18,16 @@ Map template catalogue and taxonomy; scratch/import/GitHub/AI/visual creation; c
 All answers were “all of the above”. These selections are candidate requirements, not evidence that features exist or approved delivery commitments. Keep internal employee/management access and ₹0 operating-cost ceiling unless separately changed by the owner. Preserve the existing modular monolith and verified implementation.
 
 Master Requirements Baseline v1.0 remains unchanged. Documentation only: no code, tests, deployment, merge, paid services or release are authorized.
+
+
+## Organization verification update — 2026-11-20
+
+- Re-run the Templates CI workflow on the current `dev` head and resolve the observed failures from runs 44589355785 and 44589341247; verify the exact head SHA.
+- Apply and verify branch protection and required checks for all five standard branches.
+- Complete manual screen-reader/accessibility acceptance and live isolated-container boundary tests (resource, network, filesystem and cancellation/cleanup behavior).
+- Run Environment Snapshot on supported Linux and AIX target environments; verify TXT/JSON output, redaction behavior and CMM ICG/ACQ/ISS mapping. CI/unit tests alone are not native AIX verification.
+- Verify live Jenkins/Nexus integrations only with approved endpoints and credentials; fake-server tests do not prove live integration.
+- Obtain owner-approved zero-cost deployment topology, rollback, incident ownership and RPO/RTO; complete isolated restore/recovery exercise and owner acceptance.
+- Complete template taxonomy coverage and generated-project build/compatibility acceptance as applicable.
+
+The latest observed `new` CI run passed (44729067877), but release remains NO-GO / NOT ACCEPTED. No code, tests, deployment, merge or branch promotion was performed by this documentation refresh.

@@ -6,6 +6,7 @@ import type { Request } from "express";
 import { z } from "zod";
 import { AppError, conflict, notEligible, notFound, validationFailed } from "../../lib/errors.js";
 import { audit } from "../audit/audit.service.js";
+import { isSecretFileName } from "../export/file-policy.js";
 import { branchRole, parseLog, parseStatus } from "./git.js";
 import type { WorkspaceService } from "./workspace.js";
 
@@ -135,6 +136,9 @@ export class WorkspaceFiles {
     const rel = relative(input.path, { allowRoot: false });
     const root = rel.split("/")[0]!;
     if (root === PROVENANCE_DIR) throw notEligible("Platform provenance files cannot be edited.");
+    if (isSecretFileName(rel)) {
+      throw notEligible("Credential files (.env, keys) cannot be saved here. Use an .example file with placeholders.");
+    }
     const bytes = Buffer.from(input.content, "utf8");
     if (bytes.length > FILE_LIMITS.fileBytes) throw notEligible("This file is too large to save from the browser.");
     return this.workspace.serialize(dir, async () => {

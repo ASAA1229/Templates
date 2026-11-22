@@ -21,11 +21,21 @@ import { contentDigest } from "./library.js";
 import { catalogView } from "../catalog/catalog.js";
 import type { GenerationService } from "../generation/generation.service.js";
 
-const MAX_FILES = 200;
+export const MAX_FILES = 200;
 const MAX_FILE_BYTES = 512 * 1024;
 const MAX_TOTAL_BYTES = 4 * 1024 * 1024;
-const EXCLUDED_DIRS = new Set([".git", ".asaa", "node_modules", "dist", "build", "coverage", ".next", ".venv", "venv"]);
-const EXCLUDED_FILES = /^(\.env($|\.)|.*\.(pem|key|p12|pfx)$|id_rsa|id_ed25519|credentials(\.json)?$)$/i;
+export const EXCLUDED_DIRS = new Set([
+  ".git",
+  ".asaa",
+  "node_modules",
+  "dist",
+  "build",
+  "coverage",
+  ".next",
+  ".venv",
+  "venv",
+]);
+export const EXCLUDED_FILES = /^(\.env($|\.)|.*\.(pem|key|p12|pfx)$|id_rsa|id_ed25519|credentials(\.json)?$)$/i;
 const TEXT_EXTENSIONS = new Set([
   ".txt",
   ".md",

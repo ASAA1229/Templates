@@ -13,6 +13,7 @@ import { audit } from "../audit/audit.service.js";
 import { authorize } from "../auth/policy.js";
 import { resolveAssets, type AssetIndex, type AssetVersion } from "./resolver.js";
 import { z } from "zod";
+import { requireActiveSector } from "./taxonomy.js";
 
 export function catalogView(item: CatalogItem): CatalogItemView {
   return {
@@ -31,6 +32,7 @@ export function catalogView(item: CatalogItem): CatalogItemView {
     sourceReference: item.sourceReference,
     license: item.license,
     ownership: item.ownership,
+    sector: item.sector,
     dependencies: Array.isArray(item.dependencies) ? (item.dependencies as { name: string; version: string }[]) : [],
     contentRef: item.contentRef,
     contentDigest: item.contentDigest,
@@ -57,6 +59,7 @@ export function catalogRouter(ctx: AppContext): Router {
         ...(query.tag ? { tags: { has: query.tag } } : {}),
         ...(query.lifecycle ? { lifecycle: query.lifecycle } : {}),
         ...(query.kind ? { kind: query.kind } : {}),
+        ...(query.sector ? { sector: query.sector } : {}),
         ...(query.q
           ? {
               OR: [
@@ -86,6 +89,7 @@ export function catalogRouter(ctx: AppContext): Router {
   router.post("/", authorize(ctx, "catalog:write"), async (req, res, next) => {
     try {
       const input = createCatalogItemSchema.parse(req.body);
+      await requireActiveSector(ctx, input.sector);
       const item = await ctx.prisma.catalogItem.create({
         data: {
           ...input,
@@ -193,6 +197,8 @@ export function catalogRouter(ctx: AppContext): Router {
       const { expectedVersion, ...changes } = updateCatalogItemSchema.parse(req.body);
       const current = await ctx.prisma.catalogItem.findUnique({ where: { id } });
       if (!current) throw notFound("Catalog item");
+      if (changes.sector !== undefined && changes.sector !== current.sector)
+        await requireActiveSector(ctx, changes.sector);
       if (current.contentDigest) {
         // Released template metadata is immutable (RG-06); publish a new version instead.
         const locked: Record<string, string> = {};

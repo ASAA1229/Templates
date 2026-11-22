@@ -106,6 +106,8 @@ describe("tool certification", () => {
     const report = await certifyTools(REAL_TOOLS);
     expect(report.toolSummary.total).toBeGreaterThanOrEqual(1);
     const tool = report.tools.find((entry) => entry.id === "env-snapshot")!;
+    expect(report.tools.some((entry) => entry.id === "env_snapshot")).toBe(false);
+    expect(report.tools.every((entry) => entry.status === "CERTIFIED")).toBe(true);
     expect(
       tool.checks.filter((check) => check.status === "fail"),
       JSON.stringify(tool.checks),

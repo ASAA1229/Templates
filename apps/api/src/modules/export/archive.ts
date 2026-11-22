@@ -2,10 +2,8 @@ import { createHash } from "node:crypto";
 import { lstat, readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { notEligible } from "../../lib/errors.js";
+import { assertNoSecretContent, EXCLUDED_DIRECTORIES as EXCLUDED, isSecretFileName } from "./file-policy.js";
 import { createZip, type ZipEntry } from "./zip.js";
-
-/** Never exported: VCS metadata and dependency folders. */
-const EXCLUDED = new Set([".git", "node_modules"]);
 export const EXPORT_LIMITS = { files: 2000, fileBytes: 10 * 1024 * 1024, totalBytes: 50 * 1024 * 1024 } as const;
 
 export interface ArchiveSource {
@@ -23,12 +21,20 @@ export interface ArchiveSource {
   };
   /** Digest of what is on disk now; compared with generation.outputDigest. */
   currentDigest: string | null;
+  /** Extra provenance recorded in the manifest (e.g. workspace repository state for workspace exports). */
+  extra?: Record<string, unknown>;
 }
 
 const sha256 = (value: Buffer | string) => createHash("sha256").update(value).digest("hex");
 
-/** Collect regular files only: symlinks and special files make the export unsafe and are refused. */
-async function collect(root: string): Promise<{ path: string; content: Buffer }[]> {
+/**
+ * Collect regular files only: symlinks and special files make the export unsafe and are refused. Credential files
+ * (.env, private keys) are left out and named in `report.excludedSecrets`; text containing credentials is refused.
+ */
+export async function collectProjectFiles(
+  root: string,
+  report: { excludedSecrets: string[] } = { excludedSecrets: [] },
+): Promise<{ path: string; content: Buffer }[]> {
   const files: { path: string; content: Buffer }[] = [];
   let total = 0;
   const walk = async (dir: string, relative: string) => {
@@ -40,6 +46,10 @@ async function collect(root: string): Promise<{ path: string; content: Buffer }[
       if (stats.isSymbolicLink()) throw notEligible(`Cannot export: "${rel}" is a symbolic link.`);
       if (stats.isDirectory()) await walk(full, rel);
       else if (stats.isFile()) {
+        if (isSecretFileName(entry.name)) {
+          report.excludedSecrets.push(rel);
+          continue;
+        }
         if (stats.size > EXPORT_LIMITS.fileBytes) throw notEligible(`Cannot export: "${rel}" is too large.`);
         total += stats.size;
         if (files.length >= EXPORT_LIMITS.files || total > EXPORT_LIMITS.totalBytes) {
@@ -50,6 +60,7 @@ async function collect(root: string): Promise<{ path: string; content: Buffer }[
     }
   };
   await walk(root, "");
+  assertNoSecretContent(files);
   return files;
 }
 
@@ -57,14 +68,17 @@ async function collect(root: string): Promise<{ path: string; content: Buffer }[
 export async function buildProjectArchive(
   source: ArchiveSource,
 ): Promise<{ filename: string; archive: Buffer; manifest: unknown }> {
-  const files = await collect(source.directory);
+  const report = { excludedSecrets: [] as string[] };
+  const files = await collectProjectFiles(source.directory, report);
   const rootName = source.project.key.toLowerCase().replace(/[^a-z0-9._-]/g, "-");
   const manifest = {
     schemaVersion: 1,
     project: source.project,
     generation: source.generation,
     modifiedSinceGeneration: source.currentDigest !== source.generation.outputDigest,
-    excluded: [...EXCLUDED],
+    ...(source.extra ? { workspace: source.extra } : {}),
+    excluded: [...EXCLUDED, ".env*", "*.pem", "*.key", "*.p12", "*.pfx", "*.jks", "id_rsa", "id_ed25519", "id_ecdsa"],
+    excludedSecretFiles: report.excludedSecrets,
     totals: { files: files.length, bytes: files.reduce((sum, file) => sum + file.content.length, 0) },
     files: files.map((file) => ({ path: file.path, bytes: file.content.length, sha256: sha256(file.content) })),
   };

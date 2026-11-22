@@ -40,9 +40,12 @@ export function CatalogPage() {
   const [params, setParams] = useSearchParams();
   const [query, setQuery] = useState(params.get("q") ?? "");
   const [creating, setCreating] = useState(false);
-  const filters = ["q", "category", "technology", "lifecycle", "kind"].filter((key) => params.get(key));
+  const filters = ["q", "category", "technology", "lifecycle", "kind", "sector"].filter((key) => params.get(key));
   const search = new URLSearchParams(filters.map((key) => [key, params.get(key)!]));
   const catalog = useResource<{ items: CatalogItemView[]; categories: string[] }>(`/catalog?${search}`);
+  const sectors = useResource<{ terms: { kind: string; key: string; label: string; active: boolean }[] }>(
+    "/catalog/taxonomy",
+  );
   const set = (key: string, value: string) => {
     const next = new URLSearchParams(params);
     if (value) next.set(key, value);
@@ -86,7 +89,7 @@ export function CatalogPage() {
 
       <form
         role="search"
-        className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,10rem)_minmax(0,10rem)_minmax(0,10rem)_auto] lg:items-end"
+        className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,10rem)_minmax(0,10rem)_minmax(0,10rem)_minmax(0,10rem)_auto] lg:items-end"
         onSubmit={(event) => {
           event.preventDefault();
           set("q", query.trim());
@@ -115,6 +118,24 @@ export function CatalogPage() {
                 {category}
               </option>
             ))}
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="catalog-sector">Sector</Label>
+          <Select
+            id="catalog-sector"
+            value={params.get("sector") ?? ""}
+            onChange={(event) => set("sector", event.target.value)}
+          >
+            <option value="">All</option>
+            {sectors.state === "ready" &&
+              sectors.data.terms
+                .filter((term) => term.kind === "SECTOR")
+                .map((term) => (
+                  <option key={term.key} value={term.key}>
+                    {term.label}
+                  </option>
+                ))}
           </Select>
         </div>
         <div className="space-y-1.5">
@@ -191,7 +212,8 @@ function CatalogCard({ item, onChanged }: { item: CatalogItemView; onChanged: ()
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="text-xs text-muted-foreground">
-            {humanize(item.kind)} · {item.category} · v{item.version}
+            {humanize(item.kind)} · {item.category}
+            {item.sector ? ` · ${item.sector}` : ""} · v{item.version}
           </p>
           <h2 className="font-semibold">{item.title}</h2>
         </div>

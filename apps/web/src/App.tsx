@@ -10,6 +10,11 @@ import { ActivateAccountPage } from "@/features/auth/ActivateAccountPage";
 import { ResetPasswordPage } from "@/features/auth/ResetPasswordPage";
 import { AccessRequestsPage } from "@/features/security/AccessRequestsPage";
 import { CatalogPage } from "@/features/catalog/CatalogPage";
+import { TaxonomyPage } from "@/features/catalog/TaxonomyPage";
+import { DeliveryApprovalsPage } from "@/features/delivery/ApprovalsPage";
+import { OpsPage } from "@/features/ops/OpsPage";
+import { AuthoringPage } from "@/features/authoring/AuthoringPage";
+import { DraftEditor } from "@/features/authoring/DraftEditor";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
 import { ProjectDetailPage } from "@/features/projects/ProjectDetailPage";
 import { ProjectsPage } from "@/features/projects/ProjectsPage";
@@ -34,7 +39,12 @@ const TITLES: [RegExp, string][] = [
   [/^\/projects\/[^/]+\/workspace$/, "Engineering workspace"],
   [/^\/projects\/[^/]+/, "Project"],
   [/^\/projects/, "Projects"],
+  [/^\/catalog\/taxonomy/, "Catalogue taxonomy"],
   [/^\/catalog/, "Template catalog"],
+  [/^\/template-authoring\/[^/]+/, "Template draft"],
+  [/^\/template-authoring/, "Template authoring"],
+  [/^\/delivery-approvals/, "Delivery approvals"],
+  [/^\/operations/, "Operations and assets"],
   [/^\/search/, "Advanced search"],
   [/^\/audit/, "Audit log"],
   [/^\/security/, "Security"],
@@ -166,6 +176,11 @@ export const routes: RouteObject[] = [
       },
       { path: "projects/:projectId", element: <ProjectDetailPage /> },
       { path: "catalog", element: <CatalogPage /> },
+      { path: "catalog/taxonomy", element: <TaxonomyPage /> },
+      { path: "template-authoring", element: <AuthoringPage /> },
+      { path: "template-authoring/:draftId", element: <DraftEditor /> },
+      { path: "delivery-approvals", element: <DeliveryApprovalsPage /> },
+      { path: "operations", element: <OpsPage /> },
       { path: "search", element: <SearchPage /> },
       { path: "audit", element: <AuditPage /> },
       { path: "security", element: <SecurityPage /> },
