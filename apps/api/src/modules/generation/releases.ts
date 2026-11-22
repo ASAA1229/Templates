@@ -1,6 +1,7 @@
 import {
   createReleaseSchema,
   deprecateReleaseSchema,
+  releaseCompareQuerySchema,
   releaseListQuerySchema,
   releaseNoteSchema,
   type TemplateReleaseView,
@@ -14,6 +15,7 @@ import { audit } from "../audit/audit.service.js";
 import { authorize } from "../auth/policy.js";
 import type { GenerationService } from "./generation.service.js";
 import { isUsable } from "./library.js";
+import { diffManifests } from "./release-diff.js";
 
 /**
  * Template release lifecycle (RG-06): DRAFT -> IN_REVIEW -> APPROVED -> RELEASED (immutable) -> DEPRECATED.
@@ -167,6 +169,38 @@ export function releasesRouter(ctx: AppContext, service: GenerationService): Rou
         metadata: { templateId: row.templateId, version: row.version, digest: row.contentDigest },
       });
       res.status(201).json({ release: releaseView(row) });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  /** Compare two recorded versions of one template (manifest snapshots from the release ledger). */
+  router.get("/compare", authorize(ctx, "template:read"), async (req, res, next) => {
+    try {
+      const query = releaseCompareQuerySchema.safeParse(req.query);
+      if (!query.success) {
+        throw validationFailed({ templateId: "Provide templateId, from and to (semantic versions)." });
+      }
+      const { templateId, from, to } = query.data;
+      const rows = await prisma.templateRelease.findMany({
+        where: { templateId, version: { in: [from, to] } },
+      });
+      const before = rows.find((row) => row.version === from);
+      const after = rows.find((row) => row.version === to);
+      if (!before || !after) throw notFound("Release");
+      const view = (row: TemplateRelease) => ({
+        version: row.version,
+        status: row.status,
+        contentDigest: row.contentDigest,
+      });
+      res.json({
+        comparison: {
+          templateId,
+          from: view(before),
+          to: view(after),
+          changes: diffManifests(before.manifest, after.manifest),
+        },
+      });
     } catch (error) {
       next(error);
     }
