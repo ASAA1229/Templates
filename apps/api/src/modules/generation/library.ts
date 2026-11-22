@@ -144,7 +144,7 @@ function checkContent(manifest: TemplateManifest, files: Map<string, Buffer>, pr
   }
 }
 
-async function loadTemplate(versionDir: string, id: string, version: string): Promise<LibraryTemplate> {
+export async function loadTemplate(versionDir: string, id: string, version: string): Promise<LibraryTemplate> {
   const problems: string[] = [];
   const template: LibraryTemplate = {
     id,

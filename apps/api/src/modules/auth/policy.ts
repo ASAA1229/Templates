@@ -31,6 +31,13 @@ export const PERMISSIONS = [
   "session:manage",
   "session:self-manage",
   "identity:manage",
+  "delivery:export",
+  "delivery:request",
+  "delivery:approve",
+  "connector:read",
+  "connector:operate",
+  "taxonomy:manage",
+  "ops:read",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
@@ -52,6 +59,9 @@ const ROLE_PERMISSIONS: Record<AuthenticatedOwner["role"], ReadonlySet<Permissio
     "workspace:write",
     "job:read",
     "job:write",
+    "delivery:export",
+    "delivery:request",
+    "connector:read",
     "session:self-manage",
   ]),
   TESTER: new Set([
@@ -84,6 +94,8 @@ const ROLE_PERMISSIONS: Record<AuthenticatedOwner["role"], ReadonlySet<Permissio
     "workspace:write",
     "job:read",
     "job:write",
+    "delivery:export",
+    "delivery:request",
     "session:self-manage",
   ]),
 };
@@ -99,6 +111,8 @@ const MFA_GATED: ReadonlySet<Permission> = new Set([
   "catalog:write",
   "audit:read",
   "session:manage",
+  "delivery:approve",
+  "connector:operate",
 ]);
 
 export function authorize(ctx: AppContext, permission: Permission) {
