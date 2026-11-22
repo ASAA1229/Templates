@@ -848,6 +848,22 @@ export class GenerationService {
       },
       currentDigest,
     });
+    // Every export is recorded in the delivery ledger, not only exports made through the delivery route.
+    const now = this.ctx.now();
+    const ledger = await this.prisma.deliveryRequest.create({
+      data: {
+        projectId: generation.projectId,
+        kind: "ZIP_EXPORT",
+        status: "EXECUTED",
+        provider: "download",
+        note: "Generation archive export",
+        requestedById: req.owner!.id,
+        decidedById: req.owner!.id,
+        decidedAt: now,
+        executedAt: now,
+        result: { filename, bytes: archive.length, sha256: createHash("sha256").update(archive).digest("hex") },
+      },
+    });
     await audit(this.ctx, req, {
       action: "generation.export",
       outcome: "SUCCESS",
@@ -855,6 +871,7 @@ export class GenerationService {
       targetId: generation.projectId,
       metadata: {
         generationId: generation.id,
+        deliveryId: ledger.id,
         bytes: archive.length,
         archiveSha256: createHash("sha256").update(archive).digest("hex"),
         modifiedSinceGeneration: (manifest as { modifiedSinceGeneration: boolean }).modifiedSinceGeneration,
