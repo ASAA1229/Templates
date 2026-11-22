@@ -1,5 +1,9 @@
 import {
+  Activity,
   FolderKanban,
+  GitPullRequestArrow,
+  PenTool,
+  Tags,
   LayoutDashboard,
   Library,
   LogOut,
@@ -24,6 +28,8 @@ export const NAV_ITEMS = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/projects", label: "Projects", icon: FolderKanban },
   { to: "/catalog", label: "Template catalog", icon: Library },
+  { to: "/template-authoring", label: "Template authoring", icon: PenTool },
+  { to: "/catalog/taxonomy", label: "Taxonomy", icon: Tags },
   { to: "/template-submissions", label: "Template submissions", icon: Upload },
   { to: "/template-releases", label: "Template releases", icon: PackageCheck },
   { to: "/search", label: "Advanced search", icon: Search },
@@ -49,6 +55,8 @@ export function AppShell() {
     owner?.role === "OWNER" || owner?.role === "ADMIN"
       ? [
           ...NAV_ITEMS,
+          { to: "/delivery-approvals", label: "Delivery approvals", icon: GitPullRequestArrow },
+          { to: "/operations", label: "Operations", icon: Activity },
           { to: "/team", label: "Team members", icon: UserRound },
           { to: "/access-requests", label: "Access requests", icon: UserPlus },
         ]

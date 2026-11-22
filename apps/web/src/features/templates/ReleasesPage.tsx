@@ -17,6 +17,7 @@ import { ApiError, api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useResource } from "@/lib/hooks";
 import { formatDateTime } from "@/lib/utils";
+import { ReleaseCompare } from "./ReleaseCompare";
 
 const TONES = {
   DRAFT: "neutral",
@@ -113,6 +114,8 @@ export function ReleasesPage() {
           </form>
         </CardContent>
       </Card>
+
+      <ReleaseCompare releases={rows} />
 
       {releases.state === "loading" && <LoadingState label="Loading releases…" />}
       {releases.state === "error" && <ErrorState error={releases.error} onRetry={releases.reload} />}

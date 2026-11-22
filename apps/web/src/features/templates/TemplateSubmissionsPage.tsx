@@ -15,6 +15,9 @@ type Submission = {
   fileCount?: number;
   bytes?: number;
   status: "PENDING_REVIEW" | "APPROVED";
+  aiGenerated?: boolean;
+  aiFiles?: string[];
+  source?: string;
 };
 
 export function TemplateSubmissionsPage() {
@@ -79,12 +82,20 @@ export function TemplateSubmissionsPage() {
                 <div>
                   <CardTitle>{item.title || item.templateId || "Template candidate"}</CardTitle>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {item.templateId} · v{item.version} · project {item.projectKey}
+                    {item.templateId} · v{item.version} ·{" "}
+                    {item.projectKey ? `project ${item.projectKey}` : "authoring draft"}
                   </p>
                 </div>
-                <span className="rounded-full border px-2 py-1 text-xs">
-                  {item.status === "APPROVED" ? "Approved" : "Pending review"}
-                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  {item.aiGenerated && (
+                    <span className="rounded-full border border-warning/40 bg-warning/10 px-2 py-1 text-xs">
+                      AI-generated ({item.aiFiles?.length ?? 0} files): read every file before approving
+                    </span>
+                  )}
+                  <span className="rounded-full border px-2 py-1 text-xs">
+                    {item.status === "APPROVED" ? "Approved" : "Pending review"}
+                  </span>
+                </div>
               </CardHeader>
               <CardContent className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-sm text-muted-foreground">
