@@ -667,3 +667,10 @@ model TaxonomyTerm {
 
   @@unique([kind, key])
 }
+
+/// Durable connector revocations (D3.20). One-way: a row means the connector and its credential are never reusable.
+model ConnectorRevocation {
+  connectorId String   @id @db.VarChar(40)
+  revokedById String?  @db.Uuid
+  revokedAt   DateTime @default(now()) @db.Timestamptz(3)
+}

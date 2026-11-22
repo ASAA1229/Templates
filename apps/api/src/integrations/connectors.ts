@@ -81,9 +81,30 @@ export interface AuditSink {
   }): void | Promise<void>;
 }
 
+/**
+ * Durable record of revoked connectors. Revocation is one-way: once a connector id is recorded it is never
+ * reusable. Implementations must throw (not return false) when state cannot be read, so callers fail closed.
+ */
+export interface RevocationStore {
+  isRevoked(connectorId: string): Promise<boolean>;
+  revoke(connectorId: string, actor: string): Promise<void>;
+}
+
+/** Process-local store: only for tests and tools that have no database. The server uses a persistent store. */
+export class InMemoryRevocationStore implements RevocationStore {
+  private readonly revoked = new Set<string>();
+  async isRevoked(connectorId: string) {
+    return this.revoked.has(connectorId);
+  }
+  async revoke(connectorId: string) {
+    this.revoked.add(connectorId);
+  }
+}
+
 interface Registration {
   connector: Connector;
   scope: ConnectorScope;
+  /** Sticky in-process flag: set on revoke and whenever the store says so; never cleared. */
   revoked: boolean;
   credentialRef: string | null;
 }
@@ -122,6 +143,7 @@ export class ConnectorManager {
   constructor(
     private readonly credentials: CredentialProvider,
     private readonly audit: AuditSink = () => undefined,
+    private readonly revocations: RevocationStore = new InMemoryRevocationStore(),
   ) {}
 
   register(id: string, connector: Connector, scope: ConnectorScope = {}, credentialRef: string | null = null) {
@@ -132,7 +154,21 @@ export class ConnectorManager {
 
   /** Immediately stop all use of a connector (credential revocation). */
   async revoke(id: string, actor: string) {
-    this.get(id).revoked = true;
+    const registration = this.get(id);
+    // Deny locally first so the connector is unusable in this process even if persisting fails.
+    registration.revoked = true;
+    try {
+      await this.revocations.revoke(id, actor);
+    } catch {
+      await this.audit({
+        connectorId: id,
+        action: "connector.revoke",
+        outcome: "FAILURE",
+        actor,
+        detail: "Revocation could not be persisted; the connector stays denied in this process.",
+      });
+      throw new ConnectorError(503, "Revocation could not be persisted. The connector is denied until it is retried.");
+    }
     await this.audit({ connectorId: id, action: "connector.revoke", outcome: "SUCCESS", actor });
   }
 
@@ -142,8 +178,21 @@ export class ConnectorManager {
     return registration;
   }
 
-  describe(id: string) {
-    const { connector, scope, revoked } = this.get(id);
+  /** True when the connector is revoked, or when revocation state cannot be read (fail closed). */
+  async isRevoked(id: string): Promise<boolean> {
+    const registration = this.get(id);
+    if (registration.revoked) return true;
+    try {
+      if (await this.revocations.isRevoked(id)) registration.revoked = true;
+    } catch {
+      return true;
+    }
+    return registration.revoked;
+  }
+
+  async describe(id: string) {
+    const { connector, scope } = this.get(id);
+    const revoked = await this.isRevoked(id);
     return {
       id,
       kind: connector.kind,
@@ -156,7 +205,14 @@ export class ConnectorManager {
 
   async health(id: string, actor: string): Promise<ConnectorHealth> {
     const registration = this.get(id);
-    if (registration.revoked) return { ok: false, status: "misconfigured", latencyMs: 0, detail: "Connector revoked." };
+    if (await this.isRevoked(id)) {
+      return {
+        ok: false,
+        status: "misconfigured",
+        latencyMs: 0,
+        detail: "Connector revoked or revocation state unavailable.",
+      };
+    }
     if (registration.credentialRef && !this.credentials.get(registration.credentialRef)) {
       return { ok: false, status: "misconfigured", latencyMs: 0, detail: "Credential is not configured." };
     }
@@ -165,7 +221,7 @@ export class ConnectorManager {
   }
 
   async trigger(id: string, request: BuildRequest, options: CallOptions) {
-    const connector = this.require(id, "BUILD", "trigger", options, true);
+    const connector = await this.require(id, "BUILD", "trigger", options, true);
     this.inScope(id, request.job, this.get(id).scope.jobs, "job", options.actor, "connector.build.trigger");
     return this.guard(
       id,
@@ -177,7 +233,7 @@ export class ConnectorManager {
   }
 
   async status(id: string, job: string, buildId: string, options: CallOptions) {
-    const connector = this.require(id, "BUILD", "status", options, false);
+    const connector = await this.require(id, "BUILD", "status", options, false);
     this.inScope(id, job, this.get(id).scope.jobs, "job", options.actor, "connector.build.status");
     return this.guard(
       id,
@@ -189,7 +245,7 @@ export class ConnectorManager {
   }
 
   async cancel(id: string, job: string, buildId: string, options: CallOptions) {
-    const connector = this.require(id, "BUILD", "cancel", options, true);
+    const connector = await this.require(id, "BUILD", "cancel", options, true);
     this.inScope(id, job, this.get(id).scope.jobs, "job", options.actor, "connector.build.cancel");
     return this.guard(
       id,
@@ -201,7 +257,7 @@ export class ConnectorManager {
   }
 
   async publish(id: string, ref: ArtifactRef, content: Buffer, sha256: string, options: CallOptions) {
-    const connector = this.require(id, "ARTIFACT_REGISTRY", "publish", options, true);
+    const connector = await this.require(id, "ARTIFACT_REGISTRY", "publish", options, true);
     this.inScope(
       id,
       ref.repository,
@@ -220,7 +276,7 @@ export class ConnectorManager {
   }
 
   async fetch(id: string, ref: ArtifactRef, options: CallOptions) {
-    const connector = this.require(id, "ARTIFACT_REGISTRY", "fetch", options, false);
+    const connector = await this.require(id, "ARTIFACT_REGISTRY", "fetch", options, false);
     this.inScope(
       id,
       ref.repository,
@@ -233,7 +289,7 @@ export class ConnectorManager {
   }
 
   async list(id: string, repository: string, prefix: string | undefined, options: CallOptions) {
-    const connector = this.require(id, "ARTIFACT_REGISTRY", "list", options, false);
+    const connector = await this.require(id, "ARTIFACT_REGISTRY", "list", options, false);
     this.inScope(
       id,
       repository,
@@ -253,13 +309,13 @@ export class ConnectorManager {
 
   // ───── guards ─────
 
-  private require<K extends ConnectorKind>(
+  private async require<K extends ConnectorKind>(
     id: string,
     kind: K,
     capability: string,
     options: CallOptions,
     needsApproval: boolean,
-  ): K extends "BUILD" ? BuildConnector : RegistryConnector {
+  ): Promise<K extends "BUILD" ? BuildConnector : RegistryConnector> {
     const registration = this.get(id);
     const deny = (message: string, status = 403): never => {
       void this.audit({
@@ -271,7 +327,7 @@ export class ConnectorManager {
       });
       throw new ConnectorError(status, message);
     };
-    if (registration.revoked) deny("This connector has been revoked.");
+    if (await this.isRevoked(id)) deny("This connector has been revoked or its revocation state is unavailable.");
     if (registration.connector.kind !== kind) deny(`Connector ${id} is not a ${kind} connector.`, 409);
     if (registration.connector.contract !== CONNECTOR_CONTRACT_VERSION) {
       deny(
