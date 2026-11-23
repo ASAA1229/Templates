@@ -36,6 +36,8 @@ model Owner {
   mfaRecoveryHashes         String[]             @default([])
   /// Last accepted TOTP time step; codes at or below it are rejected (replay protection).
   mfaLastStep               Int?
+  /// Optional identity-provider subject linked to this account for single sign-on (never auto-provisioned).
+  ssoSubject                String?              @unique @db.VarChar(255)
   sessions                  Session[]
   projects                  Project[]
   savedSearches             SavedSearch[]

@@ -1,6 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
+import { readOidcConfig } from "../modules/auth/oidc.js";
 
 /** apps/api, from both src/config (tsx) and dist/config (compiled). */
 const API_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -147,6 +148,13 @@ const envSchema = z.object({
     .max(512)
     .optional()
     .or(z.literal("").transform(() => undefined)),
+  /**
+   * Optional single sign-on through the shared ASAA identity provider (confidential client `templates-web`).
+   * Enabled only when all three are set. SSO signs in existing local accounts only; roles stay in Templates.
+   */
+  TEMPLATES_OIDC_ISSUER: z.string().trim().optional().or(z.literal("").transform(() => undefined)),
+  TEMPLATES_OIDC_CLIENT_ID: z.string().trim().optional().or(z.literal("").transform(() => undefined)),
+  TEMPLATES_OIDC_CLIENT_SECRET: z.string().max(512).optional().or(z.literal("").transform(() => undefined)),
   /** Static bearer token fallback when client credentials are not configured. */
   ASAA_EVENTS_TOKEN: z
     .string()
@@ -219,6 +227,8 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
     const parsed = new URL(value);
     if (parsed.username || parsed.password) throw new Error(`${name} must not contain credentials.`);
   }
+  // Throws on a malformed or non-HTTPS (non-loopback) issuer; returns undefined (SSO off) when not fully configured.
+  readOidcConfig(config, config.WEB_ORIGIN);
   const jarvisUrl = new URL(config.JARVIS_AI_URL);
   if (
     !["http:", "https:"].includes(jarvisUrl.protocol) ||

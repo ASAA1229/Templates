@@ -93,7 +93,9 @@ describe("container command and isolation selection", () => {
       "none",
       "--read-only",
       "--tmpfs",
-      "/tmp:rw,size=64m",
+      "/tmp:rw,noexec,nosuid,nodev,size=64m",
+      "--ipc",
+      "none",
       "--cap-drop",
       "ALL",
       "--security-opt",
@@ -102,6 +104,10 @@ describe("container command and isolation selection", () => {
       "128",
       "--memory",
       "256m",
+      "--memory-swap",
+      "256m",
+      "--ulimit",
+      "nofile=256:256",
       "--cpus",
       "1",
       "--user",
@@ -303,7 +309,7 @@ describe("build/test job API", () => {
     const submitted = await p.agent.post(p.jobs, { task: "node-script", target: "hello.js" });
     expect(submitted.status).toBe(202);
     expect(submitted.body.job).toMatchObject({ task: "node-script", target: "hello.js", isolation: "process" });
-    expect(submitted.body.job.isolationDescription).toMatch(/NO network sandbox and NO filesystem sandbox/);
+    expect(submitted.body.job.isolationDescription).toMatch(/permission model confines file access.*not a security boundary/);
     const job = await waitFor(p.agent, `${p.jobs}/${submitted.body.job.id}`, final);
     expect(job).toMatchObject({ status: "SUCCEEDED", exitCode: 0, isolation: "process" });
     expect(job.finishedAt).not.toBeNull();

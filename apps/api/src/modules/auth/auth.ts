@@ -9,6 +9,7 @@ import { hashToken, newSessionToken } from "../../lib/tokens.js";
 import { DbRateLimiter } from "../../middleware/rate-limit.js";
 import { audit } from "../audit/audit.service.js";
 import { registerMfaRoutes, verifySecondFactor } from "./mfa.js";
+import { registerSsoRoutes } from "./sso.js";
 import { authorize } from "./policy.js";
 
 export const SESSION_COOKIE = "asaa_session";
@@ -74,6 +75,32 @@ export function authenticate(ctx: AppContext) {
       next(error);
     }
   };
+}
+
+/** Creates the server-side session and cookie for an account that has passed every sign-in check. */
+export async function startSession(
+  ctx: AppContext,
+  req: Request,
+  res: Response,
+  owner: Parameters<typeof ownerView>[0],
+  action: string,
+  metadata?: Record<string, unknown>,
+): Promise<void> {
+  const { token, tokenHash } = newSessionToken();
+  const now = ctx.now();
+  const session = await ctx.prisma.session.create({
+    data: {
+      ownerId: owner.id,
+      tokenHash,
+      createdAt: now,
+      lastSeenAt: now,
+      expiresAt: new Date(now.getTime() + ctx.config.SESSION_ABSOLUTE_MINUTES * 60_000),
+      userAgent: req.get("user-agent")?.slice(0, 200) ?? null,
+    },
+  });
+  res.cookie(SESSION_COOKIE, token, { ...cookieOptions(ctx), expires: session.expiresAt });
+  req.owner = ownerView(owner);
+  await audit(ctx, req, { action, outcome: "SUCCESS", targetType: "session", targetId: session.id, ...(metadata ? { metadata } : {}) });
 }
 
 export function requireOwner() {
@@ -401,21 +428,7 @@ export function authRouter(ctx: AppContext): Router {
       // A successful account login clears both counters.
       await emailLimiter.reset(email);
       await ipLimiter.reset(req.ip ?? "unknown");
-      const { token, tokenHash } = newSessionToken();
-      const now = ctx.now();
-      const session = await ctx.prisma.session.create({
-        data: {
-          ownerId: owner.id,
-          tokenHash,
-          createdAt: now,
-          lastSeenAt: now,
-          expiresAt: new Date(now.getTime() + ctx.config.SESSION_ABSOLUTE_MINUTES * 60_000),
-          userAgent: req.get("user-agent")?.slice(0, 200) ?? null,
-        },
-      });
-      res.cookie(SESSION_COOKIE, token, { ...cookieOptions(ctx), expires: session.expiresAt });
-      req.owner = ownerView(owner);
-      await audit(ctx, req, { action: "auth.login", outcome: "SUCCESS", targetType: "session", targetId: session.id });
+      await startSession(ctx, req, res, owner, "auth.login");
       res.status(200).json({ owner: ownerView(owner) });
     } catch (error) {
       next(error);
@@ -423,6 +436,7 @@ export function authRouter(ctx: AppContext): Router {
   });
 
   registerMfaRoutes(router, ctx);
+  registerSsoRoutes(router, ctx);
 
   router.get("/members", requireOwner(), authorize(ctx, "identity:manage"), async (_req, res, next) => {
     try {

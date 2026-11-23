@@ -8,6 +8,7 @@ import type { AppContext } from "../../context.js";
 import {
   DEFAULT_LIMITS,
   executionConfig,
+  processConfinementBlocksNetwork,
   runIsolated,
   type RunLimits,
   type RunResult,
@@ -22,7 +23,7 @@ import {
   chooseIsolation,
   containerIsolationDescription,
   createLimiter,
-  PROCESS_ISOLATION_DESCRIPTION,
+  processIsolationDescription,
   runInContainer,
   type DockerDeps,
   type IsolationMode,
@@ -61,7 +62,7 @@ const submitSchema = z.object({
 });
 
 export function isolationDescription(mode: string, image: string): string {
-  return mode === "container" ? containerIsolationDescription(image) : PROCESS_ISOLATION_DESCRIPTION;
+  return mode === "container" ? containerIsolationDescription(image) : processIsolationDescription(processConfinementBlocksNetwork());
 }
 
 export function jobView(job: ExecutionJob, image: string) {
@@ -254,6 +255,7 @@ export function jobsRouter(ctx: AppContext, deps: JobsDeps = {}): Router {
           args: nodeArgs,
           files,
           limits: lim,
+          confine: true,
           signal,
           onSpawn: markRunning,
         });
@@ -335,6 +337,21 @@ export function jobsRouter(ctx: AppContext, deps: JobsDeps = {}): Router {
         const choice = await chooseIsolation(ctx.config.JOB_ISOLATION, image, docker());
         if (choice.unavailable) {
           throw new AppError(503, "UNAVAILABLE", `Container isolation is required but unavailable: ${choice.reason}`);
+        }
+        // User-supplied code gets no network by default. A container always provides that; the process fallback only
+        // does on a Node release that can deny network, so staging/production fail closed instead of silently running
+        // with network access (an explicit JOB_ISOLATION=process remains the operator's own choice).
+        if (
+          choice.mode === "process" &&
+          ctx.config.JOB_ISOLATION === "auto" &&
+          (ctx.config.NODE_ENV === "production" || ctx.config.NODE_ENV === "staging") &&
+          !processConfinementBlocksNetwork()
+        ) {
+          throw new AppError(
+            503,
+            "UNAVAILABLE",
+            `Jobs need container isolation here (network must be off for user code): ${choice.reason}`,
+          );
         }
         const job = await ctx.prisma.executionJob.create({
           data: { projectId: project.id, requestedById: req.owner!.id, task, target, isolation: choice.mode },
