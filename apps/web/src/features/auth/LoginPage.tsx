@@ -86,7 +86,12 @@ export function LoginPage() {
             <form noValidate onSubmit={submitSsoCode} className="space-y-4">
               {message && <Alert tone="danger">{message}</Alert>}
               <Field label="Authenticator or recovery code">
-                <Input autoComplete="one-time-code" value={ssoCode} onChange={(event) => setSsoCode(event.target.value)} required />
+                <Input
+                  autoComplete="one-time-code"
+                  value={ssoCode}
+                  onChange={(event) => setSsoCode(event.target.value)}
+                  required
+                />
               </Field>
               <Button type="submit" className="w-full" disabled={pending} aria-busy={pending}>
                 {pending ? "Verifying…" : "Verify"}
@@ -121,9 +126,14 @@ export function LoginPage() {
             {expired && !message && <Alert tone="warning">Your session ended. Sign in again to continue.</Alert>}
             {message && <Alert tone="danger">{message}</Alert>}
             {ssoState === "failed" && !message && (
-              <Alert tone="danger">Single sign-on could not sign you in. Use your local account or ask an administrator to link your identity.</Alert>
+              <Alert tone="danger">
+                Single sign-on could not sign you in. Use your local account or ask an administrator to link your
+                identity.
+              </Alert>
             )}
-            {ssoState === "unavailable" && !message && <Alert tone="warning">Single sign-on is currently unavailable.</Alert>}
+            {ssoState === "unavailable" && !message && (
+              <Alert tone="warning">Single sign-on is currently unavailable.</Alert>
+            )}
             <Field label="Email" error={errors.email}>
               <Input
                 type="email"
@@ -156,7 +166,12 @@ export function LoginPage() {
               <LogIn aria-hidden="true" /> {pending ? "Signing in…" : "Sign in"}
             </Button>
             {ssoEnabled && (
-              <Button type="button" variant="outline" className="w-full" onClick={() => window.location.assign("/api/auth/sso/login")}>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => window.location.assign("/api/auth/sso/login")}
+              >
                 Sign in with single sign-on
               </Button>
             )}

@@ -62,7 +62,9 @@ const submitSchema = z.object({
 });
 
 export function isolationDescription(mode: string, image: string): string {
-  return mode === "container" ? containerIsolationDescription(image) : processIsolationDescription(processConfinementBlocksNetwork());
+  return mode === "container"
+    ? containerIsolationDescription(image)
+    : processIsolationDescription(processConfinementBlocksNetwork());
 }
 
 export function jobView(job: ExecutionJob, image: string) {

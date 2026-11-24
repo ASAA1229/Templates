@@ -21,7 +21,11 @@ let netPermission: boolean | undefined;
 export function processConfinementBlocksNetwork(): boolean {
   if (netPermission === undefined) {
     try {
-      const probe = spawnSync(process.execPath, ["--permission", "--allow-net", "-e", ""], { stdio: "ignore", timeout: 5000, windowsHide: true });
+      const probe = spawnSync(process.execPath, ["--permission", "--allow-net", "-e", ""], {
+        stdio: "ignore",
+        timeout: 5000,
+        windowsHide: true,
+      });
       netPermission = probe.status === 0;
     } catch {
       netPermission = false;

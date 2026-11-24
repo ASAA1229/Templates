@@ -59,7 +59,8 @@ export function adapterProblems(manifest: TemplateManifest): string[] {
   }
   const declared = new Set(manifest.validation.requiredOutputs);
   for (const output of need.outputs) {
-    if (!declared.has(output)) problems.push(`The ${adapter} adapter requires "${output}" in validation.requiredOutputs.`);
+    if (!declared.has(output))
+      problems.push(`The ${adapter} adapter requires "${output}" in validation.requiredOutputs.`);
   }
   return problems;
 }

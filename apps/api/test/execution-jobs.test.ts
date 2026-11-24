@@ -309,7 +309,9 @@ describe("build/test job API", () => {
     const submitted = await p.agent.post(p.jobs, { task: "node-script", target: "hello.js" });
     expect(submitted.status).toBe(202);
     expect(submitted.body.job).toMatchObject({ task: "node-script", target: "hello.js", isolation: "process" });
-    expect(submitted.body.job.isolationDescription).toMatch(/permission model confines file access.*not a security boundary/);
+    expect(submitted.body.job.isolationDescription).toMatch(
+      /permission model confines file access.*not a security boundary/,
+    );
     const job = await waitFor(p.agent, `${p.jobs}/${submitted.body.job.id}`, final);
     expect(job).toMatchObject({ status: "SUCCEEDED", exitCode: 0, isolation: "process" });
     expect(job.finishedAt).not.toBeNull();

@@ -89,8 +89,12 @@ describe("session cookie Secure flag", () => {
   it("may be off only for a loopback web origin", () => {
     expect(() => loadConfig({ ...base, WEB_ORIGIN: "http://127.0.0.1:5000", COOKIE_SECURE: "false" })).not.toThrow();
     expect(() => loadConfig({ ...base, WEB_ORIGIN: "http://localhost:5000" })).not.toThrow();
-    expect(() => loadConfig({ ...base, WEB_ORIGIN: "http://192.168.1.20:5000", COOKIE_SECURE: "false" })).toThrow(/COOKIE_SECURE/);
+    expect(() => loadConfig({ ...base, WEB_ORIGIN: "http://192.168.1.20:5000", COOKIE_SECURE: "false" })).toThrow(
+      /COOKIE_SECURE/,
+    );
     expect(() => loadConfig({ ...base, WEB_ORIGIN: "https://templates.example.test" })).toThrow(/COOKIE_SECURE/);
-    expect(() => loadConfig({ ...base, WEB_ORIGIN: "https://templates.example.test", COOKIE_SECURE: "true" })).not.toThrow();
+    expect(() =>
+      loadConfig({ ...base, WEB_ORIGIN: "https://templates.example.test", COOKIE_SECURE: "true" }),
+    ).not.toThrow();
   });
 });

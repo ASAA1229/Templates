@@ -55,7 +55,8 @@ export function readOidcConfig(
   if (issuerUrl.username || issuerUrl.password || issuerUrl.search || issuerUrl.hash) {
     throw new Error("TEMPLATES_OIDC_ISSUER must not contain credentials, a query or a fragment.");
   }
-  if (!isSecureOrLoopback(issuerUrl)) throw new Error("TEMPLATES_OIDC_ISSUER must use HTTPS unless it is a loopback address.");
+  if (!isSecureOrLoopback(issuerUrl))
+    throw new Error("TEMPLATES_OIDC_ISSUER must use HTTPS unless it is a loopback address.");
   if (!/^[A-Za-z0-9._:-]{1,128}$/.test(clientId)) throw new Error("TEMPLATES_OIDC_CLIENT_ID is not valid.");
   return {
     issuer: issuerUrl.toString().replace(/\/+$/, ""),
@@ -97,7 +98,8 @@ const CLOCK_SKEW_SECONDS = 60;
 const DISCOVERY_TTL_MS = 10 * 60_000;
 const JWKS_MIN_REFETCH_MS = 60_000;
 const REQUEST_TIMEOUT_MS = 10_000;
-export const hasControlChars = (value: string): boolean => [...value].some((char) => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127);
+export const hasControlChars = (value: string): boolean =>
+  [...value].some((char) => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127);
 
 const base64url = (buffer: Buffer): string => buffer.toString("base64url");
 
@@ -156,7 +158,8 @@ export class OidcSso {
       if (error instanceof SsoError) throw error;
       throw new SsoError("unavailable", "Identity provider is unreachable.");
     }
-    if (doc.issuer !== this.config.issuer) throw new SsoError("unavailable", "Discovery issuer does not match the configured issuer.");
+    if (doc.issuer !== this.config.issuer)
+      throw new SsoError("unavailable", "Discovery issuer does not match the configured issuer.");
     const origin = new URL(this.config.issuer).origin;
     const endpoints: Record<string, string> = {};
     for (const key of ["authorization_endpoint", "token_endpoint", "jwks_uri"] as const) {
@@ -233,8 +236,10 @@ export class OidcSso {
   async completeLogin(code: string, state: string): Promise<SsoIdentity> {
     const entry = this.pending.get(state);
     this.pending.delete(state);
-    if (!entry || this.now() - entry.createdAt >= PENDING_TTL_MS) throw new SsoError("invalid_state", "Unknown or expired login state.");
-    if (typeof code !== "string" || code.length === 0 || code.length > 2048) throw new SsoError("invalid_state", "Invalid authorization code.");
+    if (!entry || this.now() - entry.createdAt >= PENDING_TTL_MS)
+      throw new SsoError("invalid_state", "Unknown or expired login state.");
+    if (typeof code !== "string" || code.length === 0 || code.length > 2048)
+      throw new SsoError("invalid_state", "Invalid authorization code.");
     const discovery = await this.discover();
     let tokens: Record<string, unknown>;
     try {
@@ -271,18 +276,27 @@ export class OidcSso {
     const audience = claims.aud;
     const audiences = typeof audience === "string" ? [audience] : Array.isArray(audience) ? audience : [];
     if (!audiences.includes(this.config.clientId)) throw new SsoError("invalid_token", "Audience mismatch.");
-    if (audiences.length > 1 && claims.azp !== this.config.clientId) throw new SsoError("invalid_token", "Authorized party mismatch.");
-    if (claims.azp !== undefined && claims.azp !== this.config.clientId) throw new SsoError("invalid_token", "Authorized party mismatch.");
+    if (audiences.length > 1 && claims.azp !== this.config.clientId)
+      throw new SsoError("invalid_token", "Authorized party mismatch.");
+    if (claims.azp !== undefined && claims.azp !== this.config.clientId)
+      throw new SsoError("invalid_token", "Authorized party mismatch.");
     const nowSeconds = Math.floor(this.now() / 1000);
-    if (typeof claims.exp !== "number" || claims.exp + CLOCK_SKEW_SECONDS <= nowSeconds) throw new SsoError("invalid_token", "The token has expired.");
+    if (typeof claims.exp !== "number" || claims.exp + CLOCK_SKEW_SECONDS <= nowSeconds)
+      throw new SsoError("invalid_token", "The token has expired.");
     if (claims.nbf !== undefined && (typeof claims.nbf !== "number" || claims.nbf - CLOCK_SKEW_SECONDS > nowSeconds)) {
       throw new SsoError("invalid_token", "The token is not yet valid.");
     }
     if (claims.iat !== undefined && (typeof claims.iat !== "number" || claims.iat - CLOCK_SKEW_SECONDS > nowSeconds)) {
       throw new SsoError("invalid_token", "The token was issued in the future.");
     }
-    if (typeof claims.nonce !== "string" || claims.nonce !== expectedNonce) throw new SsoError("invalid_token", "Nonce mismatch.");
-    if (typeof claims.sub !== "string" || claims.sub.length === 0 || claims.sub.length > 255 || hasControlChars(claims.sub)) {
+    if (typeof claims.nonce !== "string" || claims.nonce !== expectedNonce)
+      throw new SsoError("invalid_token", "Nonce mismatch.");
+    if (
+      typeof claims.sub !== "string" ||
+      claims.sub.length === 0 ||
+      claims.sub.length > 255 ||
+      hasControlChars(claims.sub)
+    ) {
       throw new SsoError("invalid_token", "Invalid subject.");
     }
   }
@@ -291,7 +305,8 @@ export class OidcSso {
   private async verifyJwt(token: string): Promise<Record<string, unknown>> {
     if (token.length > MAX_TOKEN_BYTES) throw new SsoError("invalid_token", "The token is too large.");
     const parts = token.split(".");
-    if (parts.length !== 3 || parts.some((part) => !/^[A-Za-z0-9_-]*$/.test(part))) throw new SsoError("invalid_token", "Malformed token.");
+    if (parts.length !== 3 || parts.some((part) => !/^[A-Za-z0-9_-]*$/.test(part)))
+      throw new SsoError("invalid_token", "Malformed token.");
     let header: Record<string, unknown>;
     let claims: unknown;
     try {
@@ -319,7 +334,12 @@ export class OidcSso {
     let valid = false;
     try {
       const publicKey = createPublicKey({ key: jwk as JsonWebKey, format: "jwk" });
-      valid = cryptoVerify("RSA-SHA256", Buffer.from(`${parts[0]}.${parts[1]}`), publicKey, Buffer.from(parts[2]!, "base64url"));
+      valid = cryptoVerify(
+        "RSA-SHA256",
+        Buffer.from(`${parts[0]}.${parts[1]}`),
+        publicKey,
+        Buffer.from(parts[2]!, "base64url"),
+      );
     } catch {
       valid = false;
     }

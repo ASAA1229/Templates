@@ -152,9 +152,21 @@ const envSchema = z.object({
    * Optional single sign-on through the shared ASAA identity provider (confidential client `templates-web`).
    * Enabled only when all three are set. SSO signs in existing local accounts only; roles stay in Templates.
    */
-  TEMPLATES_OIDC_ISSUER: z.string().trim().optional().or(z.literal("").transform(() => undefined)),
-  TEMPLATES_OIDC_CLIENT_ID: z.string().trim().optional().or(z.literal("").transform(() => undefined)),
-  TEMPLATES_OIDC_CLIENT_SECRET: z.string().max(512).optional().or(z.literal("").transform(() => undefined)),
+  TEMPLATES_OIDC_ISSUER: z
+    .string()
+    .trim()
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  TEMPLATES_OIDC_CLIENT_ID: z
+    .string()
+    .trim()
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+  TEMPLATES_OIDC_CLIENT_SECRET: z
+    .string()
+    .max(512)
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
   /** Static bearer token fallback when client credentials are not configured. */
   ASAA_EVENTS_TOKEN: z
     .string()
