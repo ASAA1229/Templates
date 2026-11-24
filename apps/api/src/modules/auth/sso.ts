@@ -15,7 +15,7 @@ import { authorize } from "./policy.js";
  *
  * Security model: SSO signs in EXISTING, active local accounts only. The account is matched by an explicit
  * subject link (Owner.ssoSubject) or, when the subject is not linked anywhere, by the provider's VERIFIED
- * email. It never provisions users and never reads roles from the token: roles stay with Templates. An
+ * email (never for OWNER/ADMIN accounts, which the owner links explicitly). It never provisions users and never reads roles from the token: roles stay with Templates. An
  * account with MFA enabled still has to pass the existing TOTP/recovery-code step. Local login is untouched.
  */
 const STATE_COOKIE = "asaa_sso_state";
@@ -100,7 +100,10 @@ export function registerSsoRoutes(router: Router, ctx: AppContext, options: Opti
       let via = "subject_link";
       if (!owner && identity.verifiedEmail) {
         const byEmail = await ctx.prisma.owner.findUnique({ where: { email: identity.verifiedEmail } });
-        if (byEmail && !byEmail.ssoSubject) {
+        if (byEmail && !byEmail.ssoSubject && (byEmail.role === "OWNER" || byEmail.role === "ADMIN")) {
+          // Privileged accounts are never linked by email: the owner must link them via PUT /members/:id/sso-subject (E3:D5.16).
+          return await fail(req, res, "privileged_email_link_refused", byEmail.id);
+        } else if (byEmail && !byEmail.ssoSubject) {
           owner = byEmail;
           via = "verified_email";
         } else if (byEmail) {

@@ -129,14 +129,33 @@ describe("single sign-on", () => {
     expect((await ssoRoundTrip(harness.agent())).headers.location).toBe("/login?sso=failed");
   });
 
+  it("never auto-links OWNER or ADMIN accounts by verified email and audits the refusal (E3:D5.16)", async () => {
+    const owner = await harness.createOwner();
+    const admin = await harness.ctx.prisma.owner.create({
+      data: { email: "admin@asaa.test", displayName: "Admin", role: "ADMIN", passwordHash: await hashPassword("x".repeat(16)) },
+    });
+    for (const [sub, email] of [["kc-o", OWNER_EMAIL], ["kc-a", "admin@asaa.test"]]) {
+      nextClaims = { sub, email, email_verified: true };
+      const agent = harness.agent();
+      expect((await ssoRoundTrip(agent)).headers.location).toBe("/login?sso=failed");
+      expect((await agent.get("/api/auth/session")).status).toBe(401);
+    }
+    expect((await harness.ctx.prisma.owner.findUnique({ where: { id: owner.id } }))?.ssoSubject).toBeNull();
+    expect((await harness.ctx.prisma.owner.findUnique({ where: { id: admin.id } }))?.ssoSubject).toBeNull();
+    const refusals = await harness.ctx.prisma.auditEvent.findMany({ where: { action: "auth.sso.login", outcome: "FAILURE" } });
+    expect(refusals.filter((e) => (e.metadata as { reason?: string })?.reason === "privileged_email_link_refused")).toHaveLength(2);
+  });
+
   it("still requires the MFA step", async () => {
     const owner = await harness.createOwner();
+    const signedIn = await harness.signedIn();
+    expect((await signedIn.put("/api/auth/members/" + owner.id + "/sso-subject", { subject: "kc-9" })).status).toBe(204);
     const secret = generateSecret();
     await harness.ctx.prisma.owner.update({
       where: { id: owner.id },
       data: { mfaSecretEnc: encryptSecret(secret, encryptionKey(MFA_KEY)), mfaEnabledAt: new Date() },
     });
-    nextClaims = { sub: "kc-9", email: OWNER_EMAIL, email_verified: true };
+    nextClaims = { sub: "kc-9" };
     const agent = harness.agent();
     const result = await ssoRoundTrip(agent);
     expect(result.headers.location).toBe("/login?sso=mfa");
