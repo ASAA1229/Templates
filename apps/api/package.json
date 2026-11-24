@@ -16,7 +16,8 @@
     "db:status": "prisma migrate status",
     "certify:templates": "tsx src/cli/certify-templates.ts",
     "owner:init": "tsx --env-file-if-exists=.env src/cli/owner.ts init",
-    "owner:recover": "tsx --env-file-if-exists=.env src/cli/owner.ts recover"
+    "owner:recover": "tsx --env-file-if-exists=.env src/cli/owner.ts recover",
+    "demo:seed": "tsx --env-file-if-exists=.env src/cli/demo-user.ts"
   },
   "dependencies": {
     "@asaa/contracts": "0.1.0",
