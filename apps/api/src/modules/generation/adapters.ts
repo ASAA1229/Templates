@@ -18,32 +18,55 @@ export interface GeneratorAdapter {
   render(context: GeneratorAdapterContext): RenderPlan;
 }
 
-function requireStarter(
-  context: GeneratorAdapterContext,
-  projectType: "web-app" | "api-service" | "blank",
-  family: "web-app" | "backend-service" | "general",
-  architecture: "single-page-app" | "layered-service" | "minimal",
-  outputs: string[],
-) {
-  if (context.manifest.kind !== "starter" || context.manifest.projectType !== projectType) {
-    throw new GenerationError(
-      `The ${context.manifest.compatibility.adapter} adapter requires a ${projectType} starter.`,
-    );
-  }
-  const blueprint = context.manifest.blueprint;
-  if (!blueprint || blueprint.family !== family || blueprint.architecture !== architecture) {
-    throw new GenerationError(
-      `The ${context.manifest.compatibility.adapter} adapter requires blueprint ${family}/${architecture}.`,
-    );
-  }
-  const declared = new Set(context.manifest.validation.requiredOutputs);
-  for (const output of outputs) {
-    if (!declared.has(output)) {
-      throw new GenerationError(
-        `The ${context.manifest.compatibility.adapter} adapter requires "${output}" in validation.requiredOutputs.`,
-      );
+const ADAPTER_REQUIREMENTS: Partial<
+  Record<
+    GeneratorAdapterId,
+    {
+      projectType: "web-app" | "api-service" | "blank";
+      family: "web-app" | "backend-service" | "general";
+      architecture: "single-page-app" | "layered-service" | "minimal";
+      outputs: string[];
     }
+  >
+> = {
+  "react-vite": {
+    projectType: "web-app",
+    family: "web-app",
+    architecture: "single-page-app",
+    outputs: ["package.json", "index.html", "src/main.tsx"],
+  },
+  "node-api": {
+    projectType: "api-service",
+    family: "backend-service",
+    architecture: "layered-service",
+    outputs: ["package.json", "src/server.ts"],
+  },
+  blank: { projectType: "blank", family: "general", architecture: "minimal", outputs: ["README.txt", "project.json"] },
+};
+
+/** Problems that make a manifest unusable with its declared adapter; empty when compatible. */
+export function adapterProblems(manifest: TemplateManifest): string[] {
+  const adapter = manifest.compatibility.adapter;
+  const need = ADAPTER_REQUIREMENTS[adapter];
+  if (!need) return [];
+  const problems: string[] = [];
+  if (manifest.kind !== "starter" || manifest.projectType !== need.projectType) {
+    problems.push(`The ${adapter} adapter requires a ${need.projectType} starter.`);
   }
+  const blueprint = manifest.blueprint;
+  if (!blueprint || blueprint.family !== need.family || blueprint.architecture !== need.architecture) {
+    problems.push(`The ${adapter} adapter requires blueprint ${need.family}/${need.architecture}.`);
+  }
+  const declared = new Set(manifest.validation.requiredOutputs);
+  for (const output of need.outputs) {
+    if (!declared.has(output)) problems.push(`The ${adapter} adapter requires "${output}" in validation.requiredOutputs.`);
+  }
+  return problems;
+}
+
+function requireStarter(context: GeneratorAdapterContext) {
+  const [first] = adapterProblems(context.manifest);
+  if (first) throw new GenerationError(first);
 }
 
 const fileTreeAdapter: GeneratorAdapter = {
@@ -54,7 +77,7 @@ const fileTreeAdapter: GeneratorAdapter = {
 const reactViteAdapter: GeneratorAdapter = {
   id: "react-vite",
   render: (context) => {
-    requireStarter(context, "web-app", "web-app", "single-page-app", ["package.json", "index.html", "src/main.tsx"]);
+    requireStarter(context);
     return renderPlan(context.manifest, context.sources, context.values, context.project);
   },
 };
@@ -62,7 +85,7 @@ const reactViteAdapter: GeneratorAdapter = {
 const nodeApiAdapter: GeneratorAdapter = {
   id: "node-api",
   render: (context) => {
-    requireStarter(context, "api-service", "backend-service", "layered-service", ["package.json", "src/server.ts"]);
+    requireStarter(context);
     return renderPlan(context.manifest, context.sources, context.values, context.project);
   },
 };
@@ -70,7 +93,7 @@ const nodeApiAdapter: GeneratorAdapter = {
 const blankAdapter: GeneratorAdapter = {
   id: "blank",
   render: (context) => {
-    requireStarter(context, "blank", "general", "minimal", ["README.txt", "project.json"]);
+    requireStarter(context);
     return renderPlan(context.manifest, context.sources, context.values, context.project);
   },
 };

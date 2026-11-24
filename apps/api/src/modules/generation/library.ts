@@ -9,6 +9,7 @@ import {
   unsafePathReason,
   type TemplateManifest,
 } from "@asaa/contracts";
+import { adapterProblems } from "./adapters.js";
 
 /** Hard limits for template content read from disk. */
 export const LIBRARY_LIMITS = {
@@ -137,6 +138,11 @@ function checkContent(manifest: TemplateManifest, files: Map<string, Buffer>, pr
       if (!known.has(name)) problems.push(`files/${file.source} uses undeclared placeholder "${name}".`);
     }
   }
+  const node = manifest.compatibility.node;
+  if (node !== undefined && !/^(?:>=|\^|~)?\d+(?:\.\d+){0,2}(?: <\d+(?:\.\d+){0,2})?$/.test(node)) {
+    problems.push(`compatibility.node "${node}" is not a supported version range (use for example ">=22").`);
+  }
+  problems.push(...adapterProblems(manifest));
   if (manifest.compatibility.generator !== GENERATOR_MAJOR) {
     problems.push(
       `Requires generator ${manifest.compatibility.generator}.x; this platform provides ${GENERATOR_MAJOR}.x.`,

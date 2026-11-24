@@ -9,6 +9,7 @@ import { hashToken, newSessionToken } from "../../lib/tokens.js";
 import { DbRateLimiter } from "../../middleware/rate-limit.js";
 import { audit } from "../audit/audit.service.js";
 import { registerMfaRoutes, verifySecondFactor } from "./mfa.js";
+import { registerSsoRoutes } from "./sso.js";
 import { authorize } from "./policy.js";
 
 export const SESSION_COOKIE = "asaa_session";
@@ -74,6 +75,45 @@ export function authenticate(ctx: AppContext) {
       next(error);
     }
   };
+}
+
+/** Creates the server-side session and cookie for an account that has passed every sign-in check. */
+export async function startSession(
+  ctx: AppContext,
+  req: Request,
+  res: Response,
+  owner: Parameters<typeof ownerView>[0],
+  action: string,
+  metadata?: Record<string, unknown>,
+): Promise<void> {
+  const { token, tokenHash } = newSessionToken();
+  const now = ctx.now();
+  // Rotation: a session cookie presented at sign-in is ended so it can never outlive the new identity.
+  if (req.sessionId) {
+    await ctx.prisma.session.updateMany({ where: { id: req.sessionId, revokedAt: null }, data: { revokedAt: now } });
+  }
+  const session = await ctx.prisma.session.create({
+    data: {
+      ownerId: owner.id,
+      tokenHash,
+      createdAt: now,
+      lastSeenAt: now,
+      expiresAt: new Date(now.getTime() + ctx.config.SESSION_ABSOLUTE_MINUTES * 60_000),
+      userAgent: req.get("user-agent")?.slice(0, 200) ?? null,
+    },
+  });
+  res.cookie(SESSION_COOKIE, token, { ...cookieOptions(ctx), expires: session.expiresAt });
+  req.owner = ownerView(owner);
+  await audit(ctx, req, { action, outcome: "SUCCESS", targetType: "session", targetId: session.id, ...(metadata ? { metadata } : {}) });
+}
+
+/** Re-authentication (current password) attempts from a signed-in session, per account; shared by every caller. */
+export async function enforceReauthLimit(ctx: AppContext, res: Response, ownerId: string): Promise<void> {
+  const retryAfter = await new DbRateLimiter(ctx, "reauth", 10, 15 * 60_000).consume(ownerId);
+  if (retryAfter > 0) {
+    res.setHeader("retry-after", String(retryAfter));
+    throw new AppError(429, "RATE_LIMITED", "Too many password confirmations. Try again later.");
+  }
 }
 
 export function requireOwner() {
@@ -399,23 +439,10 @@ export function authRouter(ctx: AppContext): Router {
         }
       }
       // A successful account login clears both counters.
+      // Only the per-account counter is cleared: resetting the per-address counter would let anyone who owns
+      // one valid account restart their own address budget and keep guessing other accounts' passwords.
       await emailLimiter.reset(email);
-      await ipLimiter.reset(req.ip ?? "unknown");
-      const { token, tokenHash } = newSessionToken();
-      const now = ctx.now();
-      const session = await ctx.prisma.session.create({
-        data: {
-          ownerId: owner.id,
-          tokenHash,
-          createdAt: now,
-          lastSeenAt: now,
-          expiresAt: new Date(now.getTime() + ctx.config.SESSION_ABSOLUTE_MINUTES * 60_000),
-          userAgent: req.get("user-agent")?.slice(0, 200) ?? null,
-        },
-      });
-      res.cookie(SESSION_COOKIE, token, { ...cookieOptions(ctx), expires: session.expiresAt });
-      req.owner = ownerView(owner);
-      await audit(ctx, req, { action: "auth.login", outcome: "SUCCESS", targetType: "session", targetId: session.id });
+      await startSession(ctx, req, res, owner, "auth.login");
       res.status(200).json({ owner: ownerView(owner) });
     } catch (error) {
       next(error);
@@ -423,6 +450,7 @@ export function authRouter(ctx: AppContext): Router {
   });
 
   registerMfaRoutes(router, ctx);
+  registerSsoRoutes(router, ctx);
 
   router.get("/members", requireOwner(), authorize(ctx, "identity:manage"), async (_req, res, next) => {
     try {
@@ -583,6 +611,7 @@ export function authRouter(ctx: AppContext): Router {
   router.post("/password", requireOwner(), authorize(ctx, "session:self-manage"), async (req, res, next) => {
     try {
       const input = changePasswordSchema.parse(req.body);
+      await enforceReauthLimit(ctx, res, req.owner!.id);
       const owner = await ctx.prisma.owner.findUniqueOrThrow({ where: { id: req.owner!.id } });
       if (!(await verifyPassword(input.currentPassword, owner.passwordHash))) {
         await audit(ctx, req, {
