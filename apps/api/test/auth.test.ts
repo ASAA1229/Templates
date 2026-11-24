@@ -14,7 +14,12 @@ beforeEach(async () => {
 describe("owner sign-in (US-A01)", () => {
   it("verifies a legacy scrypt hash (N=2^15, p=1) at login and upgrades it to the current cost (E3:D5.16 FU-9)", async () => {
     const salt = randomBytes(16);
-    const key = scryptSync(OWNER_PASSWORD.normalize("NFKC"), salt, 64, { N: 2 ** 15, r: 8, p: 1, maxmem: 128 * 2 ** 15 * 8 * 2 });
+    const key = scryptSync(OWNER_PASSWORD.normalize("NFKC"), salt, 64, {
+      N: 2 ** 15,
+      r: 8,
+      p: 1,
+      maxmem: 128 * 2 ** 15 * 8 * 2,
+    });
     const legacy = ["scrypt", 2 ** 15, 8, 1, salt.toString("base64url"), key.toString("base64url")].join("$");
     expect(await verifyPassword(OWNER_PASSWORD, legacy)).toBe(true);
     expect(needsRehash(legacy)).toBe(true);
