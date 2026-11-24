@@ -50,7 +50,10 @@ describe("production web server", () => {
       }
       expect(await get(port, "/%")).toBe(400);
       expect(await get(port, "/%E0%A4%A")).toBe(400);
-      expect(await get(port, "/%2e%2e/%2e%2e/etc/passwd")).toBeGreaterThanOrEqual(200);
+      // The URL parser collapses encoded dot segments, so this resolves inside the dist root and falls back to the SPA shell (never a file outside it).
+      expect(await get(port, "/%2e%2e/%2e%2e/etc/passwd")).toBe(200);
+      // An encoded slash survives URL parsing, decodes to a traversal and must be refused.
+      expect(await get(port, "/..%2f..%2fetc/passwd")).toBe(403);
       expect(child.exitCode).toBeNull();
       expect(await get(port, "/")).toBe(200);
     } finally {
