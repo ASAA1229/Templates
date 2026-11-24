@@ -1,5 +1,5 @@
 import { createSign, generateKeyPairSync } from "node:crypto";
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { hashPassword } from "../src/lib/password.js";
 import { base32Decode, encryptSecret, encryptionKey, generateSecret, hotp, timeStep } from "../src/lib/totp.js";
 import { createHarness, OWNER_EMAIL } from "./helpers.js";
@@ -21,7 +21,8 @@ function idToken(claims: Record<string, unknown>) {
   return `${head}.${b64(createSign("RSA-SHA256").update(head).sign(privateKey))}`;
 }
 
-beforeAll(() => {
+// Stubbed at module load: the harness builds the app (and captures global fetch) before any beforeAll hook runs.
+{
   vi.stubGlobal("fetch", async (url: string | URL) => {
     const target = String(url);
     const json = (body: unknown) => new Response(JSON.stringify(body), { status: 200 });
@@ -49,7 +50,7 @@ beforeAll(() => {
     }
     return new Response("not found", { status: 404 });
   });
-});
+}
 
 const harness = createHarness({
   TEMPLATES_OIDC_ISSUER: ISSUER,

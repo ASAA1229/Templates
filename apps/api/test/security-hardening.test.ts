@@ -2,7 +2,8 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { createHarness, OWNER_EMAIL, OWNER_PASSWORD } from "./helpers.js";
 
 /** E3:D5.14 regression tests for authentication hardening. */
-const h = createHarness();
+// MFA enrolment answers 503 without an encryption key, which would mask the rate limit under test.
+const h = createHarness({ MFA_ENCRYPTION_KEY: "unit-test-mfa-encryption-key-123456" });
 afterAll(() => h.close());
 beforeEach(async () => {
   await h.reset();
