@@ -38,7 +38,12 @@ describe("password confirmation from a signed-in session", () => {
     const agent = await h.signedIn();
     let last = 0;
     for (let attempt = 0; attempt < 11; attempt++) {
-      last = (await agent.post("/api/auth/password", { currentPassword: "wrong wrong wrong", newPassword: "another long password" })).status;
+      last = (
+        await agent.post("/api/auth/password", {
+          currentPassword: "wrong wrong wrong",
+          newPassword: "another long password",
+        })
+      ).status;
     }
     expect(last).toBe(429);
     const mfa = await agent.post("/api/auth/mfa/enroll", { password: "wrong wrong wrong" });

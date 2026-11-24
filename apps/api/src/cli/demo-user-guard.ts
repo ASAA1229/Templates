@@ -21,7 +21,9 @@ export function readDemoCredentials(env: NodeJS.ProcessEnv): { email: string; pa
   const rawEmail = env.DEMO_USER_EMAIL?.trim();
   const password = env.DEMO_USER_PASSWORD;
   if (!rawEmail || !password) {
-    throw new Error("Set DEMO_USER_EMAIL and DEMO_USER_PASSWORD in the environment or in the git-ignored apps/api/.env.");
+    throw new Error(
+      "Set DEMO_USER_EMAIL and DEMO_USER_PASSWORD in the environment or in the git-ignored apps/api/.env.",
+    );
   }
   const email = loginSchema.shape.email.safeParse(rawEmail);
   if (!email.success) throw new Error("DEMO_USER_EMAIL is not a valid email address.");

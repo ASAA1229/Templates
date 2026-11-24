@@ -6,7 +6,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-const SERVER = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../../deploy/local-prod/web-server.mjs");
+const SERVER = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../../../../deploy/local-prod/web-server.mjs",
+);
 
 async function freePort(): Promise<number> {
   return new Promise((resolve) => {
@@ -21,7 +24,9 @@ async function get(port: number, rawPath: string): Promise<number> {
   // fetch() would normalise the path; a raw socket sends it exactly as an attacker would.
   const { connect } = await import("node:net");
   return new Promise((resolve, reject) => {
-    const socket = connect(port, "127.0.0.1", () => socket.write(`GET ${rawPath} HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n`));
+    const socket = connect(port, "127.0.0.1", () =>
+      socket.write(`GET ${rawPath} HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n`),
+    );
     let data = "";
     socket.on("data", (chunk) => (data += chunk));
     socket.on("close", () => resolve(Number(/^HTTP\/1\.1 (\d+)/.exec(data)?.[1] ?? 0)));

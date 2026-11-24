@@ -21,7 +21,11 @@ describe("demo user seed guards", () => {
       expect((error as Error).message).toMatch(/policy/);
       expect((error as Error).message).not.toContain(secret);
     }
-    expect(() => readDemoCredentials({ DEMO_USER_EMAIL: "nope", DEMO_USER_PASSWORD: "a long enough password" })).toThrow(/email/);
-    expect(readDemoCredentials({ DEMO_USER_EMAIL: " Abhi@Gmail.com ", DEMO_USER_PASSWORD: "a long enough password" }).email).toBe("abhi@gmail.com");
+    expect(() =>
+      readDemoCredentials({ DEMO_USER_EMAIL: "nope", DEMO_USER_PASSWORD: "a long enough password" }),
+    ).toThrow(/email/);
+    expect(
+      readDemoCredentials({ DEMO_USER_EMAIL: " Abhi@Gmail.com ", DEMO_USER_PASSWORD: "a long enough password" }).email,
+    ).toBe("abhi@gmail.com");
   });
 });

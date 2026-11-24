@@ -29,7 +29,14 @@ async function main() {
         }),
         prisma.session.updateMany({ where: { ownerId: existing.id, revokedAt: null }, data: { revokedAt: now } }),
         prisma.auditEvent.create({
-          data: { actorType: "SYSTEM", action: "demo_user.update", outcome: "SUCCESS", targetType: "owner", targetId: existing.id, metadata: { role } },
+          data: {
+            actorType: "SYSTEM",
+            action: "demo_user.update",
+            outcome: "SUCCESS",
+            targetType: "owner",
+            targetId: existing.id,
+            metadata: { role },
+          },
         }),
       ]);
       console.log(`Demo account ${email} updated (role ${role}). MFA and SSO link unchanged.`);
@@ -40,9 +47,18 @@ async function main() {
         data: { email, displayName: "Demo Owner", role, passwordHash, passwordChangedAt: now },
       });
       await prisma.auditEvent.create({
-        data: { actorType: "SYSTEM", action: "demo_user.create", outcome: "SUCCESS", targetType: "owner", targetId: created.id, metadata: { role } },
+        data: {
+          actorType: "SYSTEM",
+          action: "demo_user.create",
+          outcome: "SUCCESS",
+          targetType: "owner",
+          targetId: created.id,
+          metadata: { role },
+        },
       });
-      console.log(`Demo account ${email} created (role ${role}). Enrol an authenticator under Security at first sign-in.`);
+      console.log(
+        `Demo account ${email} created (role ${role}). Enrol an authenticator under Security at first sign-in.`,
+      );
     }
   } finally {
     await prisma.$disconnect();
