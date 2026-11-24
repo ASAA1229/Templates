@@ -205,6 +205,10 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
   if ((config.NODE_ENV === "production" || config.NODE_ENV === "staging") && !config.COOKIE_SECURE) {
     throw new Error("COOKIE_SECURE must be true in staging and production (HTTPS only).");
   }
+  // The session cookie may be sent without the Secure attribute only on a loopback origin.
+  if (!config.COOKIE_SECURE && !isLoopbackHost(new URL(config.WEB_ORIGIN).hostname)) {
+    throw new Error("COOKIE_SECURE must be true unless WEB_ORIGIN is a loopback address.");
+  }
   if (config.REQUIRE_MFA_PRIVILEGED && !config.MFA_ENCRYPTION_KEY) {
     throw new Error("REQUIRE_MFA_PRIVILEGED needs MFA_ENCRYPTION_KEY to be set.");
   }

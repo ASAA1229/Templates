@@ -127,6 +127,16 @@ export function readZip(
   archive: Buffer,
   limits = { maxEntries: MAX_ENTRIES, maxTotalBytes: 256 * 1024 * 1024 },
 ): ZipEntry[] {
+  try {
+    return parseZip(archive, limits);
+  } catch (error) {
+    // Offsets or lengths that point outside the buffer surface as RangeError; report them as a bad archive.
+    if (error instanceof RangeError) throw new ZipError("Corrupt archive structure.");
+    throw error;
+  }
+}
+
+function parseZip(archive: Buffer, limits: { maxEntries: number; maxTotalBytes: number }): ZipEntry[] {
   const endAt = archive.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
   if (endAt < 0 || archive.length - endAt < 22) throw new ZipError("Not a ZIP archive.");
   const count = archive.readUInt16LE(endAt + 10);
