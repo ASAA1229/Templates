@@ -3,17 +3,28 @@ import { PASSWORD_MAX, PASSWORD_MIN, loginSchema, passwordSchema } from "@asaa/c
 /** Pure checks for the development-only demo account seed. Nothing here ever returns or logs the password. */
 export const PASSWORD_POLICY = `${PASSWORD_MIN} to ${PASSWORD_MAX} characters.`;
 
+export const TEST_DATA_LABEL = "TEMPORARY / TEST DATA";
+export const SEED_DISPLAY_NAME = `Demo Owner – ${TEST_DATA_LABEL}`;
+/** Stored in the seed's audit events so the seed can recognise (and only ever touch) the account it created. */
+export const SEED_DATA_CLASS = "TEMPORARY_TEST_DATA";
+
+const ENV_MESSAGE = "The demo account seed runs only when NODE_ENV or APP_ENV is explicitly development or test.";
+
+/** An explicit NODE_ENV/APP_ENV of development or test is required: unset values are refused, and any other value always wins. */
 export function assertDevelopmentEnvironment(env: NodeJS.ProcessEnv): void {
-  const mode = (env.APP_ENV ?? env.NODE_ENV ?? "development").trim().toLowerCase();
-  if (mode !== "development" && mode !== "test") {
-    throw new Error("The demo account seed runs only when NODE_ENV/APP_ENV is development or test.");
-  }
-  // An explicit APP_ENV or NODE_ENV that says production/staging always wins, whichever one is set.
-  for (const value of [env.APP_ENV, env.NODE_ENV]) {
-    const normalized = value?.trim().toLowerCase();
-    if (normalized && normalized !== "development" && normalized !== "test") {
-      throw new Error("The demo account seed runs only when NODE_ENV/APP_ENV is development or test.");
-    }
+  const values = [env.APP_ENV, env.NODE_ENV]
+    .map((value) => value?.trim().toLowerCase())
+    .filter((value): value is string => Boolean(value));
+  if (values.length === 0 || values.some((value) => value !== "development" && value !== "test"))
+    throw new Error(ENV_MESSAGE);
+}
+
+/** The seed may only update an account it created itself (recorded by its own demo_user.create audit event). */
+export function assertSeedOwnedAccount(email: string, createdBySeed: boolean): void {
+  if (!createdBySeed) {
+    throw new Error(
+      `An account for ${email} already exists and is not the demo seed's ${TEST_DATA_LABEL} account. The seed never modifies such accounts: choose another DEMO_USER_EMAIL.`,
+    );
   }
 }
 
