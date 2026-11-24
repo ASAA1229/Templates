@@ -58,14 +58,16 @@ export function createConnectorHub(
   ctx: AppContext,
   credentials: CredentialProvider = new EnvCredentialProvider(),
 ): ConnectorHub {
-  const manager = new ConnectorManager(credentials, (event) =>
-    audit(ctx, null, {
-      action: event.action,
-      outcome: event.outcome,
-      targetType: "connector",
-      targetId: event.connectorId,
-      metadata: { actor: event.actor, ...(event.detail ? { detail: event.detail } : {}) },
-    }),
+  const manager = new ConnectorManager(
+    credentials,
+    (event) =>
+      audit(ctx, null, {
+        action: event.action,
+        outcome: event.outcome,
+        targetType: "connector",
+        targetId: event.connectorId,
+        metadata: { actor: event.actor, ...(event.detail ? { detail: event.detail } : {}) },
+      }),
     new PrismaRevocationStore(ctx),
   );
   const info = new Map<string, Registered>();
@@ -262,13 +264,20 @@ export function connectorsRouter(ctx: AppContext, hub: ConnectorHub = createConn
       } catch (error) {
         await ctx.prisma.deliveryRequest.update({
           where: { id: ledger.id },
-          data: { status: "FAILED", result: { error: error instanceof Error ? error.message.slice(0, 300) : "failed" } },
+          data: {
+            status: "FAILED",
+            result: { error: error instanceof Error ? error.message.slice(0, 300) : "failed" },
+          },
         });
         throw error;
       }
       await ctx.prisma.deliveryRequest.update({
         where: { id: ledger.id },
-        data: { status: "EXECUTED", executedAt: ctx.now(), result: { sha256: built.sha256, bytes: built.archive.length } },
+        data: {
+          status: "EXECUTED",
+          executedAt: ctx.now(),
+          result: { sha256: built.sha256, bytes: built.archive.length },
+        },
       });
       await audit(ctx, req, {
         action: "connector.artifact_publish",

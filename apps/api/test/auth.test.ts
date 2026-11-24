@@ -1,5 +1,6 @@
+import { randomBytes, scryptSync } from "node:crypto";
 import supertest from "supertest";
-import { hashPassword } from "../src/lib/password.js";
+import { hashPassword, needsRehash, verifyPassword } from "../src/lib/password.js";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { createHarness, OWNER_EMAIL, OWNER_PASSWORD } from "./helpers.js";
 
@@ -11,6 +12,26 @@ beforeEach(async () => {
 });
 
 describe("owner sign-in (US-A01)", () => {
+  it("verifies a legacy scrypt hash (N=2^15, p=1) at login and upgrades it to the current cost (E3:D5.16 FU-9)", async () => {
+    const salt = randomBytes(16);
+    const key = scryptSync(OWNER_PASSWORD.normalize("NFKC"), salt, 64, {
+      N: 2 ** 15,
+      r: 8,
+      p: 1,
+      maxmem: 128 * 2 ** 15 * 8 * 2,
+    });
+    const legacy = ["scrypt", 2 ** 15, 8, 1, salt.toString("base64url"), key.toString("base64url")].join("$");
+    expect(await verifyPassword(OWNER_PASSWORD, legacy)).toBe(true);
+    expect(needsRehash(legacy)).toBe(true);
+    await h.ctx.prisma.owner.update({ where: { email: OWNER_EMAIL }, data: { passwordHash: legacy } });
+    const login = await h.agent().post("/api/auth/login", { email: OWNER_EMAIL, password: OWNER_PASSWORD });
+    expect(login.status).toBe(200);
+    const upgraded = (await h.ctx.prisma.owner.findUniqueOrThrow({ where: { email: OWNER_EMAIL } })).passwordHash;
+    expect(upgraded).not.toBe(legacy);
+    expect(needsRehash(upgraded)).toBe(false);
+    expect(await verifyPassword(OWNER_PASSWORD, upgraded)).toBe(true);
+  });
+
   it("creates an HttpOnly, SameSite=Strict session cookie and audits success", async () => {
     const agent = h.agent();
     const response = await agent.post("/api/auth/login", {

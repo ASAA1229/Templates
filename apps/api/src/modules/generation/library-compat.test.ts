@@ -18,10 +18,16 @@ describe("template compatibility validation", () => {
   });
 
   it("reports adapter and starter mismatches before generation", async () => {
-    const starter = (await new TemplateLibrary(root).list()).find((t) => t.manifest?.compatibility.adapter === "react-vite")!;
+    const starter = (await new TemplateLibrary(root).list()).find(
+      (t) => t.manifest?.compatibility.adapter === "react-vite",
+    )!;
     const manifest = starter.manifest!;
     expect(adapterProblems(manifest)).toEqual([]);
-    const broken = { ...manifest, kind: "template" as const, validation: { ...manifest.validation, requiredOutputs: [] } };
+    const broken = {
+      ...manifest,
+      kind: "template" as const,
+      validation: { ...manifest.validation, requiredOutputs: [] },
+    };
     expect(adapterProblems(broken).join(" ")).toMatch(/requires a web-app starter.*requires "package.json"/s);
   });
 });

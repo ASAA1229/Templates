@@ -1,10 +1,26 @@
 import AxeBuilder from "@axe-core/playwright";
+import { PrismaClient } from "@prisma/client";
 import { expect, type Page } from "@playwright/test";
 import { E2E_OWNER } from "./global-setup";
 
 export { E2E_OWNER };
 
+/**
+ * The per-address sign-in limiter (20 per 15 minutes) counts successful sign-ins too (E3:D5.14), and every
+ * browser test here signs in from the same address. Clear only that counter between sign-ins so the suite
+ * is not throttled; the limiter itself stays enabled and is covered by the API tests.
+ */
+async function resetSignInLimiter() {
+  const prisma = new PrismaClient({ datasourceUrl: process.env.E2E_DATABASE_URL! });
+  try {
+    await prisma.rateLimitBucket.deleteMany({ where: { key: { startsWith: "login-ip:" } } });
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
 export async function signIn(page: Page, path = "/") {
+  await resetSignInLimiter();
   await page.goto(path);
   await expect(page.getByRole("heading", { name: "Sign in to ASAA Templates" })).toBeVisible();
   await page.getByLabel("Email").fill(E2E_OWNER.email);

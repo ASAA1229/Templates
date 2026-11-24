@@ -15,7 +15,7 @@ import { authorize } from "./policy.js";
  *
  * Security model: SSO signs in EXISTING, active local accounts only. The account is matched by an explicit
  * subject link (Owner.ssoSubject) or, when the subject is not linked anywhere, by the provider's VERIFIED
- * email. It never provisions users and never reads roles from the token: roles stay with Templates. An
+ * email (never for OWNER/ADMIN accounts, which the owner links explicitly). It never provisions users and never reads roles from the token: roles stay with Templates. An
  * account with MFA enabled still has to pass the existing TOTP/recovery-code step. Local login is untouched.
  */
 const STATE_COOKIE = "asaa_sso_state";
@@ -47,7 +47,12 @@ export function registerSsoRoutes(router: Router, ctx: AppContext, options: Opti
   const clear = (res: Response, name: string, sameSite: "lax" | "strict") =>
     res.clearCookie(name, { httpOnly: true, sameSite, secure: ctx.config.COOKIE_SECURE, path: COOKIE_PATH });
   const fail = async (req: Request, res: Response, reason: string, targetId?: string) => {
-    await audit(ctx, req, { action: "auth.sso.login", outcome: "FAILURE", ...(targetId ? { targetType: "owner", targetId } : {}), metadata: { reason } });
+    await audit(ctx, req, {
+      action: "auth.sso.login",
+      outcome: "FAILURE",
+      ...(targetId ? { targetType: "owner", targetId } : {}),
+      metadata: { reason },
+    });
     clear(res, STATE_COOKIE, "lax");
     res.redirect(302, "/login?sso=failed");
   };
@@ -59,7 +64,8 @@ export function registerSsoRoutes(router: Router, ctx: AppContext, options: Opti
   router.get("/sso/login", async (req, res, next) => {
     try {
       if (!sso) throw notFound("Single sign-on is not enabled.");
-      if ((await ipLimiter.consume(req.ip ?? "unknown")) > 0) throw new AppError(429, "RATE_LIMITED", "Too many sign-in attempts. Try again later.");
+      if ((await ipLimiter.consume(req.ip ?? "unknown")) > 0)
+        throw new AppError(429, "RATE_LIMITED", "Too many sign-in attempts. Try again later.");
       let begun: { url: string; state: string };
       try {
         begun = await sso.beginLogin();
@@ -80,7 +86,8 @@ export function registerSsoRoutes(router: Router, ctx: AppContext, options: Opti
   router.get("/sso/callback", async (req, res, next) => {
     try {
       if (!sso) throw notFound("Single sign-on is not enabled.");
-      if ((await ipLimiter.consume(req.ip ?? "unknown")) > 0) throw new AppError(429, "RATE_LIMITED", "Too many sign-in attempts. Try again later.");
+      if ((await ipLimiter.consume(req.ip ?? "unknown")) > 0)
+        throw new AppError(429, "RATE_LIMITED", "Too many sign-in attempts. Try again later.");
       const code = typeof req.query.code === "string" ? req.query.code : "";
       const state = typeof req.query.state === "string" ? req.query.state : "";
       const bound = req.cookies?.[STATE_COOKIE] as string | undefined;
@@ -100,14 +107,18 @@ export function registerSsoRoutes(router: Router, ctx: AppContext, options: Opti
       let via = "subject_link";
       if (!owner && identity.verifiedEmail) {
         const byEmail = await ctx.prisma.owner.findUnique({ where: { email: identity.verifiedEmail } });
-        if (byEmail && !byEmail.ssoSubject) {
+        if (byEmail && !byEmail.ssoSubject && (byEmail.role === "OWNER" || byEmail.role === "ADMIN")) {
+          // Privileged accounts are never linked by email: the owner must link them via PUT /members/:id/sso-subject (E3:D5.16).
+          return await fail(req, res, "privileged_email_link_refused", byEmail.id);
+        } else if (byEmail && !byEmail.ssoSubject) {
           owner = byEmail;
           via = "verified_email";
         } else if (byEmail) {
           return await fail(req, res, "linked_to_other_subject", byEmail.id);
         }
       }
-      if (!owner || !owner.isActive) return await fail(req, res, owner ? "inactive_account" : "no_local_account", owner?.id);
+      if (!owner || !owner.isActive)
+        return await fail(req, res, owner ? "inactive_account" : "no_local_account", owner?.id);
       clear(res, STATE_COOKIE, "lax");
       if (owner.mfaEnabledAt) {
         // Same second factor as local sign-in: hold a short-lived, single-use ticket until the code is verified.
@@ -121,7 +132,13 @@ export function registerSsoRoutes(router: Router, ctx: AppContext, options: Opti
         const { token, tokenHash } = newSessionToken();
         mfaTickets.set(tokenHash, { ownerId: owner.id, expiresAt: now + MFA_TTL_MS });
         res.cookie(MFA_COOKIE, token, cookie(MFA_TTL_MS, "strict"));
-        await audit(ctx, req, { action: "auth.sso.login", outcome: "DENIED", targetType: "owner", targetId: owner.id, metadata: { reason: "mfa_required", via } });
+        await audit(ctx, req, {
+          action: "auth.sso.login",
+          outcome: "DENIED",
+          targetType: "owner",
+          targetId: owner.id,
+          metadata: { reason: "mfa_required", via },
+        });
         return res.redirect(302, "/login?sso=mfa");
       }
       await startSession(ctx, req, res, owner, "auth.sso.login", { via });
@@ -142,7 +159,10 @@ export function registerSsoRoutes(router: Router, ctx: AppContext, options: Opti
         clear(res, MFA_COOKIE, "strict");
         throw new AppError(401, "UNAUTHENTICATED", "Single sign-in expired. Start again.");
       }
-      const retryAfter = Math.max(await mfaLimiter.consume(ticket.ownerId), await ipLimiter.consume(req.ip ?? "unknown"));
+      const retryAfter = Math.max(
+        await mfaLimiter.consume(ticket.ownerId),
+        await ipLimiter.consume(req.ip ?? "unknown"),
+      );
       if (retryAfter > 0) {
         res.setHeader("retry-after", String(retryAfter));
         throw new AppError(429, "RATE_LIMITED", "Too many attempts. Try again later.");
@@ -153,7 +173,13 @@ export function registerSsoRoutes(router: Router, ctx: AppContext, options: Opti
         throw new AppError(401, "UNAUTHENTICATED", "Single sign-in expired. Start again.");
       }
       if (!(await verifySecondFactor(ctx, owner, input.data.code))) {
-        await audit(ctx, req, { action: "auth.sso.login", outcome: "FAILURE", targetType: "owner", targetId: owner.id, metadata: { reason: "invalid_mfa_code" } });
+        await audit(ctx, req, {
+          action: "auth.sso.login",
+          outcome: "FAILURE",
+          targetType: "owner",
+          targetId: owner.id,
+          metadata: { reason: "invalid_mfa_code" },
+        });
         throw new AppError(401, "UNAUTHENTICATED", "Invalid verification code.");
       }
       mfaTickets.delete(hashToken(token!));
@@ -170,9 +196,18 @@ export function registerSsoRoutes(router: Router, ctx: AppContext, options: Opti
   router.put("/members/:id/sso-subject", requireOwner(), authorize(ctx, "identity:manage"), async (req, res, next) => {
     try {
       const input = z
-        .object({ subject: z.string().trim().min(1).max(255).refine((value) => !hasControlChars(value)).nullable() })
+        .object({
+          subject: z
+            .string()
+            .trim()
+            .min(1)
+            .max(255)
+            .refine((value) => !hasControlChars(value))
+            .nullable(),
+        })
         .safeParse(req.body);
-      if (!input.success) throw validationFailed({ subject: "Provide the identity provider subject, or null to unlink." });
+      if (!input.success)
+        throw validationFailed({ subject: "Provide the identity provider subject, or null to unlink." });
       const id = String(req.params.id);
       const target = await ctx.prisma.owner.findUnique({ where: { id } });
       if (!target) throw notFound("Member not found.");

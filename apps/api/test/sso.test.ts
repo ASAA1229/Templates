@@ -1,5 +1,5 @@
 import { createSign, generateKeyPairSync } from "node:crypto";
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { hashPassword } from "../src/lib/password.js";
 import { base32Decode, encryptSecret, encryptionKey, generateSecret, hotp, timeStep } from "../src/lib/totp.js";
 import { createHarness, OWNER_EMAIL } from "./helpers.js";
@@ -9,7 +9,8 @@ const CLIENT = "templates-web";
 const MFA_KEY = "unit-test-mfa-encryption-key-123456";
 const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
 const jwk = { ...publicKey.export({ format: "jwk" }), kid: "k1", use: "sig", alg: "RS256" };
-const b64 = (value: object | Buffer) => Buffer.from(value instanceof Buffer ? value : JSON.stringify(value)).toString("base64url");
+const b64 = (value: object | Buffer) =>
+  Buffer.from(value instanceof Buffer ? value : JSON.stringify(value)).toString("base64url");
 
 /** Claims the fake provider will put in the next ID token. */
 let nextClaims: Record<string, unknown> = {};
@@ -20,7 +21,8 @@ function idToken(claims: Record<string, unknown>) {
   return `${head}.${b64(createSign("RSA-SHA256").update(head).sign(privateKey))}`;
 }
 
-beforeAll(() => {
+// Stubbed at module load: the harness builds the app (and captures global fetch) before any beforeAll hook runs.
+{
   vi.stubGlobal("fetch", async (url: string | URL) => {
     const target = String(url);
     const json = (body: unknown) => new Response(JSON.stringify(body), { status: 200 });
@@ -48,7 +50,7 @@ beforeAll(() => {
     }
     return new Response("not found", { status: 404 });
   });
-});
+}
 
 const harness = createHarness({
   TEMPLATES_OIDC_ISSUER: ISSUER,
@@ -86,16 +88,30 @@ describe("single sign-on", () => {
   it("signs in an existing account by verified email and takes no role from the token", async () => {
     await harness.createOwner();
     const member = await harness.ctx.prisma.owner.create({
-      data: { email: "dev@asaa.test", displayName: "Dev", role: "DEVELOPER", passwordHash: await hashPassword("x".repeat(16)) },
+      data: {
+        email: "dev@asaa.test",
+        displayName: "Dev",
+        role: "DEVELOPER",
+        passwordHash: await hashPassword("x".repeat(16)),
+        // Session timestamps use the test clock, so the password must predate it (as createOwner does).
+        passwordChangedAt: new Date(harness.clock.now.getTime() - 1000),
+      },
     });
-    nextClaims = { sub: "kc-1", email: "dev@asaa.test", email_verified: true, realm_access: { roles: ["owner", "admin"] } };
+    nextClaims = {
+      sub: "kc-1",
+      email: "dev@asaa.test",
+      email_verified: true,
+      realm_access: { roles: ["owner", "admin"] },
+    };
     const agent = harness.agent();
     const result = await ssoRoundTrip(agent);
     expect(result.status).toBe(302);
     expect(result.headers.location).toBe("/");
     const session = await agent.get("/api/auth/session");
     expect(session.body.owner).toMatchObject({ id: member.id, role: "DEVELOPER" });
-    const events = await harness.ctx.prisma.auditEvent.findMany({ where: { action: "auth.sso.login", outcome: "SUCCESS" } });
+    const events = await harness.ctx.prisma.auditEvent.findMany({
+      where: { action: "auth.sso.login", outcome: "SUCCESS" },
+    });
     expect(events).toHaveLength(1);
   });
 
@@ -121,7 +137,9 @@ describe("single sign-on", () => {
   it("matches an explicit subject link and refuses an email match linked to a different subject", async () => {
     const owner = await harness.createOwner();
     const agent = await harness.signedIn();
-    expect((await agent.put("/api/auth/members/" + owner.id + "/sso-subject", { subject: "kc-owner" })).status).toBe(204);
+    expect((await agent.put("/api/auth/members/" + owner.id + "/sso-subject", { subject: "kc-owner" })).status).toBe(
+      204,
+    );
     nextClaims = { sub: "kc-owner" };
     const viaLink = harness.agent();
     expect((await ssoRoundTrip(viaLink)).headers.location).toBe("/");
@@ -129,14 +147,47 @@ describe("single sign-on", () => {
     expect((await ssoRoundTrip(harness.agent())).headers.location).toBe("/login?sso=failed");
   });
 
+  it("never auto-links OWNER or ADMIN accounts by verified email and audits the refusal (E3:D5.16)", async () => {
+    const owner = await harness.createOwner();
+    const admin = await harness.ctx.prisma.owner.create({
+      data: {
+        email: "admin@asaa.test",
+        displayName: "Admin",
+        role: "ADMIN",
+        passwordHash: await hashPassword("x".repeat(16)),
+      },
+    });
+    for (const [sub, email] of [
+      ["kc-o", OWNER_EMAIL],
+      ["kc-a", "admin@asaa.test"],
+    ]) {
+      nextClaims = { sub, email, email_verified: true };
+      const agent = harness.agent();
+      expect((await ssoRoundTrip(agent)).headers.location).toBe("/login?sso=failed");
+      expect((await agent.get("/api/auth/session")).status).toBe(401);
+    }
+    expect((await harness.ctx.prisma.owner.findUnique({ where: { id: owner.id } }))?.ssoSubject).toBeNull();
+    expect((await harness.ctx.prisma.owner.findUnique({ where: { id: admin.id } }))?.ssoSubject).toBeNull();
+    const refusals = await harness.ctx.prisma.auditEvent.findMany({
+      where: { action: "auth.sso.login", outcome: "FAILURE" },
+    });
+    expect(
+      refusals.filter((e) => (e.metadata as { reason?: string })?.reason === "privileged_email_link_refused"),
+    ).toHaveLength(2);
+  });
+
   it("still requires the MFA step", async () => {
     const owner = await harness.createOwner();
+    const signedIn = await harness.signedIn();
+    expect((await signedIn.put("/api/auth/members/" + owner.id + "/sso-subject", { subject: "kc-9" })).status).toBe(
+      204,
+    );
     const secret = generateSecret();
     await harness.ctx.prisma.owner.update({
       where: { id: owner.id },
       data: { mfaSecretEnc: encryptSecret(secret, encryptionKey(MFA_KEY)), mfaEnabledAt: new Date() },
     });
-    nextClaims = { sub: "kc-9", email: OWNER_EMAIL, email_verified: true };
+    nextClaims = { sub: "kc-9" };
     const agent = harness.agent();
     const result = await ssoRoundTrip(agent);
     expect(result.headers.location).toBe("/login?sso=mfa");

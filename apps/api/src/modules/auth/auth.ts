@@ -104,7 +104,13 @@ export async function startSession(
   });
   res.cookie(SESSION_COOKIE, token, { ...cookieOptions(ctx), expires: session.expiresAt });
   req.owner = ownerView(owner);
-  await audit(ctx, req, { action, outcome: "SUCCESS", targetType: "session", targetId: session.id, ...(metadata ? { metadata } : {}) });
+  await audit(ctx, req, {
+    action,
+    outcome: "SUCCESS",
+    targetType: "session",
+    targetId: session.id,
+    ...(metadata ? { metadata } : {}),
+  });
 }
 
 /** Re-authentication (current password) attempts from a signed-in session, per account; shared by every caller. */

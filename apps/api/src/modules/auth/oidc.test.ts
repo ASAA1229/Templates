@@ -5,7 +5,8 @@ import { OidcSso, SsoError, readOidcConfig } from "./oidc.js";
 const ISSUER = "http://127.0.0.1:8180/realms/asaa";
 const CLIENT = "templates-web";
 const NOW = 1_800_000_000_000;
-const b64 = (value: object | Buffer) => Buffer.from(value instanceof Buffer ? value : JSON.stringify(value)).toString("base64url");
+const b64 = (value: object | Buffer) =>
+  Buffer.from(value instanceof Buffer ? value : JSON.stringify(value)).toString("base64url");
 
 const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
 const other = generateKeyPairSync("rsa", { modulusLength: 2048 });
@@ -16,7 +17,10 @@ function sign(claims: object, key = privateKey, header: object = { alg: "RS256",
   return `${head}.${b64(createSign("RSA-SHA256").update(head).sign(key))}`;
 }
 
-function harness(tokenFor: (nonce: string) => Record<string, unknown> | string, discoveryOverride: Record<string, unknown> = {}) {
+function harness(
+  tokenFor: (nonce: string) => Record<string, unknown> | string,
+  discoveryOverride: Record<string, unknown> = {},
+) {
   let nonce = "";
   let tokenRequest = "";
   const fetchImpl = (async (url: string | URL, init?: RequestInit) => {
@@ -40,7 +44,13 @@ function harness(tokenFor: (nonce: string) => Record<string, unknown> | string, 
     return new Response("nope", { status: 404 });
   }) as typeof fetch;
   const sso = new OidcSso(
-    { issuer: ISSUER, clientId: CLIENT, clientSecret: "s3cret", redirectUri: "http://127.0.0.1:5000/api/auth/sso/callback", scopes: "openid email profile" },
+    {
+      issuer: ISSUER,
+      clientId: CLIENT,
+      clientSecret: "s3cret",
+      redirectUri: "http://127.0.0.1:5000/api/auth/sso/callback",
+      scopes: "openid email profile",
+    },
     { fetchImpl, now: () => NOW },
   );
   return {
@@ -69,19 +79,31 @@ const valid = (nonce: string, extra: Record<string, unknown> = {}) => ({
 });
 
 describe("readOidcConfig", () => {
-  const full = { TEMPLATES_OIDC_ISSUER: "https://idp.example/realms/asaa", TEMPLATES_OIDC_CLIENT_ID: CLIENT, TEMPLATES_OIDC_CLIENT_SECRET: "x" };
+  const full = {
+    TEMPLATES_OIDC_ISSUER: "https://idp.example/realms/asaa",
+    TEMPLATES_OIDC_CLIENT_ID: CLIENT,
+    TEMPLATES_OIDC_CLIENT_SECRET: "x",
+  };
   it("is disabled unless issuer, client id and secret are all set", () => {
     expect(readOidcConfig({}, "http://127.0.0.1:5000")).toBeUndefined();
     expect(readOidcConfig({ ...full, TEMPLATES_OIDC_CLIENT_SECRET: "" }, "http://127.0.0.1:5000")).toBeUndefined();
     expect(readOidcConfig({ ...full, TEMPLATES_OIDC_ISSUER: "" }, "http://127.0.0.1:5000")).toBeUndefined();
   });
   it("derives the redirect URI from the web origin", () => {
-    expect(readOidcConfig(full, "http://127.0.0.1:5000")?.redirectUri).toBe("http://127.0.0.1:5000/api/auth/sso/callback");
+    expect(readOidcConfig(full, "http://127.0.0.1:5000")?.redirectUri).toBe(
+      "http://127.0.0.1:5000/api/auth/sso/callback",
+    );
   });
   it("requires https except for loopback", () => {
-    expect(() => readOidcConfig({ ...full, TEMPLATES_OIDC_ISSUER: "http://idp.example/realms/asaa" }, "http://127.0.0.1:5000")).toThrow(/HTTPS/);
-    expect(readOidcConfig({ ...full, TEMPLATES_OIDC_ISSUER: "http://127.0.0.1:8180/realms/asaa" }, "http://127.0.0.1:5000")).toBeDefined();
-    expect(() => readOidcConfig({ ...full, TEMPLATES_OIDC_ISSUER: "https://u:p@idp.example/r" }, "http://127.0.0.1:5000")).toThrow();
+    expect(() =>
+      readOidcConfig({ ...full, TEMPLATES_OIDC_ISSUER: "http://idp.example/realms/asaa" }, "http://127.0.0.1:5000"),
+    ).toThrow(/HTTPS/);
+    expect(
+      readOidcConfig({ ...full, TEMPLATES_OIDC_ISSUER: "http://127.0.0.1:8180/realms/asaa" }, "http://127.0.0.1:5000"),
+    ).toBeDefined();
+    expect(() =>
+      readOidcConfig({ ...full, TEMPLATES_OIDC_ISSUER: "https://u:p@idp.example/r" }, "http://127.0.0.1:5000"),
+    ).toThrow();
   });
 });
 
