@@ -71,3 +71,26 @@ describe("log redaction", () => {
     });
   });
 });
+
+describe("password hashing cost", () => {
+  it("uses at least OWASP-equivalent scrypt parameters and flags weaker stored hashes for rehash", async () => {
+    const hash = await hashPassword("a long enough password");
+    const [, n, r, p] = hash.split("$").map(Number);
+    expect(n).toBeGreaterThanOrEqual(2 ** 16);
+    expect(r).toBeGreaterThanOrEqual(8);
+    expect(p).toBeGreaterThanOrEqual(2);
+    const legacy = ["scrypt", 2 ** 15, 8, 1, ...hash.split("$").slice(4)].join("$");
+    expect(needsRehash(legacy)).toBe(true);
+  });
+});
+
+describe("session cookie Secure flag", () => {
+  const base = { DATABASE_URL: "postgresql://u:p@127.0.0.1:5432/x" };
+  it("may be off only for a loopback web origin", () => {
+    expect(() => loadConfig({ ...base, WEB_ORIGIN: "http://127.0.0.1:5000", COOKIE_SECURE: "false" })).not.toThrow();
+    expect(() => loadConfig({ ...base, WEB_ORIGIN: "http://localhost:5000" })).not.toThrow();
+    expect(() => loadConfig({ ...base, WEB_ORIGIN: "http://192.168.1.20:5000", COOKIE_SECURE: "false" })).toThrow(/COOKIE_SECURE/);
+    expect(() => loadConfig({ ...base, WEB_ORIGIN: "https://templates.example.test" })).toThrow(/COOKIE_SECURE/);
+    expect(() => loadConfig({ ...base, WEB_ORIGIN: "https://templates.example.test", COOKIE_SECURE: "true" })).not.toThrow();
+  });
+});

@@ -6,6 +6,7 @@ export default defineConfig({
     include: ["src/**/*.test.ts", "test/**/*.test.ts"],
     // Integration suites share one PostgreSQL test database, so files run one at a time.
     fileParallelism: false,
+    globalSetup: ["./test/global-setup.ts"],
     testTimeout: 60_000,
     hookTimeout: 120_000,
     coverage: { provider: "v8", include: ["src/**/*.ts"], exclude: ["src/server.ts", "src/cli/**"] },

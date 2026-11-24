@@ -19,8 +19,14 @@ const PROBE_TIMEOUT_MS = 3000;
 const PROBE_TTL_MS = 30_000;
 const KILL_GRACE_MS = 3000;
 
-export const PROCESS_ISOLATION_DESCRIPTION =
-  "Process isolation: runs as a host process in a disposable folder with a scrubbed environment and time, memory, output and disk limits. It has NO network sandbox and NO filesystem sandbox.";
+export function processIsolationDescription(blocksNetwork: boolean): string {
+  return (
+    "Process isolation: runs as a host process in a disposable folder with a scrubbed environment and time, memory, output and disk limits. " +
+    "Node's permission model confines file access to that folder and blocks child processes and workers" +
+    (blocksNetwork ? " and network access" : "; network access is NOT blocked on this Node release") +
+    ". It is not a security boundary against native code: use container isolation for untrusted code."
+  );
+}
 
 export function containerIsolationDescription(image: string): string {
   return `Container isolation: runs in a Docker container from local image ${image} with no network, a read-only root and project mount, dropped capabilities, and CPU, memory and process limits.`;
@@ -157,7 +163,9 @@ export function buildContainerArgs(opts: {
     "none",
     "--read-only",
     "--tmpfs",
-    "/tmp:rw,size=64m",
+    "/tmp:rw,noexec,nosuid,nodev,size=64m",
+    "--ipc",
+    "none",
     "--cap-drop",
     "ALL",
     "--security-opt",
@@ -166,6 +174,11 @@ export function buildContainerArgs(opts: {
     "128",
     "--memory",
     `${opts.limits.maxMemoryMb}m`,
+    // Same value as --memory: the container cannot spill into swap to exceed its memory limit.
+    "--memory-swap",
+    `${opts.limits.maxMemoryMb}m`,
+    "--ulimit",
+    "nofile=256:256",
     "--cpus",
     "1",
     "--user",
