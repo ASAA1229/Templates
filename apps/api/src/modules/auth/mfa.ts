@@ -1,4 +1,4 @@
-import type { Router } from "express";
+import type { Response, Router } from "express";
 import { z } from "zod";
 import type { AppContext } from "../../context.js";
 import { AppError, notFound } from "../../lib/errors.js";
@@ -15,7 +15,7 @@ import {
 } from "../../lib/totp.js";
 import { audit } from "../audit/audit.service.js";
 import { authorize } from "./policy.js";
-import { requireOwner } from "./auth.js";
+import { enforceReauthLimit, requireOwner } from "./auth.js";
 
 /**
  * TOTP multi-factor authentication (US-A04). Secrets are encrypted at rest (AES-256-GCM) with
@@ -68,7 +68,8 @@ export function registerMfaRoutes(router: Router, ctx: AppContext) {
     return key;
   };
 
-  async function confirmPassword(ownerId: string, password: string) {
+  async function confirmPassword(ownerId: string, password: string, res: Response) {
+    await enforceReauthLimit(ctx, res, ownerId);
     const owner = await ctx.prisma.owner.findUniqueOrThrow({ where: { id: ownerId } });
     if (!(await verifyPassword(password, owner.passwordHash))) {
       throw new AppError(400, "VALIDATION_FAILED", "Current password is incorrect.", {
@@ -99,7 +100,7 @@ export function registerMfaRoutes(router: Router, ctx: AppContext) {
     try {
       const key = requireKey();
       const { password } = z.object({ password: z.string().min(1).max(200) }).parse(req.body);
-      const owner = await confirmPassword(req.owner!.id, password);
+      const owner = await confirmPassword(req.owner!.id, password, res);
       if (owner.mfaEnabledAt) throw new AppError(409, "CONFLICT", "Multi-factor authentication is already enabled.");
       const secret = generateSecret();
       await ctx.prisma.owner.update({
@@ -170,7 +171,7 @@ export function registerMfaRoutes(router: Router, ctx: AppContext) {
       const input = z
         .object({ password: z.string().min(1).max(200), code: z.string().trim().min(6).max(32) })
         .parse(req.body);
-      const owner = await confirmPassword(req.owner!.id, input.password);
+      const owner = await confirmPassword(req.owner!.id, input.password, res);
       if (!owner.mfaEnabledAt) throw new AppError(409, "CONFLICT", "Multi-factor authentication is not enabled.");
       if (!(await verifySecondFactor(ctx, owner, input.code))) {
         await audit(ctx, req, {

@@ -5,9 +5,10 @@ import { randomBytes, scrypt as scryptCallback, timingSafeEqual } from "node:cry
  * Format: scrypt$N$r$p$<salt b64url>$<hash b64url>. Parameters are stored per hash
  * so they can be raised later; `needsRehash` reports older parameters.
  */
-const N = 2 ** 15;
+// OWASP-equivalent scrypt cost (N=2^16, r=8, p=2); older hashes are upgraded at the next successful login.
+const N = 2 ** 16;
 const R = 8;
-const P = 1;
+const P = 2;
 const KEY_LENGTH = 64;
 const MAX_MEMORY = 128 * N * R * 2;
 
