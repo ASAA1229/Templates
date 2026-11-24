@@ -93,6 +93,8 @@ describe("single sign-on", () => {
         displayName: "Dev",
         role: "DEVELOPER",
         passwordHash: await hashPassword("x".repeat(16)),
+        // Session timestamps use the test clock, so the password must predate it (as createOwner does).
+        passwordChangedAt: new Date(harness.clock.now.getTime() - 1000),
       },
     });
     nextClaims = {
