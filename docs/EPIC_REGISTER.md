@@ -26,3 +26,15 @@ User-reported basic platform completion is retained as a report, not upgraded to
 ## Discovery expansion — Sets 1–12 (2026-11-19)
 
 All questions in Sets 1–12 were answered “all of the above”. Treat these as candidate requirements for reconciliation, not implementation evidence or a delivery commitment. Preserve TMP-E01–TMP-E11 and their existing evidence/status values. Map applicable additions as sub-epics/features: expanded template categories and industry taxonomy; scratch/import/GitHub/AI/visual authoring; customization and generated outputs; lifecycle/versioning/compatibility; collaboration; AI/JARVIS mini-features; validation and quality; deployment; assets/connectors; and offline Linux/AIX Environment Snapshot. Also map cross-cutting shared architecture, APIs/events, data governance, security/privacy, CI/CD/infrastructure, and quality engineering/testing. No status promotion from questionnaire answers.
+
+
+## Owner decision alignment — 2026-11-27
+
+Apply these constraints to existing epics without duplicating them or changing implementation status:
+- Internal employee/management access only.
+- Zero-cost/local-first development and dummy data until investment.
+- Jenkins remains in use; Nexus is intentionally paused because it is paid.
+- Offline Environment Snapshot for Linux/AIX, with TXT/JSON output and CMM ICG/ACQ/ISS reporting; no network dependency.
+- Preserve template lifecycle, authoring, builder/generation, export, collaboration, security isolation, quality gates and documentation requirements.
+
+The platform's existing epic IDs and evidence remain authoritative; update statuses only after exact-commit tests and review.

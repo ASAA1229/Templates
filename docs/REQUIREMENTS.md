@@ -316,3 +316,15 @@ The initial internal release is blocked until RG-01 through RG-10 have objective
 ## Implementation traceability — 2026-11-14
 
 Authoritative status and evidence: [PROJECT_STATUS.md](PROJECT_STATUS.md). No requirement above was removed or weakened. Locally verified mappings: 4.1 identity (MFA, lifecycle, isolation matrix); 4.4 catalog and assets (dependency, license and version resolution); 4.5 template lifecycle (draft, review, approval, immutable release, deprecation, pinning); 4.6 builder and generation (versioned blueprint, reproducible output, preview parity, safe updates); 4.7 workspace and delivery (file tree, editor, diff/history, ZIP export, readiness, backup/restore drill); 4.8 integrations (connector contract with scoped credentials, health, revocation and audit, tested against local fakes). Not yet implemented or externally gated: remote Git provisioning, live Jenkins/Nexus validation, OS-level execution isolation and a product build/test job API, deployment promotion and rollback, performance baseline, P2 items.
+
+
+## Owner decision update — 2026-11-27
+
+- Preserve the existing platform and its completed foundations; do not restart the project or replace the approved stack without a demonstrated need.
+- Keep the platform internal to authorized ASAA management and employees.
+- Operating cost remains ₹0 until investment. Prefer local/free services and dummy data; do not activate paid services without owner approval.
+- Jenkins is in use. Nexus is paid and intentionally paused; its credentials/integration are not a blocker.
+- Keep the established React/Vite/TypeScript, Node/Express, PostgreSQL/Prisma, Tailwind and shadcn/ui direction unless the existing repository documents a justified module-specific choice.
+- Preserve the template catalog, authoring/generation, customization/export, versioning, collaboration, security/isolation, QA, documentation, assets and connector scope already recorded in this requirements file.
+- Include the offline Linux/AIX Environment Snapshot capability: no network dependency; generate TXT/JSON reports; preserve the CMM ICG/ACQ/ISS reporting context. Use fixtures/dummy inputs for testing.
+- Build integration adapters and tests where useful, but keep paid/live connectors disabled until configured and authorized.

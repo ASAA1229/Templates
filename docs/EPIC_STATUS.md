@@ -42,3 +42,14 @@ Sets 1–12 are closed. New selections are candidate requirements only; existing
 | Release acceptance | Not accepted; NO-GO | Close external, device/host, operations and owner gates |
 
 Do not promote local, agent-reported or fake-server evidence to CI VERIFIED or live-integration status. See [Project Status](PROJECT_STATUS.md) and [Pending Work](PENDING_WORK_REGISTER.md).
+
+
+## Owner decision update — 2026-11-27
+
+Requirements/constraints clarified:
+- Employee and management access only.
+- ₹0/local-first; dummy data until investment.
+- Jenkins is in use; Nexus is paid and intentionally paused, not a blocker.
+- Environment Snapshot remains an offline Linux/AIX capability with TXT/JSON reports and CMM ICG/ACQ/ISS context.
+
+These decisions do not upgrade or downgrade any epic's development, test, integration or acceptance state. Existing evidence is preserved; verify the current exact branch commit before changing status.

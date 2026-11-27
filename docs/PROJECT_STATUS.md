@@ -150,3 +150,10 @@ A rerun was triggered as GitHub Actions run **44524041362** on `new`, SHA `c98d3
 The latest CI result is branch/run-specific. It does not establish manual screen-reader acceptance, live isolated-container boundary enforcement, native Linux/AIX execution for Environment Snapshot, live Jenkins/Nexus integration, approved deployment/recovery topology, or owner acceptance. Environment Snapshot native AIX compatibility and CMM ICG/ACQ/ISS output mapping remain unverified on target hosts.
 
 **Release status: NO-GO / NOT ACCEPTED.** Preserve the zero-operating-cost constraint and internal employee/management access boundary unless the owner explicitly changes them.
+
+
+## Owner requirements reconciliation — 2026-11-27
+
+The owner confirmed the platform remains internal to ASAA management and employees, zero-cost/local-first until investment, with dummy data where live services are unavailable. Jenkins is in use; paid Nexus integration is intentionally paused and is not a blocker. The offline Linux/AIX Environment Snapshot requirement remains in scope with TXT/JSON reports and CMM ICG/ACQ/ISS context.
+
+This is a requirements reconciliation only. It does not claim new implementation, testing, CI or acceptance evidence and does not change the existing release decision. Refresh exact-commit verification before changing project status.
